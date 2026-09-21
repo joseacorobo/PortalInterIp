@@ -1,0 +1,283 @@
+/* =============================================================
+   Inter NOC — Portal Operaciones IP
+   Design System — Telecom Precision Analytics (Stitch)
+   ============================================================= */
+
+/* ROOT DESIGN TOKENS (LIGHT MODE NATIVE AS PER STITCH) */
+:root {
+  /* Surfaces */
+  --bg:                       #F3F6FC;
+  --panel:                    #FFFFFF;
+  --sidebar-bg:               #FFFFFF;
+  
+  /* Borders */
+  --border:                   #E4E9F3;
+  --border-2:                 #EEF2F8;
+  
+  /* Text */
+  --text:                     #101828;
+  --muted:                    #5B6B89;
+  --muted-2:                  #98A3B8;
+  
+  /* Brand (Azul oficial del logo Inter) */
+  --brand:                    #1C58A8;
+  --brand-2:                  #2E74C9;
+  --brand-tint:               #EAF2FC;
+  
+  /* Navy (Severidad Alta/Critica) */
+  --navy:                     #0B3B78;
+  --navy-ink:                 #071F3F;
+  
+  /* Yellow / Amber (Severidad Moderada/Atencion) */
+  --yellow:                   #F4B400;
+  --yellow-tint:              #FEF6E0;
+
+  /* Legacy Aliases for Tailwind compat */
+  --snow-bg:                  var(--bg);
+  --snow-sidebar:             var(--sidebar-bg);
+  --snow-card:                var(--panel);
+  --snow-border:              var(--border);
+  --snow-text:                var(--text);
+  --snow-muted:               var(--muted);
+  --snow-subtle:              #F8FAFC;
+  --snow-hover:               var(--brand-tint);
+  --snow-input:               #FFFFFF;
+  --snow-scrollbar:           #CBD5E1;
+  --snow-scrollbar-hover:     #94A3B8;
+  --snow-blue:                var(--brand);
+  --snow-accent:              var(--brand-2);
+}
+
+/* DARK MODE TOKENS */
+html[data-theme="dark"] {
+  --bg:                       #0B1322;
+  --panel:                    #111B2E;
+  --sidebar-bg:               #0E1728;
+  --border:                   #233052;
+  --border-2:                 #1B2740;
+  --text:                     #EEF2FA;
+  --muted:                    #93A1C0;
+  --muted-2:                  #5E6C8C;
+  --brand:                    #5B9BE0;
+  --brand-2:                  #7CB2EA;
+  --brand-tint:               rgba(91, 155, 224, 0.14);
+  --navy:                     #8FB7E8;
+  --navy-ink:                 #DCE9FA;
+  --yellow:                   #F5C24D;
+  --yellow-tint:              rgba(245, 194, 77, 0.12);
+  --snow-subtle:              rgba(255, 255, 255, 0.03);
+  --snow-input:               rgba(30, 41, 59, 0.6);
+  --snow-scrollbar:           rgba(255, 255, 255, 0.1);
+  --snow-scrollbar-hover:     rgba(255, 255, 255, 0.2);
+}
+
+/* Global Font & Baseline */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-feature-settings: "tnum" 1, "zero" 1;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  letter-spacing: 0em;
+}
+
+h1, h2, h3, h4, h5, h6, .tabular-nums {
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.015em;
+}
+
+/* ============================================================== */
+/* BASE SURFACE AND TOKEN CLASSES                                  */
+/* ============================================================== */
+
+.bg-snow-bg { background-color: var(--snow-bg) !important; }
+.bg-snow-sidebar { background-color: var(--snow-sidebar) !important; }
+.bg-snow-card { 
+  background-color: var(--snow-card) !important; 
+  border: 1px solid var(--snow-border);
+}
+.border-snow-border { border-color: var(--snow-border) !important; }
+.text-snow-text { color: var(--snow-text) !important; }
+.text-snow-muted { color: var(--snow-muted) !important; }
+.bg-snow-subtle { background-color: var(--snow-subtle) !important; }
+.divide-snow-border > * + * { border-color: var(--snow-border) !important; }
+
+/* Elevations */
+.shadow-xs {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+.shadow-sm {
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+.shadow-stitch-card {
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.02);
+}
+
+/* ============================================================== */
+/* STITCH ANIMATIONS & MICRO-INTERACTIONS                         */
+/* ============================================================== */
+
+/* Entrada escalonada de tarjetas */
+@keyframes stitch-fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: stitch-fade-in-up 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+.delay-50 { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-250 { animation-delay: 250ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Microinteracción de Hover & Elevación */
+.hover-elevation {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
+}
+.hover-elevation:hover {
+  transform: translateY(-2px);
+  border-color: rgba(28, 88, 168, 0.35) !important;
+  box-shadow: 0 8px 24px -4px rgba(28, 88, 168, 0.08) !important;
+}
+
+/* Scrollbars limpios */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--snow-scrollbar);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--snow-scrollbar-hover);
+}
+
+/* ============================================================== */
+/* FORM CONTROLS & BOTONES                                        */
+/* ============================================================== */
+
+input, textarea, select {
+  background-color: var(--snow-input);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-tint);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted-2);
+}
+
+.btn-primary {
+  background-color: var(--brand) !important;
+  color: #FFFFFF !important;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.btn-primary:hover {
+  background-color: var(--brand-2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(28, 88, 168, 0.25);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF !important;
+  color: var(--text) !important;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border) !important;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background-color: var(--border-2) !important;
+}
+
+/* ============================================================== */
+/* BADGES Y CONTADORES DE SEVERIDAD (REGLA DE COLOR ESTRICTA)     */
+/* ============================================================== */
+
+.badge-p1 {
+  background-color: #EAF2FC;
+  color: #2E74C9;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p2 {
+  background-color: #E2E8F0;
+  color: #1C58A8;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p3 {
+  background-color: #FEF6E0;
+  color: #B45309;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p4 {
+  background-color: #0B3B78;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p5 {
+  background-color: #071F3F;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+/* Barras de Saturación DERS */
+.bar-ders-equilibrada {
+  background-color: var(--brand-2);
+}
+.bar-ders-moderada {
+  background-color: var(--yellow);
+}
+.bar-ders-alta {
+  background-color: var(--navy);
+}
+
+/* ============================================================== */
+/* DARK OVERRIDES EXCLUSIVOS PARA HTML[DATA-THEME="DARK"]         */
+/* ============================================================== */
+html[data-theme="dark"] .bg-white { 
+  background-color: var(--panel) !important; 
+}
+html[data-theme="dark"] .text-gray-900, 
+html[data-theme="dark"] .text-gray-800 { 
+  color: #FFFFFF !important; 
+}
+html[data-theme="dark"] .text-gray-700, 
+html[data-theme="dark"] .text-gray-600 { 
+  color: #E2E8F0 !important; 
+}
+html[data-theme="dark"] .text-gray-500 { 
+  color: #94A3B8 !important; 
+}
+html[data-theme="dark"] .border-gray-100, 
+html[data-theme="dark"] .border-gray-200 { 
+  border-color: var(--border) !important; 
+}

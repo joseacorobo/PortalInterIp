@@ -1,0 +1,60 @@
+<div class="sketch-panel-title-block">
+    <h2>Asistente Inteligente de Comandos CLI</h2>
+    <p>Agiliza el uso de comandos bsicos y avanzados. Genera comandos con autocompletado inteligente.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; margin-top: 1rem;">
+    <!-- Columna Izquierda: Parametros -->
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div class="sketch-card-panel" style="padding: 1rem;">
+            <h3 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; color: var(--dash-text-title);">Parmetros de Inyeccin</h3>
+            
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--dash-text-muted); margin-bottom: 0.25rem;">Vendor (OLT/SW)</label>
+                <select id="m5-vendor" class="sketch-input" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--dash-bg); color: var(--dash-text-body); border: 1px solid var(--dash-border-subtle);">
+                    <option value="FiberHome">FiberHome / Inter</option>
+                    <option value="Huawei">Huawei / Netuno</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--dash-text-muted); margin-bottom: 0.25rem;">Slot</label>
+                <input type="text" id="m5-slot" class="sketch-input" placeholder="Ej: 2" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--dash-bg); color: var(--dash-text-body); border: 1px solid var(--dash-border-subtle);">
+            </div>
+            
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--dash-text-muted); margin-bottom: 0.25rem;">PON</label>
+                <input type="text" id="m5-pon" class="sketch-input" placeholder="Ej: 5" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--dash-bg); color: var(--dash-text-body); border: 1px solid var(--dash-border-subtle);">
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--dash-text-muted); margin-bottom: 0.25rem;">ONU ID</label>
+                <input type="text" id="m5-onu" class="sketch-input" placeholder="Ej: 32" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--dash-bg); color: var(--dash-text-body); border: 1px solid var(--dash-border-subtle);">
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha: Seleccion de Comando y Resultado -->
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div class="sketch-card-panel" style="padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 0.9rem; font-weight: 700; color: var(--dash-text-title); margin: 0;">Catlogo de Comandos</h3>
+                <select id="m5-category" class="sketch-input" style="padding: 0.3rem 0.5rem; border-radius: 4px; background: var(--dash-bg); color: var(--dash-text-body); border: 1px solid var(--dash-border-subtle); font-size: 0.8rem;">
+                    <!-- Se llena con JS -->
+                </select>
+            </div>
+            
+            <div id="m5-commands-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 200px; overflow-y: auto; margin-bottom: 1rem;">
+                <!-- Lista de comandos -->
+            </div>
+            
+            <h3 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--dash-text-title);">Comando Generado</h3>
+            <div style="background: var(--dash-bg); border: 1px solid var(--dash-border-subtle); padding: 1rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; position: relative;">
+                <code id="m5-output" style="color: var(--brand);">Seleccione un comando y llene los parmetros.</code>
+                <button id="m5-copy-btn" class="btn-action-primary" style="position: absolute; right: 0.5rem; top: 0.5rem; padding: 0.3rem 0.6rem; font-size: 0.7rem;">
+                    Copiar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+# Python Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Binaries & Tool executables
+uv.exe
+*.exe
+
+# Database Journals & WAL
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Operating System & IDE
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,289 @@
+/* ==========================================================================
+   DASHBOARD - SISTEMA DE METRICAS Y DESARROLLO (OPERACIONES IP)
+   Corporate Identity: Telecom Precision Analytics (Stitch)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. GRID & LAYOUT (12-Column Desktop, 8 Tablet, 4 Mobile)
+   -------------------------------------------------------------------------- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.5rem;
+}
+
+@media (max-width: 1439px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin: 1rem;
+        gap: 0.75rem;
+    }
+}
+
+.col-span-full { grid-column: 1 / -1; }
+.col-span-4 { grid-column: span 4 / span 4; }
+.col-span-8 { grid-column: span 8 / span 8; }
+.col-span-12 { grid-column: span 12 / span 12; }
+.col-span-3 { grid-column: span 3 / span 3; }
+.col-span-6 { grid-column: span 6 / span 6; }
+
+/* --------------------------------------------------------------------------
+   2. CONTENEDORES Y TARJETAS KPI (GLASSMORPHISM)
+   -------------------------------------------------------------------------- */
+.dashboard-kpi-card {
+    background-color: var(--panel);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem; /* rounded-md */
+    padding: 1rem; /* space-md */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+    animation: stitch-fade-in-up 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+    opacity: 0;
+}
+
+.dashboard-kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.dashboard-kpi-card:nth-child(2) { animation-delay: 0.10s; }
+.dashboard-kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.dashboard-kpi-card:nth-child(4) { animation-delay: 0.20s; }
+
+.dashboard-kpi-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(13, 110, 253, 0.4);
+    box-shadow: inset 0 0 12px rgba(13, 110, 253, 0.12), 0 12px 32px -4px rgba(0, 0, 0, 0.55);
+}
+
+/* Tarjeta Hero KPI (Meta Ponderada de Produccion) */
+.dashboard-hero-kpi {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.15) 0%, rgba(10, 15, 29, 0.8) 100%);
+    backdrop-filter: blur(24px) saturate(180%);
+    color: #FFFFFF;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(13, 110, 253, 0.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 28px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-kpi-value {
+    font-family: 'Inter', monospace;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Pildoras de Tendencia / Variacion (Pill Trends) */
+.kpi-trend-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    line-height: 1;
+}
+
+.kpi-trend-pill.positive {
+    background-color: var(--emerald-tint);
+    color: var(--emerald);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.kpi-trend-pill.warning {
+    background-color: var(--yellow-tint);
+    color: var(--yellow);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.kpi-trend-pill.negative {
+    background-color: var(--crimson-tint);
+    color: var(--crimson);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   3. BARRAS DE PROGRESO Y DISTRIBUCION DE PUNTOS
+   -------------------------------------------------------------------------- */
+.dashboard-progress-track {
+    height: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 0.125rem; /* rounded-sm */
+    overflow: hidden;
+    position: relative;
+}
+
+.dashboard-progress-fill {
+    height: 100%;
+    border-radius: 0.125rem;
+    transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Colores Segun Celula Tecnica */
+.progress-fill-ftth {
+    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%);
+}
+
+.progress-fill-cabecera {
+    background: linear-gradient(90deg, var(--yellow) 0%, #D97706 100%);
+}
+
+.progress-fill-telefonia {
+    background: linear-gradient(90deg, #818CF8 0%, #4F46E5 100%);
+}
+
+/* --------------------------------------------------------------------------
+   4. CONTENEDORES DE GRAFICAS INTERACTIVAS (CHART.JS)
+   -------------------------------------------------------------------------- */
+.dashboard-chart-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+    animation: stitch-fade-in-up 0.4s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+.dashboard-chart-card:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-chart-card:nth-child(2) { animation-delay: 0.15s; }
+.dashboard-chart-card:nth-child(3) { animation-delay: 0.2s; }
+
+.dashboard-chart-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+    border-color: #CBD5E1;
+}
+
+html[data-theme="dark"] .dashboard-chart-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+html[data-theme="dark"] .dashboard-chart-card:hover {
+    border-color: rgba(91, 155, 224, 0.4);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-2);
+}
+
+.dashboard-chart-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 240px;
+}
+
+/* --------------------------------------------------------------------------
+   5. TABLAS CORPORATIVAS DE METRICAS Y AUDITORIA
+   -------------------------------------------------------------------------- */
+.table-corporate-metrics {
+    width: 100%;
+    text-align: left;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-corporate-metrics thead th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    background-color: var(--border-2);
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-corporate-metrics tbody td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 120ms ease;
+    font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.table-corporate-metrics tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.table-corporate-metrics tbody tr:hover {
+    background-color: var(--border-2);
+}
+
+html[data-theme="dark"] .table-corporate-metrics thead th {
+    background-color: rgba(15, 23, 42, 0.85);
+    color: var(--muted);
+}
+html[data-theme="dark"] .table-corporate-metrics tbody td {
+    color: #E2E8F0;
+    border-bottom-color: var(--border);
+}
+html[data-theme="dark"] .table-corporate-metrics tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* --------------------------------------------------------------------------
+   6. PILDORAS Y BOTONES DE FILTRADO
+   -------------------------------------------------------------------------- */
+.dashboard-filter-pill {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    cursor: pointer;
+    transition: all 150ms ease;
+}
+
+.dashboard-filter-pill:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+.dashboard-filter-pill.active {
+    background-color: var(--brand);
+    color: #FFFFFF !important;
+    border-color: var(--brand);
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   7. MODAL Y DIALOGOS DE APOYO
+   -------------------------------------------------------------------------- */
+.dashboard-modal-backdrop {
+    background-color: rgba(10, 15, 29, 0.75);
+    backdrop-filter: blur(8px);
+}
+
+.dashboard-modal-surface {
+    background-color: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+}

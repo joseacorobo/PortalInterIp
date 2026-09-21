@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inter | Operaciones IP - Centro de Operaciones de Red (NOC)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style inspired by SnowUI -->
+    <link rel="stylesheet" href="/static/css/snow_ui.css?v=4.2">
+    <link rel="stylesheet" href="/static/css/sidebar.css?v=1.0">
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=1.0">
+    <!-- Theme bootstrap (anti-FOUC) — Nativo Modo Claro (Stitch) -->
+    <script>
+        (function () {
+            const KEY = 'ip-theme';
+            const saved = localStorage.getItem(KEY) || localStorage.getItem('theme');
+            const theme = saved === 'dark' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <!-- Theme toggle runtime -->
+    <script src="/static/js/theme.js" defer></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        snow: {
+                            bg: '#F8FAFC',
+                            sidebar: '#FFFFFF',
+                            card: '#FFFFFF',
+                            border: '#E2E8F0',
+                            text: '#0F172A',
+                            muted: '#475569',
+                            blue: '#0056B3',
+                            green: '#059669',
+                            yellow: '#D97706',
+                            red: '#DC2626',
+                            purple: '#4F46E5'
+                        }
+                    },
+                    borderRadius: {
+                        'snow-card': '8px'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inline View Switcher Engine (Stitch System) -->
+    <script>
+        function switchDashboardView(viewId) {
+            window.currentDashboardView = viewId;
+
+            const viewMetrics = document.getElementById('view-metrics');
+            const viewInbox = document.getElementById('view-inbox');
+            const viewAudit = document.getElementById('view-audit');
+            const viewAssistant = document.getElementById('view-assistant');
+
+            if (viewMetrics) {
+                if (viewId === 'metrics' || viewId === 'operative') {
+                    viewMetrics.classList.remove('hidden');
+                    viewMetrics.style.display = 'block';
+                } else {
+                    viewMetrics.classList.add('hidden');
+                    viewMetrics.style.display = 'none';
+                }
+            }
+            if (viewInbox) {
+                if (viewId === 'inbox' || viewId === 'mail') {
+                    viewInbox.classList.remove('hidden');
+                    viewInbox.style.display = 'block';
+                } else {
+                    viewInbox.classList.add('hidden');
+                    viewInbox.style.display = 'none';
+                }
+            }
+            if (viewAudit) {
+                if (viewId === 'audit') {
+                    viewAudit.classList.remove('hidden');
+                    viewAudit.style.display = 'block';
+                } else {
+                    viewAudit.classList.add('hidden');
+                    viewAudit.style.display = 'none';
+                }
+            }
+            if (viewAssistant) {
+                if (viewId === 'assistant') {
+                    viewAssistant.classList.remove('hidden');
+                    viewAssistant.style.display = 'block';
+                } else {
+                    viewAssistant.classList.add('hidden');
+                    viewAssistant.style.display = 'none';
+                }
+            }
+
+            // Resaltado de botones en el sidebar de Stitch
+            const btnOperative = document.getElementById('nav-view-operative');
+            const btnMetrics = document.getElementById('nav-view-metrics');
+            const btnReports = document.getElementById('nav-view-reports');
+            const btnMail = document.getElementById('nav-view-mail');
+
+            if (btnOperative) {
+                if (viewId === 'operative') btnOperative.classList.add('active');
+                else btnOperative.classList.remove('active');
+            }
+            if (btnMetrics) {
+                if (viewId === 'metrics') btnMetrics.classList.add('active');
+                else btnMetrics.classList.remove('active');
+            }
+            if (btnReports) {
+                if (viewId === 'audit') btnReports.classList.add('active');
+                else btnReports.classList.remove('active');
+            }
+            if (btnMail) {
+                if (viewId === 'inbox' || viewId === 'mail') btnMail.classList.add('active');
+                else btnMail.classList.remove('active');
+            }
+
+            // Banners contextuales de Stitch
+            const bannerOperative = document.getElementById('banner-operative');
+            const bannerMetrics = document.getElementById('banner-metrics');
+            const bannerReports = document.getElementById('banner-reports');
+            const bannerAssistant = document.getElementById('banner-assistant');
+            const bannerMail = document.getElementById('banner-mail');
+
+            if (bannerOperative) bannerOperative.classList.toggle('hidden', viewId !== 'operative');
+            if (bannerMetrics) bannerMetrics.classList.toggle('hidden', viewId !== 'metrics');
+            if (bannerReports) bannerReports.classList.toggle('hidden', viewId !== 'audit');
+            if (bannerAssistant) bannerAssistant.classList.toggle('hidden', viewId !== 'assistant');
+            if (bannerMail) bannerMail.classList.toggle('hidden', viewId !== 'inbox' && viewId !== 'mail');
+
+            // Actualizar breadcrumb si existe
+            const bcView = document.getElementById('breadcrumb-view-name');
+            if (bcView) {
+                if (viewId === 'operative') bcView.innerText = 'Vista Operativa';
+                else if (viewId === 'metrics') bcView.innerText = 'Métricas & Rendimiento';
+                else if (viewId === 'inbox' || viewId === 'mail') bcView.innerText = 'Bandeja de Correos';
+                else if (viewId === 'audit') bcView.innerText = 'Historial y Auditoría';
+                else if (viewId === 'assistant') bcView.innerText = 'Asistente CLI';
+            }
+
+            // Llamadas a controladores según la vista
+            if (viewId === 'audit' && typeof loadReportsData === 'function') {
+                loadReportsData();
+            } else if (viewId === 'inbox' || viewId === 'mail') {
+                if (typeof loadInbox === 'function') loadInbox();
+                if (typeof loadMailWorkerStatus === 'function') loadMailWorkerStatus();
+            } else if (viewId === 'metrics' || viewId === 'operative') {
+                if (window.chartHourly && typeof window.chartHourly.resize === 'function') window.chartHourly.resize();
+                if (window.chartTechnicians && typeof window.chartTechnicians.resize === 'function') window.chartTechnicians.resize();
+                if (window.chartWeights && typeof window.chartWeights.resize === 'function') window.chartWeights.resize();
+            }
+
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+        window.switchDashboardView = switchDashboardView;
+
+        function toggleSidebarCollapse() {
+            const sb = document.getElementById('main-sidebar');
+            if (!sb) return;
+            sb.classList.toggle('collapsed');
+        }
+        window.toggleSidebarCollapse = toggleSidebarCollapse;
+    </script>
+</head>
+<body class="bg-snow-bg text-snow-text font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- ============================================================== -->
+    <!-- 1. LEFT SIDEBAR — Partial (templates/partials/sidebar.html)   -->
+    <!-- ============================================================== -->
+
+
+
+
+
+<aside id="main-sidebar" class="sidebar-container select-none h-screen">
+    <!-- Top Brand & Collapse Button -->
+    <div class="flex items-center justify-between pb-3 mb-2 border-b border-[#E4E9F3]">
+        <div class="flex items-center gap-2 overflow-hidden">
+            <img src="/static/img/inter_logo.png" alt="inter" class="h-6 w-auto object-contain">
+        </div>
+        <button id="btn-toggle-sidebar" onclick="toggleSidebarCollapse()" class="sidebar-collapse-btn" title="Colapsar menú">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- Contenedor de Navegación -->
+    <div class="flex-1 flex flex-col overflow-y-auto pr-0.5 space-y-4">
+        
+        <!-- Perfil del Ingeniero / Usuario Logeado (Stitch Style) -->
+        <div class="sidebar-user-chip">
+            <div id="sidebar-user-avatar" class="sidebar-avatar">
+                CM
+            </div>
+            <div class="sidebar-user-info overflow-hidden">
+                <p id="sidebar-user-name" class="font-semibold text-xs text-[#101828] truncate">
+                    Carlos Méndez
+                </p>
+                <p id="sidebar-user-role" class="text-[11px] text-[#5B6B89] truncate">
+                    Coordinador · Soporte
+                </p>
+            </div>
+        </div>
+
+        <!-- Grupo: PANEL -->
+        <div>
+            <p class="sidebar-section-title sidebar-label-hide">Panel</p>
+            <div class="space-y-1">
+                <button onclick="switchDashboardView('operative')" id="nav-view-operative" class="sidebar-nav-pill active">
+                    <i data-lucide="columns-3" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Vista operativa</span>
+                </button>
+
+                <button onclick="switchDashboardView('metrics')" id="nav-view-metrics" class="sidebar-nav-pill">
+                    <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Métricas</span>
+                </button>
+
+                <button onclick="switchDashboardView('audit')" id="nav-view-reports" class="sidebar-nav-pill">
+                    <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Reportes</span>
+                </button>
+
+                <button onclick="switchDashboardView('inbox')" id="nav-view-mail" class="sidebar-nav-pill">
+                    <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Tickets IP</span>
+                    <span id="sidebar-inbox-badge" class="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#E8F0FE] text-[#1C58A8] sidebar-label-hide">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grupo: ÁREAS (Acordeón Stitch) -->
+        <div>
+            <p class="sidebar-section-title sidebar-label-hide">Áreas</p>
+            <div class="space-y-1">
+                
+                <!-- Acordeón: Redes de Acceso -->
+                <div class="sidebar-accordion-group" id="group-acceso">
+                    <button type="button" onclick="toggleSidebarMenu('acceso')" class="sidebar-accordion-header">
+                        <span class="sidebar-label-hide truncate">Redes de Acceso</span>
+                        <i data-lucide="chevron-down" id="chevron-acceso" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 rotate-180 sidebar-label-hide" style="color: var(--muted);"></i>
+                    </button>
+                    <div id="submenu-acceso" class="sidebar-submenu expanded">
+                        <div class="space-y-0.5 py-1">
+                            <button onclick="changeArea('Soporte')" id="nav-area-soporte" class="sidebar-subitem active">
+                                <span class="sidebar-label-hide">Soporte FTTH</span>
+                                <span id="badge-count-ftth" class="sidebar-counter-blue sidebar-label-hide">14</span>
+                            </button>
+                            <button onclick="changeArea('Cabecera')" id="nav-area-cabecera" class="sidebar-subitem">
+                                <span class="sidebar-label-hide">Cabecera OLT</span>
+                                <span id="badge-count-olt" class="sidebar-counter-yellow sidebar-label-hide">9</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acordeón: Telefonía VoIP -->
+                <div class="sidebar-accordion-group" id="group-telefonia">
+                    <button type="button" onclick="toggleSidebarMenu('telefonia')" class="sidebar-accordion-header">
+                        <span class="sidebar-label-hide truncate">Telefonía VoIP</span>
+                        <i data-lucide="chevron-down" id="chevron-telefonia" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 sidebar-label-hide" style="color: var(--muted);"></i>
+                    </button>
+                    <div id="submenu-telefonia" class="sidebar-submenu collapsed">
+                        <div class="space-y-0.5 py-1">
+                            <button onclick="changeArea('Telefonía')" id="nav-area-telefonia" class="sidebar-subitem">
+                                <span class="sidebar-label-hide">Soporte VoIP</span>
+                                <span class="sidebar-counter-blue sidebar-label-hide">3</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acordeón: Otras áreas -->
+                <div class="sidebar-accordion-group" id="group-otras">
+                    <button type="button" onclick="toggleSidebarMenu('otras')" class="sidebar-accordion-header">
+                        <span class="sidebar-label-hide truncate">Otras áreas</span>
+                        <i data-lucide="chevron-down" id="chevron-otras" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 sidebar-label-hide" style="color: var(--muted);"></i>
+                    </button>
+                    <div id="submenu-otras" class="sidebar-submenu collapsed">
+                        <div class="space-y-0.5 py-1">
+                            <button onclick="changeArea('Todas')" class="sidebar-subitem">
+                                <span class="sidebar-label-hide">Todas las Células</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer: Modo Claro Toggle -->
+    <div class="sidebar-footer">
+        <button id="theme-toggle-sidebar" onclick="toggleTheme()" class="sidebar-theme-toggle" title="Alternar tema">
+            <i data-lucide="sun" class="w-4 h-4 shrink-0 text-amber-500"></i>
+            <span class="sidebar-label-hide" id="theme-mode-text">Modo claro</span>
+        </button>
+    </div>
+</aside>
+
+    <!-- ============================================================== -->
+    <!-- 2. MAIN VIEW AREA -->
+    <!-- ============================================================== -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-snow-bg">
+
+        <!-- Top Header: Stitch Minimalist Bar -->
+        <header class="h-12 bg-white border-b border-[#E4E9F3] px-6 flex items-center justify-between select-none z-20">
+            <!-- Left: Workspace / Context Selector -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-[#101828]">Operaciones IP — Inter</span>
+                <button class="text-[#5B6B89] hover:text-[#101828] p-1 rounded transition" title="Contexto Operaciones">
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+
+            <!-- Right: Action Buttons & User Profile (Preserving full functional logic) -->
+            <div class="flex items-center gap-2.5">
+                <!-- Status Pill -->
+                <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF2FC] text-[#1C58A8]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>
+                    Turno Activo
+                </span>
+
+                <!-- Chat / Asistente Button (Stitch Action) -->
+                <button onclick="switchDashboardView('assistant')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-white border border-[#E4E9F3] hover:bg-[#EEF2F8] text-[#101828] transition shadow-xs cursor-pointer" title="Asistente CLI / Chat">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+                    <span>Chat</span>
+                </button>
+
+                <!-- Search Input (Discreet / Clean) -->
+                <div class="relative hidden md:flex items-center">
+                    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-[#98A3B8] pointer-events-none"></i>
+                    <input type="text" id="global-search-input" onkeyup="filterInboxBySearch(this.value)" placeholder="Buscar..." class="w-32 lg:w-44 pl-8 pr-2 py-1 text-xs bg-[#F3F6FC] rounded-lg text-[#101828] placeholder-[#98A3B8] border border-[#E4E9F3] focus:outline-none focus:ring-1 focus:ring-[#1C58A8] transition">
+                </div>
+
+                <!-- User Profile Pill & Dropdown -->
+                <div class="relative">
+                    <button onclick="toggleUserDropdown()" id="user-menu-btn" class="flex items-center gap-1.5 p-1 rounded-lg border border-[#E4E9F3] bg-white hover:bg-[#EEF2F8] transition cursor-pointer" title="Perfil y Sesión">
+                        <div id="header-user-avatar" class="w-6 h-6 rounded-md text-white flex items-center justify-center font-bold text-[10px] bg-[#071F3F]">
+                            CM
+                        </div>
+                        <i data-lucide="chevron-down" class="w-3 h-3 text-[#5B6B89]"></i>
+                    </button>
+
+                    <!-- Dropdown Menu de Usuario (Preservado 100% con toda su funcionalidad) -->
+                    <div id="user-profile-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-[#E4E9F3] p-2.5 z-50 animate-fade-in-up">
+                        <div class="px-3 py-2 border-b border-[#E4E9F3] mb-2">
+                            <p class="text-xs font-bold text-[#101828]" id="dropdown-user-fullname">Carlos Méndez</p>
+                            <p class="text-[10px] text-[#5B6B89] font-mono" id="dropdown-user-email">carlos.mendez@inter.com.ve</p>
+                            <span id="dropdown-user-badge" class="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#EAF2FC] text-[#1C58A8]">
+                                Coordinador - Soporte
+                            </span>
+                        </div>
+
+                        <!-- Conmutador Rápido de Perfiles -->
+                        <div class="py-1">
+                            <span class="px-3 text-[9px] font-bold uppercase tracking-wider text-[#98A3B8] block mb-1.5">
+                                Conmutar Perfil de Operaciones
+                            </span>
+                            <div id="dropdown-users-list" class="max-h-48 overflow-y-auto space-y-1">
+                                <!-- Poblado dinámicamente con especialistas y coordinadores -->
+                            </div>
+                        </div>
+
+                        <div class="border-t border-[#E4E9F3] pt-2 mt-2">
+                            <button onclick="logoutSession()" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#5B6B89] hover:bg-[#EEF2F8] hover:text-[#101828] rounded-lg transition font-medium cursor-pointer">
+                                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                                <span>Cerrar sesión</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+            <!-- ============================================================== -->
+            <!-- CONTEXT HEADER BANNER (STITCH DESIGN)                          -->
+            <!-- ============================================================== -->
+            <div id="dashboard-context-banner">
+                <!-- Banner para Vista Operativa -->
+                <div id="banner-operative" class="text-xs text-[#5B6B89] max-w-3xl leading-relaxed">
+                    Diseñada para el especialista y el coordinador durante el turno: responde en un vistazo quién está saturado y qué ticket lleva más tiempo esperando.
+                </div>
+
+                <!-- Banner para Vista de Métricas -->
+                <div id="banner-metrics" class="hidden space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h1 class="text-xl font-bold text-[#101828] tracking-tight">Vista de métricas</h1>
+                            <p class="text-xs text-[#5B6B89] mt-0.5">Tendencias y comparación por período — para cierre de turno y gerencia</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#EAF2FC] text-[#1C58A8] border border-[#D0E2FB]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>
+                                Turno Mañana · 11 activos
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-[#5B6B89]">Diseñada para el cierre de turno y la gerencia: comparaciones y tendencias, no acción inmediata.</p>
+                </div>
+
+                <!-- Banner para Vista de Reportes / Auditoría -->
+                <div id="banner-reports" class="hidden">
+                    <h1 class="text-xl font-bold text-[#101828] tracking-tight">Historial y Auditoría Forense</h1>
+                    <p class="text-xs text-[#5B6B89] mt-0.5">Trazabilidad inmutable de eventos de red y acciones técnicas</p>
+                </div>
+
+                <!-- Banner para Asistente CLI -->
+                <div id="banner-assistant" class="hidden">
+                    <h1 class="text-xl font-bold text-[#101828] tracking-tight">Asistente de Comandos CLI (M5)</h1>
+                    <p class="text-xs text-[#5B6B89] mt-0.5">Diagnósticos automatizados para routers y switches</p>
+                </div>
+
+                <!-- Banner para Bandeja de Correos -->
+                <div id="banner-mail" class="hidden space-y-1">
+                    <h1 class="text-xl font-bold text-[#101828] tracking-tight">Bandeja de Correos Operaciones IP</h1>
+                    <p class="text-xs text-[#5B6B89] mt-0.5">Gestión y atención de tickets automatizados FSM y requerimientos OLT/FTTH vía Microsoft 365</p>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- 1. VISTA DASHBOARD PRINCIPAL (MÉTRICAS & KPIS IMPORTANTES)     -->
+            <!-- ============================================================== -->
+            <section id="view-metrics" class="space-y-6">
+            <!-- Barra Superior del Dashboard: Título de Vista y Filtro de Área -->
+            <div class="flex flex-wrap items-center justify-between gap-4 pb-1">
+                <div>
+                    <h1 class="text-base md:text-lg font-bold text-gray-900 tracking-tight" id="main-view-title">Dashboard General de Operaciones</h1>
+                    <p class="text-xs text-snow-muted">Métricas en tiempo real, productividad técnica y balance de carga por célula</p>
+                </div>
+                <!-- Pastillas de Selección de Área -->
+                <div class="flex items-center bg-gray-100 p-1 rounded-lg text-xs font-medium border border-snow-border">
+                    <button onclick="changeArea('Todas')" id="pill-area-todas" class="px-3 py-1.5 rounded-lg bg-white shadow-xs text-gray-900 font-semibold transition">Todas</button>
+                    <button onclick="changeArea('Acceso')" id="pill-area-acceso" class="px-3 py-1.5 rounded-lg text-snow-muted hover:text-gray-900 transition">Redes de Acceso</button>
+                    <button onclick="changeArea('Soporte')" id="pill-area-soporte" class="px-3 py-1.5 rounded-lg text-snow-muted hover:text-gray-900 transition">Redes FTTH</button>
+                    <button onclick="changeArea('Cabecera')" id="pill-area-cabecera" class="px-3 py-1.5 rounded-lg text-snow-muted hover:text-gray-900 transition">Cabecera</button>
+                    <button onclick="changeArea('Telefonía')" id="pill-area-telefonia" class="px-3 py-1.5 rounded-lg text-snow-muted hover:text-gray-900 transition">Telefonía</button>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- NIVEL 1: VISIÓN MACRO EN TIEMPO REAL (SCORECARDS EJECUTIVAS)  -->
+            <!-- ============================================================== -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                
+                <!-- ScoreCard 1: Estado Actual de la Cola de Correos -->
+                <div class="dashboard-kpi-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-snow-muted text-xs font-semibold mb-2">
+                        <span>ESTADO ACTUAL DE CORREOS</span>
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background-color: var(--brand-tint); color: var(--brand);">
+                            <i data-lucide="inbox" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpi-queue-pending" class="text-3xl font-bold" style="color:var(--text);"">--</span>
+                        <span class="text-xs font-medium" style="color:var(--muted);">en cola</span>
+                    </div>
+                    <div class="mt-2 flex items-center gap-1.5 text-[11px]">
+                        <span class="inline-flex items-center gap-1 font-semibold px-2" style="background-color:var(--brand-tint); color:var(--brand);" py-0.5 rounded-md">
+                            <span class="w-1.5 h-1.5 rounded-full rounded-full shrink-0"></span style="background-color:var(--brand);">
+                            <span id="kpi-queue-progress">--</span> activos
+                        </span>
+                        <span class="inline-flex items-center gap-1 font-semibold px-2" style="background-color:var(--yellow-tint); color:var(--yellow);" py-0.5 rounded-md">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            <span id="kpi-queue-onhold">--</span> en espera
+                        </span>
+                    </div>
+                </div>
+
+                <!-- ScoreCard 2: Tickets Realizados & Puntos de Jornada -->
+                <div class="dashboard-kpi-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-snow-muted text-xs font-semibold mb-2">
+                        <span>TICKETS REALIZADOS (JORNADA)</span>
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background-color: var(--brand-tint); color: var(--brand);">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpi-total-tasks" class="text-3xl font-bold" style="color:var(--text);"">--</span>
+                        <span class="text-xs font-medium" style="color:var(--muted);">resueltos</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-[11px]">
+                        <span class="text-snow-muted font-medium">
+                            <strong id="kpi-total-points" class="text-gray-900 font-bold">--</strong> pts acumulados
+                        </span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded badge-kpi-normal">P1 - P5</span>
+                    </div>
+                </div>
+
+                <!-- ScoreCard 3: Casos Críticos Sin Asignar -->
+                <div class="dashboard-kpi-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-snow-muted text-xs font-semibold mb-2">
+                        <span>CRÍTICOS SIN ASIGNAR</span>
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background-color: rgba(11,59,120,.1); color: var(--navy);">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpi-critical-unassigned" class="text-3xl font-bold" style="color:var(--text);"">--</span>
+                        <span class="text-xs font-medium" style="color:var(--muted);">sin tomar</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-[11px]">
+                        <span id="kpi-critical-badge" class="text-xs font-semibold px-2 py-0.5 rounded-full badge-kpi-normal">Bandeja Normal</span>
+                        <span class="text-[10px] text-snow-muted">P4 / P5 & Alertas</span>
+                    </div>
+                </div>
+
+                <!-- ScoreCard 4: Tiempo Promedio de Primera Respuesta & SLA -->
+                <div class="dashboard-kpi-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-snow-muted text-xs font-semibold mb-2">
+                        <span>TIEMPO PRIMERA RESPUESTA (SLA)</span>
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background-color: var(--brand-tint); color: var(--brand-2);">
+                            <i data-lucide="timer" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpi-first-response" class="text-3xl font-bold" style="color:var(--text);"">--</span>
+                        <span class="text-xs font-medium" style="color:var(--muted);">minutos</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-[11px]">
+                        <span class="text-snow-muted font-medium">
+                            <strong id="kpi-sla-compliance" class="font-bold" style="color:var(--brand);">--%</strong> dentro de SLA
+                        </span>
+                        <span class="text-[10px] text-snow-muted">MTTR neto <strong id="kpi-avg-mttr" class="text-gray-900">--</strong>m</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- MONITOR DE CARGA DE TRABAJO EN TIEMPO REAL (EN PROGRESO)       -->
+            <!-- ============================================================== -->
+            <div id="realtime-workload-section" class="dashboard-chart-card space-y-4 w-full">
+                <!-- Header: Título, Métricas Rápidas y Polling Indicator -->
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#E4E9F3] dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                            <i data-lucide="activity" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-sm font-bold text-gray-900 dark:text-white tracking-tight">Carga de Trabajo Actual — Tickets En Progreso</h2>
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    En Vivo
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-snow-muted">Distribución de casos en atención simultánea agrupados por operador y área técnica</p>
+                        </div>
+                    </div>
+
+                    <!-- Métricas de Carga en Vivo -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
+                            <span class="text-snow-muted text-[10px] uppercase font-semibold">En Atención:</span>
+                            <span id="workload-summary-active-tickets" class="font-bold text-blue-600 dark:text-blue-400 font-mono">--</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
+                            <span class="text-snow-muted text-[10px] uppercase font-semibold">Puntos Activos:</span>
+                            <span id="workload-summary-active-points" class="font-bold text-amber-600 dark:text-amber-400 font-mono">-- pts</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
+                            <span class="text-snow-muted text-[10px] uppercase font-semibold">Operadores Activos:</span>
+                            <span id="workload-summary-active-ops" class="font-bold text-gray-900 dark:text-gray-100 font-mono">--</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
+                            <span class="text-snow-muted text-[10px] uppercase font-semibold">Célula Principal:</span>
+                            <span id="workload-summary-bottleneck" class="font-bold text-gray-900 dark:text-gray-100">--</span>
+                        </div>
+                        <button onclick="loadCurrentWorkload()" class="p-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-snow-muted hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-slate-800 transition cursor-pointer" title="Refrescar Carga en Vivo">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="icon-refresh-workload"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1. Desglose por Célula / Área Técnica -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs text-snow-muted font-semibold">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-500"></i>
+                            Distribución de Carga por Área Operativa
+                        </span>
+                        <span id="workload-area-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Balance Óptimo</span>
+                    </div>
+                    <div id="workload-areas-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Generado dinámicamente con loadCurrentWorkload() -->
+                    </div>
+                </div>
+
+                <!-- 2. Matriz de Operadores con Tickets en Progreso y Disponibles -->
+                <div class="space-y-2 pt-2 border-t border-[#E4E9F3] dark:border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="users" class="w-3.5 h-3.5 text-blue-500"></i>
+                            <span class="text-xs font-bold text-gray-900 dark:text-white">Detalle de Operadores y Casos en Atención</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-[10px]">
+                            <span class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Disponible</span>
+                            <span class="inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 font-semibold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Equilibrada (&le; 1 caso)</span>
+                            <span class="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Moderada (2 casos)</span>
+                            <span class="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-semibold"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Sobrecarga (&ge; 3 casos)</span>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor dinámico de tarjetas de operadores -->
+                    <div id="workload-operators-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                        <!-- Inyectado dinámicamente -->
+                        <div class="p-6 text-center text-snow-muted text-xs col-span-full">Cargando monitor de carga activa...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- NIVEL 2: RENDIMIENTO INDIVIDUAL Y COMPARATIVO DE CARGA        -->
+            <!-- ============================================================== -->
+            <div class="flex items-center justify-between pt-1">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-snow-blue"></i>
+                        Rendimiento Individual y Comparativa de Carga
+                    </h2>
+                    <p class="text-xs text-snow-muted">Curva de avance horario, semáforo de saturación por especialista y balance entre frentes</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="kpi-balance-status" class="text-xs font-semibold px-2.5 py-0.5 rounded-full badge-kpi-normal">Equilibrado</span>
+                    <span class="text-[11px] text-snow-muted font-semibold bg-gray-100 px-2.5 py-1 rounded-lg border border-snow-border" id="kpi-tech-count">
+                        -- especialistas
+                    </span>
+                </div>
+            </div>
+
+            <!-- ROW 2: SPLINE CHART & AREA EFFORT BREAKDOWN -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                
+                <!-- Main Chart: Points Evolution (2 cols) -->
+                <div class="lg:col-span-2 dashboard-chart-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold" style="color:var(--text);">Curva de Puntos por Hora</h2>
+                            <p class="text-xs text-snow-muted" id="chart-hourly-sub">Evolución del esfuerzo acumulado en la jornada</p>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 text-xs text-snow-muted">
+                            <span class="w-2.5 h-2.5 rounded-full rounded-full shrink-0"></span style="background-color:var(--brand);"> Puntos
+                        </span>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="chartHourly"></canvas>
+                    </div>
+                </div>
+
+                <!-- Area Effort Distribution Card (1 col) -->
+                <div class="dashboard-chart-card flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-sm font-bold text-gray-900 mb-1">Distribución de Puntos por Área</h2>
+                        <p class="text-xs text-snow-muted mb-4">Comparativa de carga entre frentes</p>
+                        
+                        <div class="space-y-4" id="area-progress-bars">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 rounded-lg border border-snow-border mt-4 text-[11px] text-snow-muted flex items-start gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-snow-blue shrink-0 mt-0.5"></i>
+                        <span>Los puntos no provienen de registro manual, sino de la resolución automatizada de correos.</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ROW 3: TECHNICIAN WORKLOAD BARS & TASK WEIGHTS DONUT -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                
+                <!-- Individual Workload Bars (2 cols) -->
+                <div class="lg:col-span-2 dashboard-chart-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold" style="color:var(--text);" id="tech-chart-title">Carga Individual por Especialista</h2>
+                            <p class="text-xs text-snow-muted">Puntos acumulados con semáforo de saturación</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs">
+                            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full" style="background-color: var(--brand);"></span> Balanceado</span>
+                            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Moderado</span>
+                            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full" style="background-color: var(--yellow);"></span> Moderado</span>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="chartTechnicians"></canvas>
+                    </div>
+                </div>
+
+                <!-- Donut Chart of Task Weights (1 col) -->
+                <div class="dashboard-chart-card">
+                    <h2 class="text-sm font-bold text-gray-900 mb-1">Complejidad de Tareas (P1 a P5)</h2>
+                    <p class="text-xs text-snow-muted mb-4">Proporción según dificultad técnica</p>
+                    <div class="h-56 flex items-center justify-center">
+                        <canvas id="chartWeights"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ROW 4: RANKING DE CARGA DE TRABAJO ACTUAL (LEADERBOARD) -->
+            <div class="dashboard-chart-card space-y-4 w-full">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
+                            Ranking de Carga de Trabajo Actual (Top Especialistas)
+                        </h2>
+                        <p class="text-xs text-snow-muted">Escala de saturación operativa, puntos de jornada acumulados y balance de cuadrillas</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="saturation-badge font-semibold text-[10px] rounded px-2 py-0.5" data-level="balanced">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand"></span> &lt; 60 pts Balanceado
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 font-semibold text-[10px]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 60-80 pts Moderado
+                        </span>
+                        <span class="saturation-badge font-semibold text-[10px] rounded px-2 py-0.5" data-level="high">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> &gt; 80 pts Sobrecarga
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto w-full">
+                    <table class="table-corporate-metrics w-full min-w-[760px]">
+                        <thead>
+                            <tr>
+                                <th class="w-12 text-center">Pos.</th>
+                                <th class="min-w-[180px]">Especialista</th>
+                                <th class="min-w-[120px]">Célula Técnica</th>
+                                <th class="text-right min-w-[80px]">Tickets</th>
+                                <th class="text-right min-w-[110px]">Puntos Acum.</th>
+                                <th class="w-48 text-center min-w-[150px]">Escala de Carga</th>
+                                <th class="text-right min-w-[90px]">MTTR Neto</th>
+                                <th class="text-center min-w-[130px]">Estado Operativo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tech-ranking-tbody" class="divide-y divide-snow-border font-medium">
+                            <tr><td colspan="8" class="py-4 text-center text-snow-muted">Cargando ranking de especialistas...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- 2. VISTA BANDEJA DE CORREOS AUTOMATIZADOS (MICROSOFT 365)       -->
+            <!-- ============================================================== -->
+            <section id="view-inbox" class="space-y-4 hidden">
+            <!-- ============================================================== -->
+            <!-- BANDEJA DE TICKETS HELPDESK IP (OPERACIONES Y REDES)           -->
+            <!-- CONTROL DE CICLO DE VIDA, DEPARTAMENTOS Y TIEMPOS DE ATENCIÓN  -->
+            <!-- ============================================================== -->
+            <div id="inbox-section" class="dashboard-chart-card overflow-hidden transition-all duration-200 flex flex-col">
+                
+                <!-- 1. HELPDESK IP COMMAND RIBBON / TOP BAR -->
+                <div class="outlook-ribbon-bg px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-white select-none">
+                    <!-- Left: Brand / Title -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center font-bold text-sm shadow-2xs">
+                            <i data-lucide="headphones" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold tracking-wider uppercase text-blue-100">Helpdesk IP</span>
+                                <span class="text-white/40 font-light">|</span>
+                                <h2 class="text-sm font-bold text-white tracking-tight">Consola de Tickets y Requerimientos</h2>
+                            </div>
+                            <p class="text-[10px] text-blue-100/80">Gestión de tickets, asignación por departamento y control de tiempos de atención</p>
+                        </div>
+                    </div>
+
+                    <!-- Center: Search in Ticket Style -->
+                    <div class="flex-1 max-w-xs mx-2 hidden md:block">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2 text-white/60"></i>
+                            <input type="text" id="outlook-search-input" onkeyup="filterOutlookBySearch(this.value)" placeholder="Buscar ticket, abonado, nodo..." class="w-full pl-8 pr-3 py-1 text-xs bg-white/15 hover:bg-white/25 focus:bg-white focus:text-gray-900 text-white placeholder-white/70 rounded-lg outline-none transition border border-white/20 focus:border-white">
+                        </div>
+                    </div>
+
+                    <!-- Right: Command Actions (Simulate, Parser, Sync, Fullscreen) -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="simulateEmail()" class="outlook-btn-primary px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-[#0078D4]"></i>
+                            <span>+ Simular Ticket</span>
+                        </button>
+
+                        <button onclick="openTesterModal()" class="px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold flex items-center gap-1.5 border border-white/20 transition cursor-pointer" title="Analizador y Clasificador NLP por Departamento">
+                            <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">Clasificador NLP</span>
+                        </button>
+
+                        <button onclick="syncMailWorkerNow()" class="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white border border-white/20 transition cursor-pointer" title="Sincronizar IMAP / Entrada ahora">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="icon-sync-spin"></i>
+                        </button>
+
+                        <button onclick="openMailConfigModal()" id="btn-open-mail-config" class="px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold flex items-center gap-1.5 border border-white/20 transition cursor-pointer" title="Configurar Servidor de Entrada">
+                            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">Configurar IMAP</span>
+                        </button>
+
+                        <button onclick="toggleOutlookFullscreen()" id="btn-outlook-fullscreen" class="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white border border-white/20 transition cursor-pointer" title="Modo Pantalla Completa / Restaurar">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5" id="icon-outlook-screen"></i>
+                        </button>
+
+                        <a href="/mail" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold flex items-center gap-1.5 border border-white/20 transition cursor-pointer" title="Abrir en pestaña independiente">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">Nueva Pestaña</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 2. TRIPLE COLUMN VIEW (DEPARTAMENTOS | LISTA | FICHA) -->
+                <div class="flex-1 flex flex-col md:flex-row h-[720px] overflow-hidden">
+                    
+                    <!-- COLUMNA 1: PERFIL OPERADOR, TELEMETRIA Y 6 DEPARTAMENTOS OFICIALES (260px) -->
+                    <div class="w-full md:w-[250px] lg:w-[260px] shrink-0 border-r border-snow-border flex flex-col bg-snow-sidebar overflow-y-auto select-none divide-y divide-snow-border">
+                        
+                        <!-- 1.1 Tarjeta de Identidad del Operador -->
+                        <div class="p-3 bg-white dark:bg-[#151D2F] space-y-2">
+                            <div class="flex items-center gap-2.5">
+                                <div id="operator-card-avatar" class="w-8 h-8 rounded-xl bg-[#0056B3] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                                    JC
+                                </div>
+                                <div class="overflow-hidden">
+                                    <h3 id="operator-card-name" class="text-xs font-bold text-gray-900 dark:text-white truncate">José Corobo</h3>
+                                    <p id="operator-card-role" class="text-[10px] text-[#0056B3] dark:text-[#38BDF8] font-semibold truncate">Especialista · Acceso y Aprov.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-1.5 pt-1 text-center">
+                                <div class="bg-gray-50 dark:bg-[#1C2438] p-1.5 rounded-lg border border-snow-border">
+                                    <span class="text-[9px] text-snow-muted block">Directos a Mí</span>
+                                    <strong id="operator-directs-count" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 font-mono">0</strong>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-[#1C2438] p-1.5 rounded-lg border border-snow-border">
+                                    <span class="text-[9px] text-snow-muted block">Mis Asignados</span>
+                                    <strong id="operator-claimed-count" class="text-xs font-bold text-snow-blue font-mono">0</strong>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-[#1C2438] p-1.5 rounded-lg border border-snow-border">
+                                    <span class="text-[9px] text-snow-muted block">Respuestas</span>
+                                    <strong id="operator-replies-count" class="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">0</strong>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-[#1C2438] p-1.5 rounded-lg border border-snow-border">
+                                    <span class="text-[9px] text-snow-muted block">Mis Resueltos</span>
+                                    <strong id="operator-resolved-count" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">0</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1.2 Widget Telemetría Entrada / Salida en Vivo -->
+                        <div class="p-3 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-[#131B2E] dark:to-[#171F36] space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-snow-blue animate-pulse"></span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-snow-muted">Telemetría Tickets</span>
+                                </div>
+                                <span id="telemetry-resolution-rate" class="text-[10px] font-mono font-bold text-[#0056B3] dark:text-[#38BDF8]">0.0%</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="p-2 rounded-lg bg-white/80 dark:bg-[#1E293B] border border-blue-100 dark:border-blue-900/50">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[9px] text-snow-muted">Entrada</span>
+                                        <i data-lucide="arrow-down-left" class="w-3 h-3 text-blue-600"></i>
+                                    </div>
+                                    <div class="flex items-baseline gap-1">
+                                        <strong id="telemetry-inbound-today" class="text-xs font-black text-gray-900 dark:text-white font-mono">0</strong>
+                                        <span class="text-[9px] text-snow-muted font-mono">/ <span id="telemetry-inbound-total">0</span></span>
+                                    </div>
+                                </div>
+
+                                <div class="p-2 rounded-lg bg-white/80 dark:bg-[#1E293B] border border-snow-border">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[9px] text-snow-muted">Salida</span>
+                                        <i data-lucide="arrow-up-right" class="w-3 h-3 text-snow-blue"></i>
+                                    </div>
+                                    <div class="flex items-baseline gap-1">
+                                        <strong id="telemetry-outbound-today" class="text-xs font-black text-gray-900 dark:text-white font-mono">0</strong>
+                                        <span class="text-[9px] text-snow-muted font-mono">/ <span id="telemetry-outbound-total">0</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1.3 Departamentos Técnicos Oficiales (feature_control_correos.md) -->
+                        <div class="p-2.5 space-y-2.5 flex-1 overflow-y-auto">
+                            
+                            <!-- Sección: 6 Departamentos Oficiales -->
+                            <div class="space-y-0.5">
+                                <div class="flex items-center justify-between px-2 mb-1">
+                                    <span class="text-[9px] font-bold uppercase tracking-wider text-snow-muted">
+                                        Departamentos Técnicos
+                                    </span>
+                                    <span class="text-[9px] font-mono text-snow-muted font-bold">6 Deptos</span>
+                                </div>
+
+                                <div id="depto-item-0" onclick="selectTechnicalDepartment(0)" class="mail-folder-item mail-folder-active">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-600"></i>
+                                        <span class="font-semibold text-xs">Todos los Deptos</span>
+                                    </div>
+                                    <span id="badge-depto-0" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-950 text-[#0056B3] dark:text-blue-300 font-bold">0</span>
+                                </div>
+
+                                <div id="depto-item-1" onclick="selectTechnicalDepartment(1)" class="mail-folder-item">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i data-lucide="router" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
+                                        <span class="truncate text-xs" title="Redes de Acceso y Aprovisionamiento">Acceso y Aprov.</span>
+                                    </div>
+                                    <span id="badge-depto-1" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">0</span>
+                                </div>
+
+                                <div id="depto-item-2" onclick="selectTechnicalDepartment(2)" class="mail-folder-item">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i data-lucide="wifi" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                                        <span class="truncate text-xs" title="Control de Tráfico e Redes Inalámbricas">Tráfico / Wireless</span>
+                                    </div>
+                                    <span id="badge-depto-2" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">0</span>
+                                </div>
+
+                                <div id="depto-item-3" onclick="selectTechnicalDepartment(3)" class="mail-folder-item">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-500 shrink-0"></i>
+                                        <span class="truncate text-xs" title="Seguridad de Redes">Seguridad</span>
+                                    </div>
+                                    <span id="badge-depto-3" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold">0</span>
+                                </div>
+
+                                <div id="depto-item-4" onclick="selectTechnicalDepartment(4)" class="mail-folder-item">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-purple-500 shrink-0"></i>
+                                        <span class="truncate text-xs" title="Telefonía SIP y VoIP">Telefonía</span>
+                                    </div>
+                                    <span id="badge-depto-4" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">0</span>
+                                </div>
+
+                                <div id="depto-item-5" onclick="selectTechnicalDepartment(5)" class="mail-folder-item">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i data-lucide="network" class="w-3.5 h-3.5 text-cyan-600 shrink-0"></i>
+                                        <span class="truncate text-xs" title="Redes WAN y Enlaces">Redes WAN</span>
+                                    </div>
+                                    <span id="badge-depto-5" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-bold">0</span>
+                                </div>
+
+                                <div id="depto-item-6" onclick="selectTechnicalDepartment(6)" class="mail-folder-item">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <i data-lucide="building-2" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+                                        <span class="truncate text-xs" title="Grandes Clientes y Corporativos">Grandes Clientes</span>
+                                    </div>
+                                    <span id="badge-depto-6" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold">0</span>
+                                </div>
+                            </div>
+
+                            <!-- Sección: Filtros de Flujo / Asignación -->
+                            <div class="space-y-0.5 pt-2 border-t border-snow-border">
+                                <span class="px-2 text-[9px] font-bold uppercase tracking-wider text-snow-muted block mb-1">
+                                    Bandejas y Asignación
+                                </span>
+
+                                <div id="folder-item-inbox" onclick="selectMailFolder('inbox')" class="mail-folder-item">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="inbox" class="w-3.5 h-3.5 text-blue-600"></i>
+                                        <span>Bandeja General</span>
+                                    </div>
+                                    <span id="badge-folder-inbox" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-950 text-[#0056B3] dark:text-blue-300 font-bold">0</span>
+                                </div>
+
+                                <div id="folder-item-directos" onclick="selectMailFolder('directos')" class="mail-folder-item">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="mail-check" class="w-3.5 h-3.5 text-indigo-500"></i>
+                                        <span>Directos a Mí</span>
+                                    </div>
+                                    <span id="badge-folder-directos" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold">0</span>
+                                </div>
+
+                                <div id="folder-item-mis_asignados" onclick="selectMailFolder('mis_asignados')" class="mail-folder-item">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="user-check" class="w-3.5 h-3.5 text-snow-blue"></i>
+                                        <span>Mis Asignados</span>
+                                    </div>
+                                    <span id="badge-folder-mis_asignados" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-snow-subtle text-snow-muted font-bold">0</span>
+                                </div>
+
+                                <div id="folder-item-en_espera" onclick="selectMailFolder('en_espera')" class="mail-folder-item">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i>
+                                        <span>En Espera / Terreno</span>
+                                    </div>
+                                    <span id="badge-folder-en_espera" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold">0</span>
+                                </div>
+
+                                <div id="folder-item-resueltos" onclick="selectMailFolder('resueltos')" class="mail-folder-item">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="archive" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                        <span>Casos Resueltos</span>
+                                    </div>
+                                    <span id="badge-folder-resueltos" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">0</span>
+                                </div>
+
+                                <div id="folder-item-salida" onclick="selectMailFolder('salida')" class="mail-folder-item">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="send" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        <span>Enviados (Salida)</span>
+                                    </div>
+                                    <span id="badge-folder-salida" class="folder-badge text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-snow-subtle text-snow-muted font-bold">0</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA 2: LISTA DE TICKETS POR DEPARTAMENTO Y ESTADO (380px) -->
+                    <div class="w-full md:w-[370px] lg:w-[400px] shrink-0 border-r border-snow-border flex flex-col bg-snow-sidebar overflow-hidden">
+                        
+                        <!-- Top Bar: Titulo de Departamento y Pestañas de Estado -->
+                        <div class="p-2.5 border-b border-snow-border bg-gray-50/70 dark:bg-[#1E1E20] space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="overflow-hidden">
+                                    <h3 id="current-folder-title" class="text-xs font-bold text-gray-900 dark:text-white leading-tight truncate">Todos los Departamentos</h3>
+                                    <span class="text-[10px] text-snow-muted font-medium">
+                                        <strong id="filter-visible-count" class="text-gray-900 dark:text-white font-mono">--</strong> tickets en lista
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-1 overflow-x-auto pb-0.5">
+                                    <button onclick="switchInboxTab('todos')" id="tab-inbox-todos" class="outlook-tab-btn active cursor-pointer whitespace-nowrap">
+                                        Todos
+                                    </button>
+                                    <button onclick="switchInboxTab('pendientes')" id="tab-inbox-pendientes" class="outlook-tab-btn cursor-pointer whitespace-nowrap">
+                                        Pendientes (<span id="badge-tab-pendientes">0</span>)
+                                    </button>
+                                    <button onclick="switchInboxTab('en_proceso')" id="tab-inbox-en_proceso" class="outlook-tab-btn cursor-pointer whitespace-nowrap">
+                                        En Proceso (<span id="badge-tab-proceso">0</span>)
+                                    </button>
+                                    <button onclick="switchInboxTab('prioritarios')" id="tab-inbox-prioritarios" class="outlook-tab-btn cursor-pointer whitespace-nowrap">
+                                        Críticos (<span id="badge-tab-prioritarios">0</span>)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Filtros Selectores: Operador e Impacto/SLA -->
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <select id="filter-tech" onchange="applyInboxFilters()" class="bg-white dark:bg-[#252528] border border-snow-border rounded-lg px-2 py-1 text-[11px] font-semibold text-gray-800 dark:text-gray-200 outline-none">
+                                    <option value="todos">Todos los Operadores</option>
+                                    <option value="sin_asignar">⚠️ Sin Asignar</option>
+                                </select>
+                                <select id="filter-bottleneck" onchange="applyInboxFilters()" class="bg-white dark:bg-[#252528] border border-snow-border rounded-lg px-2 py-1 text-[11px] font-semibold text-gray-800 dark:text-gray-200 outline-none">
+                                    <option value="todos">Todos los Estados</option>
+                                    <option value="pendientes">Pendientes</option>
+                                    <option value="en_proceso">En Proceso</option>
+                                    <option value="pausados">En Pausa (Terreno)</option>
+                                    <option value="estancados">Fuera de SLA</option>
+                                    <option value="criticos">Críticos (P4/P5)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Scrollable Message List Container -->
+                        <div id="outlook-message-list" class="flex-1 overflow-y-auto divide-y divide-snow-border/70 select-none">
+                            <!-- Injected dynamically by dashboard.js -->
+                        </div>
+
+                        <!-- Bottom Worker Status Bar -->
+                        <div class="p-2 border-t border-snow-border bg-gray-50/50 dark:bg-[#1C1C1E] flex items-center justify-between text-[10px] text-snow-muted">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-snow-blue animate-pulse"></span>
+                                <strong id="worker-mode-text" class="text-gray-700 dark:text-gray-300 font-mono">Consola Helpdesk IP</strong>
+                            </span>
+                            <span id="worker-state-text" class="font-medium text-snow-blue">En Línea</span>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA 3: OUTLOOK READING PANE (FICHA TÉCNICA DEL TICKET) -->
+                    <div id="outlook-reading-pane" class="flex-1 flex flex-col bg-white dark:bg-[#1C1C1E] overflow-hidden">
+                        <!-- Injected dynamically by selectOutlookMessage(ticketId) -->
+                    </div>
+
+                </div>
+
+            </div>
+
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- 3. VISTA HISTORIAL Y AUDITORÍA FORENSE                         -->
+            <!-- ============================================================== -->
+            <section id="view-audit" class="space-y-6 hidden">
+                
+                <!-- Encabezado de la Vista de Auditoría con Filtros y Descarga Excel -->
+                <div class="dashboard-chart-card flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20 shrink-0">
+                            <i data-lucide="file-bar-chart-2" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-gray-900 dark:text-white tracking-tight">Supervisión y Auditoría Gerencial</h2>
+                            <p class="text-xs text-snow-muted">Métricas consolidadas de productividad, balance por célula y trazabilidad técnica forense</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Filtro Temporal -->
+                        <div class="flex items-center bg-gray-100 dark:bg-[#242426] p-1 rounded-lg border border-snow-border text-xs">
+                            <button onclick="changeReportRange('all')" id="btn-rep-all" class="px-2.5 py-1 rounded-lg bg-gray-900 text-white font-semibold transition">Todo</button>
+                            <button onclick="changeReportRange('month')" id="btn-rep-month" class="px-2.5 py-1 rounded-lg text-snow-muted hover:text-gray-900 dark:hover:text-white transition">Mes Actual</button>
+                            <button onclick="changeReportRange('7days')" id="btn-rep-7days" class="px-2.5 py-1 rounded-lg text-snow-muted hover:text-gray-900 dark:hover:text-white transition">Últimos 7d</button>
+                            <button onclick="changeReportRange('today')" id="btn-rep-today" class="px-2.5 py-1 rounded-lg text-snow-muted hover:text-gray-900 dark:hover:text-white transition">Hoy</button>
+                        </div>
+
+                        <!-- Filtro de Célula -->
+                        <select id="select-report-area" onchange="changeReportArea(this.value)" class="bg-white dark:bg-[#242426] border border-snow-border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-900 dark:text-white outline-none">
+                            <option value="Todas">Todas las Células</option>
+                            <option value="Acceso">Redes de Acceso (Soporte + Cabecera)</option>
+                            <option value="Soporte">Soporte FTTH</option>
+                            <option value="Cabecera">Cabecera OLT</option>
+                            <option value="Telefonía">Telefonía VoIP</option>
+                        </select>
+
+                        <!-- Botón Descargar Excel (.xlsx) -->
+                        <button onclick="downloadExcelReport()" class="bg-snow-blue hover:bg-snow-accent text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 shadow-xs transition cursor-pointer">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Descargar Excel (.xlsx)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Tarjetas de Métricas Ejecutivas con Alto Contraste (Modo Claro & Modo Oscuro) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    <!-- Card 1: Puntos Totales Acumulados -->
+                    <div class="card-audit-kpi-blue p-5 rounded-snow-card shadow-xs flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-bold tracking-wider uppercase text-blue-900 dark:text-blue-300 block mb-1">
+                                Puntos Totales Acumulados
+                            </span>
+                            <span id="rep-kpi-points" class="text-3xl font-extrabold text-blue-600 dark:text-blue-400 font-mono tracking-tight">
+                                -- pts
+                            </span>
+                        </div>
+                        <span class="text-xs text-blue-800/80 dark:text-blue-300/80 font-medium block mt-2">
+                            Carga total ponderada DERS
+                        </span>
+                    </div>
+
+                    <!-- Card 2: Tickets Resueltos -->
+                    <div class="card-audit-kpi-purple p-5 rounded-snow-card shadow-xs flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-bold tracking-wider uppercase text-purple-900 dark:text-purple-300 block mb-1">
+                                Tickets Resueltos
+                            </span>
+                            <span id="rep-kpi-tasks" class="text-3xl font-extrabold text-purple-600 dark:text-purple-400 font-mono tracking-tight">
+                                --
+                            </span>
+                        </div>
+                        <span class="text-xs text-purple-800/80 dark:text-purple-300/80 font-medium block mt-2">
+                            100% automatizados sin registro manual
+                        </span>
+                    </div>
+
+                    <!-- Card 3: MTTR Promedio Neto -->
+                    <div class="bg-snow-subtle p-5 rounded-snow-card shadow-xs flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-bold tracking-wider uppercase text-snow-blue block mb-1">
+                                MTTR Promedio Neto
+                            </span>
+                            <span id="rep-kpi-mttr" class="text-3xl font-extrabold text-snow-blue font-mono tracking-tight">
+                                -- min
+                            </span>
+                        </div>
+                        <span class="text-xs text-snow-blue/80 dark:text-snow-muted font-medium block mt-2">
+                            Sin penalización por esperas de terreno
+                        </span>
+                    </div>
+
+                    <!-- Card 4: Cumplimiento de SLA -->
+                    <div class="card-audit-kpi-amber p-5 rounded-snow-card shadow-xs flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-bold tracking-wider uppercase text-amber-900 dark:text-amber-300 block mb-1">
+                                Cumplimiento de SLA
+                            </span>
+                            <span id="rep-kpi-sla" class="text-3xl font-extrabold text-amber-600 dark:text-amber-400 font-mono tracking-tight">
+                                --%
+                            </span>
+                        </div>
+                        <span class="text-xs text-amber-800/80 dark:text-amber-300/80 font-medium block mt-2">
+                            Casos resueltos dentro del tiempo meta
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- Tabla 1: Balance Comparativo por Célula -->
+                <div class="dashboard-chart-card space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="scale" class="w-4 h-4 text-snow-blue"></i>
+                            Balance Operativo por Célula (Redes de Acceso y Telefonía)
+                        </h3>
+                        <span class="text-[11px] text-snow-muted font-medium">Equidad de carga entre frentes</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="table-corporate-metrics">
+                            <thead>
+                                <tr>
+                                    <th class="py-2.5 px-3">Célula / Área</th>
+                                    <th class="py-2.5 px-3 text-center">Especialistas</th>
+                                    <th class="py-2.5 px-3 text-right">Tickets</th>
+                                    <th class="py-2.5 px-3 text-right">Puntos Totales</th>
+                                    <th class="py-2.5 px-3 text-center">% Esfuerzo</th>
+                                    <th class="py-2.5 px-3 text-right">MTTR Neto</th>
+                                    <th class="py-2.5 px-3 text-center">Estado de Carga</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-table-areas" class="divide-y divide-snow-border font-medium">
+                                <tr><td colspan="7" class="py-4 text-center text-snow-muted">Cargando métricas de células...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla 2: Ranking de Productividad de Especialistas -->
+                <div class="dashboard-chart-card space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4 text-purple-600"></i>
+                            Rendimiento Individual y Distribución de Puntos por Dificultad (P1 - P5)
+                        </h3>
+                        <span class="text-[11px] text-snow-muted font-medium">12 Especialistas activos en base de datos</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                        <table class="table-corporate-metrics">
+                            <thead>
+                                <tr>
+                                    <th class="py-2.5 px-3">Especialista</th>
+                                    <th class="py-2.5 px-3">Célula</th>
+                                    <th class="py-2.5 px-3 text-right">Tickets</th>
+                                    <th class="py-2.5 px-3 text-right">Puntos</th>
+                                    <th class="py-2.5 px-3 text-center">P1 (1p)</th>
+                                    <th class="py-2.5 px-3 text-center">P2 (2p)</th>
+                                    <th class="py-2.5 px-3 text-center">P3 (3p)</th>
+                                    <th class="py-2.5 px-3 text-center">P4 (5p)</th>
+                                    <th class="py-2.5 px-3 text-center">P5 (8p)</th>
+                                    <th class="py-2.5 px-3 text-right">MTTR</th>
+                                    <th class="py-2.5 px-3 text-center">Semáforo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-table-techs" class="divide-y divide-snow-border">
+                                <tr><td colspan="11" class="py-4 text-center text-snow-muted">Cargando productividad de analistas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla 3: Historial de Tareas Automatizadas (Log Forense) -->
+            <div id="feed-section" class="dashboard-chart-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-sm font-bold" style="color:var(--text);">Historial de Tareas Automatizadas</h2>
+                        <p class="text-xs text-snow-muted">Puntos computados al cerrar tickets de correo</p>
+                    </div>
+                    <span class="text-xs text-snow-blue font-medium flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-snow-blue animate-pulse"></span> Sincronizado
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="table-corporate-metrics">
+                        <thead>
+                            <tr>
+                                <th class="pb-3 px-3">Ticket</th>
+                                <th class="pb-3 px-3">Especialista</th>
+                                <th class="pb-3 px-3">Área</th>
+                                <th class="pb-3 px-3">Tarea Registrada</th>
+                                <th class="pb-3 px-3 text-center">Puntos Ganados</th>
+                                <th class="pb-3 px-3 text-center">Duración Neta</th>
+                                <th class="pb-3 px-3 text-right">Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feed-tbody" class="divide-y divide-snow-border">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla 4: Bitácora Forense de Auditoría y Trazabilidad en Tiempo Real -->
+            <div id="audit-trail-section" class="dashboard-chart-card space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-[#0056B3]"></i>
+                            Bitácora Forense de Auditoría y Trazabilidad Operativa
+                        </h2>
+                        <p class="text-xs text-snow-muted">Registro inmutable de inicio de sesión, tomas de tickets, pausas y resoluciones por especialista</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select id="filter-audit-action" onchange="changeAuditActionFilter(this.value)" class="bg-gray-50 dark:bg-[#252528] border border-snow-border rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200 outline-none">
+                            <option value="TODAS">Todas las Acciones</option>
+                            <option value="INICIO_SESION">Inicios de Sesión</option>
+                            <option value="CAMBIO_PERFIL">Conmutación Perfil</option>
+                            <option value="TOMA_TICKET">Tomas de Ticket</option>
+                            <option value="PAUSA_TICKET">Pausas de Terreno</option>
+                            <option value="CIERRE_TICKET">Resoluciones de Cierre</option>
+                            <option value="INGESTA_CORREO">Ingesta IMAP Real</option>
+                        </select>
+
+                        <button onclick="loadAuditLogs()" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Actualizar Bitácora">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Refrescar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table class="table-corporate-metrics">
+                        <thead>
+                            <tr>
+                                <th class="py-2.5 px-3">Fecha y Hora</th>
+                                <th class="py-2.5 px-3">Especialista</th>
+                                <th class="py-2.5 px-3">Rol / Célula</th>
+                                <th class="py-2.5 px-3">Acción Registrada</th>
+                                <th class="py-2.5 px-3">Entidad / Ticket</th>
+                                <th class="py-2.5 px-3">Detalle Técnico & Evidencia</th>
+                                <th class="py-2.5 px-3 text-right">IP Origen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-tbody" class="divide-y divide-snow-border">
+                            <tr><td colspan="7" class="py-6 text-center text-snow-muted">Cargando eventos de auditoría...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            </section>
+                    <section id="view-assistant" class="space-y-6 hidden">
+                {% include "partials/asistente_comandos.html" %}
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal para Resolver Ticket de Correo (Automatizado) -->
+    <!-- ============================================================== -->
+    <!-- WORKSPACE DE ATENCIÓN DE CORREO / TICKET (CON CRONÓMETRO EN VIVO) -->
+    <!-- ============================================================== -->
+    <div id="modalTicketWorkspace" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-snow-card w-full max-w-4xl max-h-[90vh] flex flex-col border border-snow-border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Top Bar del Ticket -->
+            <div class="px-6 py-4 bg-gray-50 border-b border-snow-border flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span id="ws-ticket-code" class="text-sm font-mono font-bold px-2.5 py-1 rounded-lg bg-white border border-snow-border text-gray-900 shadow-2xs">INC-XXXXX</span>
+                    <span id="ws-ticket-source-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-snow-blue border border-blue-100">Simulador</span>
+                    <span id="ws-ticket-status-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-snow-blue flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-snow-blue animate-pulse"></span> En Atención
+                    </span>
+                    <span id="ws-ticket-sender" class="text-xs text-snow-muted truncate max-w-xs">remitente@inter.com.ve</span>
+                </div>
+
+                <!-- CRONÓMETRO 100% AUTOMÁTICO EN VIVO -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-snow-border shadow-2xs">
+                        <i data-lucide="timer" class="w-4 h-4 text-snow-blue"></i>
+                        <span class="text-xs text-snow-muted font-medium">Tiempo Transcurrido:</span>
+                        <span id="ws-live-timer" class="font-mono font-bold text-sm text-gray-900">00:00:00</span>
+                    </div>
+
+                    <!-- Botón de Pausa (En Espera por Terreno / ARU) -->
+                    <button id="btn-pause-ticket" onclick="togglePauseTicket()" class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1.5 transition">
+                        <i data-lucide="pause-circle" class="w-4 h-4"></i>
+                        <span id="btn-pause-text">Pausar (En Espera)</span>
+                    </button>
+
+                    <button onclick="closeWorkspaceModal()" class="text-snow-muted hover:text-gray-900 ml-2">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cuerpo del Workspace (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-5">
+                
+                <!-- Asunto del Correo -->
+                <div>
+                    <h2 id="ws-ticket-subject" class="text-base font-bold text-gray-900">Asunto de la solicitud de soporte</h2>
+                </div>
+
+                <!-- Alerta Contextual Dinámica (ej. Si es Modo Bridge) -->
+                <div id="ws-bridge-alert" class="hidden p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2.5">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold">POLÍTICA CRÍTICA DE MODO BRIDGE:</span>
+                        <span> Bajo ninguna circunstancia aplicar reaprovisionamiento ni enviar comando REFRESH por Soporte FibraHogar a esta ONT. Verificar la WANMAC del router del cliente directamente en Servidor 815.</span>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de Parámetros Técnicos Extraídos de la Petición -->
+                <div class="bg-gray-50/80 rounded-lg border border-snow-border p-4">
+                    <p class="text-[11px] font-bold text-snow-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <i data-lucide="cpu" class="w-3.5 h-3.5 text-snow-blue"></i>
+                        Parámetros Técnicos Detectados en el Correo
+                    </p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div class="bg-white p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block">Código Abonado</span>
+                            <span id="ws-param-subscriber" class="font-bold text-gray-900 font-mono">--</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block">Serial PON</span>
+                            <span id="ws-param-serial" class="font-bold text-gray-900 font-mono">--</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block">Nodo OLT & Ubicación</span>
+                            <span id="ws-param-node" class="font-bold text-gray-900">--</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block">Slot / PON</span>
+                            <span id="ws-param-slotpon" class="font-bold text-gray-900 font-mono">--</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+                        <div class="bg-white p-2.5 rounded-lg border border-snow-border flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-snow-muted block">Dirección MAC Abonado</span>
+                                <span id="ws-param-mac" class="font-bold text-gray-900 font-mono">--</span>
+                            </div>
+                            <span class="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 font-mono text-gray-600">L2 / L3</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-snow-border flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-snow-muted block">Complejidad Ponderada</span>
+                                <span id="ws-param-points-badge" class="font-bold text-snow-blue">+5 pts (P4)</span>
+                            </div>
+                            <span id="ws-param-taskname" class="text-xs text-gray-700 font-medium">Soporte a Modo Bridge</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuerpo Completo del Correo Solicitante -->
+                <div class="border border-snow-border rounded-lg p-4 bg-white">
+                    <p class="text-[11px] font-bold text-snow-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i data-lucide="mail-open" class="w-3.5 h-3.5 text-snow-blue"></i>
+                        Mensaje Original del Solicitante
+                    </p>
+                    <div id="ws-ticket-body" class="text-xs text-gray-800 leading-relaxed bg-gray-50/50 p-3 rounded-lg border border-snow-border/60">
+                        Cargando cuerpo del correo...
+                    </div>
+                </div>
+
+                <!-- Formulario de Respuesta y Cierre -->
+                <form id="formCompleteTicketAutomated" onsubmit="submitCompleteAutomated(event)" class="space-y-3 pt-2">
+                    <div>
+                        <label class="block font-semibold text-gray-800 text-xs mb-1">
+                            Diagnóstico / Comandos Aplicados / Respuesta al Correo:
+                        </label>
+                        <textarea id="ws_resolution_notes" required rows="2" placeholder="Ej. Se validó atenuación óptica en -19.2 dBm. Demonio OLT desatascado en Slot 3 PON 4. ONT pasó a Whitelist y MAC en VERDE." class="w-full bg-gray-50 border border-snow-border rounded-lg p-3 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-snow-blue"></textarea>
+                    </div>
+
+                    <div class="bg-snow-subtle border border-snow-border rounded-lg p-3 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-snow-blue"></i>
+                            <span class="text-snow-blue font-medium">El tiempo de atención y los puntos se calcularán de manera 100% automática al enviar.</span>
+                        </div>
+                        <button type="submit" class="px-5 py-2.5 rounded-lg bg-snow-blue hover:bg-snow-accent text-white font-semibold transition shadow-xs flex items-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>Resolver y Computar Puntos</span>
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- ============================================================== -->
+    <!-- MODAL: PROBADOR Y ANALIZADOR DE CASOS REALES (ALGORITMO NLP) -->
+    <!-- ============================================================== -->
+    <div id="modalParserTester" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-snow-card w-full max-w-3xl max-h-[90vh] flex flex-col border border-snow-border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <div class="px-6 py-4 bg-gray-50 border-b border-snow-border flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-snow-blue flex items-center justify-center font-bold">
+                        <i data-lucide="cpu" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-sm">Algoritmo de Extracción y Distribución de Datos</h3>
+                        <p class="text-[11px] text-snow-muted">Pega el texto libre de cualquier correo y observa la distribución en casillas de texto</p>
+                    </div>
+                </div>
+                <button onclick="closeTesterModal()" class="text-snow-muted hover:text-gray-900">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                
+                <!-- Botones de Ejemplos Rápidos -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-snow-muted font-medium">Casos predefinidos:</span>
+                    <button onclick="loadExampleText(1)" class="text-xs px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">Discovery FiberHome</button>
+                    <button onclick="loadExampleText(2)" class="text-xs px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">Bridge IP Certificada (Alerta)</button>
+                    <button onclick="loadExampleText(3)" class="text-xs px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">Alerta Troncal 20G Cabecera</button>
+                </div>
+
+                <!-- Textarea para pegar correo real -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-800 mb-1">Texto Libre del Correo (Copia y Pega aquí):</label>
+                    <textarea id="tester_raw_text" rows="5" placeholder="Ej: Buenas tardes soporte, favor apoyo con el siguiente caso: Abonado: 9021882, Serial: FHTT09182312, OLT-CHAC-01 slot 3 pon 4..." class="w-full bg-gray-50 border border-snow-border rounded-lg p-3 text-xs font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-snow-blue"></textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick="executeParserAnalysis()" class="px-4 py-2 rounded-lg bg-snow-blue hover:bg-blue-600 text-white font-semibold text-xs flex items-center gap-1.5 transition shadow-xs">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>Ejecutar Algoritmo de Extracción</span>
+                    </button>
+                </div>
+
+                <!-- RESULTADOS DE LA EXTRACCIÓN (DISTRIBUCIÓN EN CASILLAS) -->
+                <div id="tester-results-container" class="hidden space-y-3 pt-3 border-t border-snow-border">
+                    <p class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-snow-blue"></i>
+                        Parámetros Técnicos Identificados y Distribuidos:
+                    </p>
+
+                    <!-- Alerta de Modo Bridge si se detectó -->
+                    <div id="tester-bridge-alert" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                        <span><strong>REGLA DE SEGURIDAD OPERACIONAL:</strong> ONT en Modo Bridge con IP Certificada. PROHIBIDO enviar comandos de Refresh o Reaprovisionar.</span>
+                    </div>
+
+                    <!-- Casillas Distribuidas Fila 1 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] text-snow-muted block font-semibold uppercase">Abonado (10 Dígitos)</span>
+                                <span id="res_permisor_badge" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-snow-blue hidden">P-10</span>
+                            </div>
+                            <input type="text" id="res_subscriber" readonly class="w-full bg-transparent font-mono font-bold text-gray-900 text-xs">
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block font-semibold uppercase">Serial PON / Vendor</span>
+                            <input type="text" id="res_serial" readonly class="w-full bg-transparent font-mono font-bold text-gray-900 text-xs">
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block font-semibold uppercase">Nodo OLT</span>
+                            <input type="text" id="res_node" readonly class="w-full bg-transparent font-bold text-gray-900 text-xs">
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block font-semibold uppercase">Slot / PON / Ct.Onu</span>
+                            <input type="text" id="res_slotpon" readonly class="w-full bg-transparent font-mono font-bold text-gray-900 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Casillas Distribuidas Fila 2 -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block font-semibold uppercase">Dirección MAC</span>
+                            <input type="text" id="res_mac" readonly class="w-full bg-transparent font-mono font-bold text-gray-900 text-xs">
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block font-semibold uppercase">Potencia Óptica (dBm)</span>
+                            <input type="text" id="res_power" readonly class="w-full bg-transparent font-bold text-snow-blue text-xs">
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-snow-border">
+                            <span class="text-[10px] text-snow-muted block font-semibold uppercase">Ponderación Asignada</span>
+                            <input type="text" id="res_points" readonly class="w-full bg-transparent font-bold text-snow-blue text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Fila 3: Tarea Sugerida y Botón de Conversión a Ticket -->
+                    <div class="bg-blue-50/60 p-3 rounded-lg border border-blue-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-snow-muted">Área y Tarea Clasificada:</span>
+                            <span id="res_taskname" class="font-bold text-gray-900">--</span>
+                        </div>
+                        <button onclick="convertAnalysisToTicket()" class="px-4 py-2 rounded-lg bg-snow-blue hover:bg-snow-accent text-white font-semibold flex items-center justify-center gap-1.5 transition shadow-xs">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            <span>Crear Ticket en Bandeja e Iniciar</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    
+    <!-- ============================================================== -->
+    <!-- MODAL: CONFIGURACIÓN DEL WORKER DE CORREO (IMAP / SIMULADOR) -->
+    <!-- ============================================================== -->
+    <div id="modalMailWorkerConfig" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-snow-card w-full max-w-lg flex flex-col border border-snow-border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <div class="px-6 py-4 bg-gray-50 border-b border-snow-border flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-snow-blue text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+                        <i data-lucide="mail-search" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-sm">Configuración del Ingestor de Correo</h3>
+                        <p class="text-[11px] text-snow-muted">Módulo 6: Worker en Segundo Plano (IMAP SSL / Simulador)</p>
+                    </div>
+                </div>
+                <button onclick="closeMailConfigModal()" class="text-snow-muted hover:text-gray-900 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="formMailWorkerConfig" onsubmit="saveMailWorkerConfig(event)" class="p-6 space-y-4 text-xs">
+                
+                <!-- Selector de Modo -->
+                <div>
+                    <label class="block font-semibold text-gray-800 mb-1">Modo de Operación:</label>
+                    <select id="cfg_mode" onchange="toggleImapFieldsVisibility()" class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 font-semibold focus:ring-2 focus:ring-snow-blue outline-none">
+                        <option value="SIMULATOR">Modo Simulador de Laboratorio (Recomendado sin Internet)</option>
+                        <option value="REAL_IMAP">Buzón IMAP Real SSL (Puerto 993)</option>
+                    </select>
+                </div>
+
+                <!-- Intervalo de Consulta -->
+                <div>
+                    <label class="block font-semibold text-gray-800 mb-1">Intervalo de Verificación Automática (segundos):</label>
+                    <input type="number" id="cfg_interval" min="15" max="3600" value="60" required class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 font-mono focus:ring-2 focus:ring-snow-blue outline-none">
+                    <span class="text-[10px] text-snow-muted mt-0.5 block">Frecuencia de escaneo en segundo plano (Recomendado: 60s).</span>
+                </div>
+
+                <!-- Campos de Conexión IMAP Real (visibles u ocultos según modo) -->
+                <div id="cfg_imap_fields" class="space-y-3 pt-2 border-t border-snow-border">
+                    <p class="font-bold text-gray-900 uppercase tracking-wider text-[10px] text-snow-muted flex items-center gap-1.5">
+                        <i data-lucide="server" class="w-3.5 h-3.5 text-snow-blue"></i>
+                        Credenciales del Buzón IMAP
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="block font-medium text-gray-700 mb-1">Servidor IMAP Host:</label>
+                            <input type="text" id="cfg_imap_server" placeholder="imap.gmail.com" class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 font-mono focus:ring-2 focus:ring-snow-blue outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-gray-700 mb-1">Puerto SSL:</label>
+                            <input type="number" id="cfg_imap_port" placeholder="993" value="993" class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 font-mono focus:ring-2 focus:ring-snow-blue outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Carpeta de Correo:</label>
+                        <input type="text" id="cfg_imap_mailbox" placeholder="INBOX" value="INBOX" class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 font-mono focus:ring-2 focus:ring-snow-blue outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Usuario / Dirección de Correo:</label>
+                        <input type="text" id="cfg_imap_user" placeholder="ejemplo@inter.com.ve" class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 focus:ring-2 focus:ring-snow-blue outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Contraseña de Aplicación / Token:</label>
+                        <input type="password" id="cfg_imap_password" placeholder="••••••••••••••••" class="w-full bg-gray-50 border border-snow-border rounded-lg p-2.5 text-xs text-gray-900 font-mono focus:ring-2 focus:ring-snow-blue outline-none">
+                        <span class="text-[10px] text-snow-muted mt-0.5 block">Dejar en blanco para mantener la contraseña actual.</span>
+                    </div>
+                </div>
+
+                <!-- Nota Informativa -->
+                <div class="p-3 bg-blue-50/60 border border-blue-100 rounded-lg text-[11px] text-blue-900 flex items-start gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-snow-blue shrink-0 mt-0.5"></i>
+                    <span>En <strong>Modo Simulador</strong>, el worker genera periódicamente casos reales de soporte FTTH y cabecera con validación de nomenclatura DERS, sin requerir acceso a internet.</span>
+                </div>
+
+                <!-- Banner de Diagnóstico en Tiempo Real -->
+                <div id="imap-test-feedback" class="hidden p-3 rounded-lg text-xs font-medium"></div>
+
+                <!-- Footer Acciones -->
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-snow-border">
+                    <a href="/docs/CONEXION_OUTLOOK_IMAP.md" target="_blank" class="text-[11px] text-snow-blue hover:underline font-semibold flex items-center gap-1">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                        <span>Guía Outlook IMAP</span>
+                    </a>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeMailConfigModal()" class="px-3.5 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition cursor-pointer">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="testMailConnection()" id="btn-test-imap" class="px-3.5 py-2 rounded-lg bg-snow-blue hover:bg-snow-accent text-white font-semibold flex items-center gap-1.5 shadow-xs transition cursor-pointer" title="Validar parámetros SSL/TLS sin guardar">
+                            <i data-lucide="activity" class="w-4 h-4"></i>
+                            <span>Probar Conexión</span>
+                        </button>
+                        <button type="submit" class="px-3.5 py-2 rounded-lg bg-snow-blue hover:bg-blue-600 text-white font-semibold flex items-center gap-1.5 shadow-xs transition cursor-pointer">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>Guardar Parámetros</span>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Dashboard Controller Script -->
+    <script src="/static/js/dashboard.js?v=4.5"></script>
+</body>
+</html>
+
+
+
+
+
+
+
