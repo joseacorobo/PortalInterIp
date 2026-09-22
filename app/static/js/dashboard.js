@@ -3017,6 +3017,7 @@ async function loadCurrentUserProfile() {
         if (res.ok) {
             const user = await res.json();
             window.currentUser = user;
+            window._currentUser = user;
             
             // Sidebar Profile
             const nameEl = document.getElementById("sidebar-user-name");
@@ -3290,8 +3291,8 @@ function renderTriageRow(t) {
                 ${safeSubject}
             </div>
             <div class="text-[11px] text-[#64748b] dark:text-slate-400 truncate flex items-center gap-1 mt-0.5" title="${safeSender}">
-                <i data-lucide="mail" class="w-3 h-3 text-slate-400 shrink-0"></i>
-                <span class="truncate">${safeSender}</span>
+                <i data-lucide="user" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                <span class="truncate"><span class="font-medium text-slate-600 dark:text-slate-300">Solicitante:</span> ${safeSender}</span>
             </div>
         </td>
         <td class="py-3 px-3.5 whitespace-nowrap">
@@ -3339,18 +3340,23 @@ function renderTriageRow(t) {
 
 function checkCoordinatorRoleAndInitTriage(user) {
     const triagePanel = document.getElementById("coordinator-triage-panel");
-    if (!triagePanel) return;
+    const tabBtnCoordinacion = document.getElementById("tab-btn-coordinacion");
+    const navViewCoordinacion = document.getElementById("nav-view-coordinacion");
 
-    const isCoordinator = user && (user.role === 'COORDINADOR');
+    const isCoordinator = user && (user.role === 'COORDINADOR' || user.role === 'ADMINISTRADOR');
     if (isCoordinator) {
-        triagePanel.classList.remove("hidden");
+        if (triagePanel) triagePanel.classList.remove("hidden");
+        if (tabBtnCoordinacion) tabBtnCoordinacion.classList.remove("hidden");
+        if (navViewCoordinacion) navViewCoordinacion.classList.remove("hidden");
         const areaBadge = document.getElementById("triage-area-badge");
         if (areaBadge && user.area) {
             areaBadge.textContent = "Área: " + user.area;
         }
         loadCoordinatorTriage();
     } else {
-        triagePanel.classList.add("hidden");
+        if (triagePanel) triagePanel.classList.add("hidden");
+        if (tabBtnCoordinacion) tabBtnCoordinacion.classList.add("hidden");
+        if (navViewCoordinacion) navViewCoordinacion.classList.add("hidden");
     }
 }
 
@@ -3366,7 +3372,7 @@ async function loadCoordinatorTriage() {
     if (!panel || !tbody) return;
 
     const user = window.currentUser;
-    if (!user || user.role !== 'COORDINADOR') {
+    if (!user || (user.role !== 'COORDINADOR' && user.role !== 'ADMINISTRADOR')) {
         panel.classList.add("hidden");
         return;
     }
@@ -3662,6 +3668,7 @@ function switchDashboardTab(tabName) {
     const tabOperativa = document.getElementById('tab-operativa');
     const tabRendimiento = document.getElementById('tab-rendimiento');
     const tabAuditoria = document.getElementById('tab-auditoria');
+    const tabCoordinacion = document.getElementById('tab-coordinacion');
     const viewAssistant = document.getElementById('view-assistant');
 
     if (tabOperativa) {
@@ -3691,6 +3698,15 @@ function switchDashboardTab(tabName) {
             tabAuditoria.style.display = 'none';
         }
     }
+    if (tabCoordinacion) {
+        if (tabName === 'coordinacion') {
+            tabCoordinacion.classList.remove('hidden');
+            tabCoordinacion.style.display = 'block';
+        } else {
+            tabCoordinacion.classList.add('hidden');
+            tabCoordinacion.style.display = 'none';
+        }
+    }
     if (viewAssistant) {
         if (tabName === 'assistant') {
             viewAssistant.classList.remove('hidden');
@@ -3705,11 +3721,13 @@ function switchDashboardTab(tabName) {
     const tabBtnOperativa = document.getElementById('tab-btn-operativa');
     const tabBtnRendimiento = document.getElementById('tab-btn-rendimiento');
     const tabBtnAuditoria = document.getElementById('tab-btn-auditoria');
+    const tabBtnCoordinacion = document.getElementById('tab-btn-coordinacion');
 
     [
         { name: 'operativa', el: tabBtnOperativa },
         { name: 'rendimiento', el: tabBtnRendimiento },
-        { name: 'auditoria', el: tabBtnAuditoria }
+        { name: 'auditoria', el: tabBtnAuditoria },
+        { name: 'coordinacion', el: tabBtnCoordinacion }
     ].forEach(t => {
         if (!t.el) return;
         t.el.classList.remove('bg-white', 'text-[#1C58A8]', 'shadow-xs', 'font-bold', 'border', 'border-[#E4E9F3]', 'text-[#5B6B89]', 'hover:text-[#101828]', 'font-semibold');
@@ -3724,10 +3742,12 @@ function switchDashboardTab(tabName) {
     const btnOperativa = document.getElementById('nav-view-operativa');
     const btnRendimiento = document.getElementById('nav-view-rendimiento');
     const btnAuditoria = document.getElementById('nav-view-auditoria');
+    const btnCoordinacion = document.getElementById('nav-view-coordinacion');
 
     if (btnOperativa) btnOperativa.classList.toggle('active', tabName === 'operativa');
     if (btnRendimiento) btnRendimiento.classList.toggle('active', tabName === 'rendimiento');
     if (btnAuditoria) btnAuditoria.classList.toggle('active', tabName === 'auditoria');
+    if (btnCoordinacion) btnCoordinacion.classList.toggle('active', tabName === 'coordinacion');
 
     // Actualizar breadcrumb si existe
     const bcView = document.getElementById('breadcrumb-view-name');
@@ -3736,6 +3756,7 @@ function switchDashboardTab(tabName) {
         else if (tabName === 'rendimiento') bcView.innerText = 'Rendimiento del Turno';
         else if (tabName === 'auditoria') bcView.innerText = 'Auditoría Forense';
         else if (tabName === 'assistant') bcView.innerText = 'Asistente CLI';
+        else if (tabName === 'coordinacion') bcView.innerText = 'Mesa de Coordinación';
     }
 
     // Acciones de carga y render por pestaña
@@ -3745,7 +3766,7 @@ function switchDashboardTab(tabName) {
     } else if (tabName === 'operativa') {
         if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
         if (typeof loadFeed === 'function') loadFeed();
-        if (window.currentUser && window.currentUser.role === 'COORDINADOR' && typeof loadCoordinatorTriage === 'function') {
+        if (window.currentUser && (window.currentUser.role === 'COORDINADOR' || window.currentUser.role === 'ADMINISTRADOR') && typeof loadCoordinatorTriage === 'function') {
             loadCoordinatorTriage();
         }
     } else if (tabName === 'rendimiento') {
@@ -3753,6 +3774,9 @@ function switchDashboardTab(tabName) {
         if (window.chartTechnicians && typeof window.chartTechnicians.resize === 'function') window.chartTechnicians.resize();
         if (window.chartWeights && typeof window.chartWeights.resize === 'function') window.chartWeights.resize();
         if (typeof loadDashboardData === 'function') loadDashboardData();
+    } else if (tabName === 'coordinacion') {
+        if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
+        if (typeof loadPendingVerification === 'function') loadPendingVerification();
     }
 
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -3768,6 +3792,8 @@ function switchDashboardView(viewId) {
         switchDashboardTab('rendimiento');
     } else if (viewId === 'audit' || viewId === 'auditoria' || viewId === 'reports') {
         switchDashboardTab('auditoria');
+    } else if (viewId === 'coordinacion') {
+        switchDashboardTab('coordinacion');
     } else if (viewId === 'assistant') {
         switchDashboardTab('assistant');
     } else {

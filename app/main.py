@@ -118,10 +118,10 @@ def normalize_area_name(area: Optional[str]) -> Optional[str]:
 
 def resolve_coordinator_area(area: Optional[str] = None, request: Request = None) -> Tuple[Optional[str], Optional[dict]]:
     """
-    Obtiene el área objetivo del coordinador:
+    Obtiene el área objetivo del coordinador y su departamento_id:
     1. Si se pasa `area` como parámetro, se normaliza y se usa.
     2. Si no, se extrae el usuario de la sesión (cookie auth_user_id, token Bearer o encabezado X-Area).
-    3. Devuelve (area_normalizada, dict_usuario)
+    3. Devuelve (area_normalizada, dict_usuario) — dict_usuario incluye departamento_id.
     """
     user = None
     user_id = None
@@ -140,7 +140,7 @@ def resolve_coordinator_area(area: Optional[str] = None, request: Request = None
             else:
                 conn = get_db()
                 cur = conn.cursor()
-                cur.execute("SELECT id, name, area, role, email FROM users WHERE email = ? OR name = ?", (token, token))
+                cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE email = ? OR name = ?", (token, token))
                 row = cur.fetchone()
                 conn.close()
                 if row:
@@ -154,7 +154,7 @@ def resolve_coordinator_area(area: Optional[str] = None, request: Request = None
     if user_id and not user:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT id, name, area, role, email FROM users WHERE id = ?", (user_id,))
+        cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE id = ?", (user_id,))
         row = cur.fetchone()
         conn.close()
         if row:
@@ -228,6 +228,7 @@ def get_kpis(area: str = "Todas"):
         SUM(CASE WHEN status = 'PENDIENTE' THEN 1 ELSE 0 END) as pending_cnt,
         SUM(CASE WHEN status = 'EN PROGRESO' THEN 1 ELSE 0 END) as progress_cnt,
         SUM(CASE WHEN status = 'EN ESPERA' THEN 1 ELSE 0 END) as onhold_cnt,
+        SUM(CASE WHEN status = 'POR_VERIFICAR' THEN 1 ELSE 0 END) as por_verificar_cnt,
         COUNT(*) as total_inbox
     FROM email_tickets et
     WHERE {where_tickets}
@@ -236,7 +237,8 @@ def get_kpis(area: str = "Todas"):
     pending_count = t_row[0] or 0
     in_progress_count = t_row[1] or 0
     on_hold_count = t_row[2] or 0
-    total_active_queue = pending_count + in_progress_count + on_hold_count
+    por_verificar_count = t_row[3] or 0
+    total_active_queue = pending_count + in_progress_count + on_hold_count + por_verificar_count
 
     # 2. Casos críticos sin asignar (P4/P5, Bridge, OLT en estado PENDIENTE)
     cur.execute(f"""
@@ -289,6 +291,7 @@ def get_kpis(area: str = "Todas"):
         "in_progress_count": in_progress_count,
         "on_hold_count": on_hold_count,
         "total_active_queue": total_active_queue,
+        "por_verificar_count": por_verificar_count,
         "unassigned_critical_count": unassigned_critical_count,
         "avg_first_response": avg_first_response,
         "sla_compliance": sla_compliance
@@ -475,12 +478,14 @@ def get_tickets_inbox(area: str = "Todas", folder: Optional[str] = None, depto_i
             params.extend([user_id, user_id])
         elif f_lower == "pendientes":
             where_clause += " AND et.status = 'PENDIENTE'"
+        elif f_lower == "por_verificar":
+            where_clause += " AND et.status = 'POR_VERIFICAR'"
         elif f_lower == "en_espera":
-            where_clause += " AND et.status = 'EN ESPERA'"
+            where_clause += " AND et.status IN ('EN ESPERA', 'POR_VERIFICAR')"
         elif f_lower == "resueltos":
             where_clause += " AND et.status = 'COMPLETADO'"
         elif f_lower == "inbox":
-            where_clause += " AND et.status != 'COMPLETADO'"
+            where_clause += " AND et.status NOT IN ('COMPLETADO')"
         elif f_lower == "aprovisionamiento":
             where_clause += " AND (et.folder = 'APROVISIONAMIENTO' OR et.subject LIKE '%Discovery%' OR et.subject LIKE '%Whitelist%')"
         elif f_lower == "demonios_olt":
@@ -705,25 +710,133 @@ def move_ticket_to_folder(ticket_id: int, payload: MoveFolderPayload, request: R
 # (Definido antes de /api/tickets/{ticket_id} para evitar colisión de ruta)
 # =============================================================
 
+def get_authenticated_coordinator(request: Request = None, user_id_param: Optional[int] = None, explicit_depto_id: Optional[int] = None) -> Tuple[Optional[dict], Optional[int]]:
+    """
+    Obtiene el usuario autenticado (asumiendo rol de Coordinador/Admin) y su departamento_id.
+    Prioridad:
+    1. user_id_param explícito
+    2. Header X-User-Id
+    3. Header Authorization: Bearer <user_id_o_email>
+    4. Cookie auth_user_id
+    5. Query param user_id
+    6. Fallback: Primer usuario con rol COORDINADOR activo
+    """
+    user = None
+    user_id = user_id_param
+
+    if request:
+        if not user_id:
+            x_uid = request.headers.get("X-User-Id")
+            if x_uid and x_uid.isdigit():
+                user_id = int(x_uid)
+        if not user_id:
+            auth_hdr = request.headers.get("Authorization")
+            if auth_hdr and auth_hdr.startswith("Bearer "):
+                tok = auth_hdr.split("Bearer ")[1].strip()
+                if tok.isdigit():
+                    user_id = int(tok)
+                else:
+                    conn = get_db()
+                    cur = conn.cursor()
+                    cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE email = ? OR name = ?", (tok, tok))
+                    r = cur.fetchone()
+                    conn.close()
+                    if r:
+                        user = dict(r)
+                        user_id = user["id"]
+        if not user_id:
+            c_cookie = request.cookies.get("auth_user_id")
+            if c_cookie and c_cookie.isdigit():
+                user_id = int(c_cookie)
+        if not user_id and hasattr(request, "query_params"):
+            q_uid = request.query_params.get("user_id")
+            if q_uid and q_uid.isdigit():
+                user_id = int(q_uid)
+
+    if user_id and not user:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE id = ?", (user_id,))
+        r = cur.fetchone()
+        conn.close()
+        if r:
+            user = dict(r)
+
+    # Fallback si no hay sesión: seleccionar el primer coordinador activo
+    if not user:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1")
+        r = cur.fetchone()
+        conn.close()
+        if r:
+            user = dict(r)
+
+    # Resolver departamento_id
+    depto_id = None
+    if user:
+        depto_id = user.get("departamento_id")
+        user_role = (user.get("role") or "").upper()
+        if user_role == "ADMINISTRADOR" and explicit_depto_id:
+            depto_id = explicit_depto_id
+    elif explicit_depto_id:
+        depto_id = explicit_depto_id
+
+    # Si aún no hay departamento_id pero hay área en el usuario, buscar en tabla departamentos
+    if not depto_id and user and user.get("area"):
+        conn = get_db()
+        cur = conn.cursor()
+        norm_area = normalize_area_name(user.get("area"))
+        cur.execute("SELECT id FROM departamentos WHERE nombre = ? OR codigo = ? LIMIT 1", (norm_area, norm_area))
+        r = cur.fetchone()
+        conn.close()
+        if r:
+            depto_id = r[0]
+
+    return user, depto_id
+
+
 @app.get("/api/tickets/unassigned")
-def get_unassigned_tickets(area: Optional[str] = None, request: Request = None):
+def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional[str] = None, request: Request = None):
     """
-    Retorna únicamente los tickets en estado 'Pendiente' que pertenezcan al área
-    del coordinador logueado (recibida como parámetro query o extraída del token/cookie de sesión).
+    Retorna ÚNICAMENTE los tickets de la tabla email_tickets donde departamento_id coincida
+    con el del coordinador autenticado y el status sea 'PENDIENTE'.
+    Utiliza claves foráneas relacionales (departamento_id), NO el campo de texto 'area'.
     """
-    target_area, user = resolve_coordinator_area(area, request)
-    if not target_area or target_area == "Todas":
+    user, coordinator_depto_id = get_authenticated_coordinator(request, explicit_depto_id=departamento_id)
+
+    # Si se especificó departamento_id por query y el usuario es ADMIN o coincide, usarlo
+    if departamento_id:
+        if user and user.get("role", "").upper() == "ADMINISTRADOR":
+            coordinator_depto_id = departamento_id
+        elif coordinator_depto_id and coordinator_depto_id != departamento_id:
+            return JSONResponse(
+                status_code=403,
+                content={"error": f"Acceso denegado: El coordinador pertenece al departamento {coordinator_depto_id}, no al departamento {departamento_id}."}
+            )
+
+    # Fallback por parámetro 'area' si vino como string
+    if not coordinator_depto_id and area and area != "Todas":
+        conn_tmp = get_db()
+        cur_tmp = conn_tmp.cursor()
+        norm_a = normalize_area_name(area)
+        cur_tmp.execute("SELECT id FROM departamentos WHERE nombre = ? OR codigo = ? LIMIT 1", (norm_a, norm_a))
+        d_row = cur_tmp.fetchone()
+        conn_tmp.close()
+        if d_row:
+            coordinator_depto_id = d_row[0]
+
+    if not coordinator_depto_id:
         return JSONResponse(
             status_code=400,
-            content={"error": "Debe especificar el área del coordinador o contar con una sesión activa con área técnica asignada."}
+            content={"error": "No se pudo determinar el departamento del coordinador. Inicie sesión con un usuario que tenga departamento_id asignado en su perfil."}
         )
 
     conn = get_db()
     cur = conn.cursor()
 
-    where_clause, _ = parse_area_filter(target_area, "et")
-
-    cur.execute(f"""
+    # FILTRADO ESTRICTO POR CLAVE FORÁNEA: departamento_id y status = 'PENDIENTE'
+    cur.execute("""
     SELECT et.id, et.ticket_code, et.sender_email, et.subject, et.full_body, et.area,
            et.departamento_id, COALESCE(d.nombre, et.area) as departamento_nombre,
            COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo,
@@ -736,14 +849,19 @@ def get_unassigned_tickets(area: Optional[str] = None, request: Request = None):
     FROM email_tickets et
     LEFT JOIN departamentos d ON et.departamento_id = d.id
     LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
-    WHERE (UPPER(et.status) = 'PENDIENTE' OR et.status = 'Pendiente')
-      AND et.operador_id IS NULL
-      AND et.claimed_by_user_id IS NULL
-      AND {where_clause}
+    WHERE et.departamento_id = ?
+      AND UPPER(et.status) = 'PENDIENTE'
     ORDER BY et.created_at DESC
-    """)
+    """, (coordinator_depto_id,))
 
-    tickets = [dict(r) for r in cur.fetchall()]
+    rows = cur.fetchall()
+    tickets = []
+    for r in rows:
+        t = dict(r)
+        pts = t.get("suggested_points") or 1
+        t["priority"] = "P5" if pts >= 8 else "P4" if pts >= 5 else "P3" if pts >= 3 else "P2" if pts >= 2 else "P1"
+        tickets.append(t)
+
     conn.close()
     return tickets
 
@@ -831,62 +949,77 @@ class AssignTicketPayload(BaseModel):
 
 
 @app.get("/api/operators/availability")
-def get_operators_availability(area: Optional[str] = None, request: Request = None):
+def get_operators_availability(departamento_id: Optional[int] = None, area: Optional[str] = None, request: Request = None):
     """
-    Retorna los operadores del área específica del coordinador, ordenados de menor
-    a mayor carga de trabajo (puntos activos en tickets en atención).
+    Retorna la lista de usuarios de la tabla users donde su role sea 'Especialista' (u 'Operador')
+    y su departamento_id coincida con el del coordinador autenticado.
+    Calcula dinámicamente sus puntos activos actuales (active_points / puntos_activos) a partir de
+    los tickets en estado 'EN PROGRESO' o 'EN ESPERA'.
     """
-    target_area, user = resolve_coordinator_area(area, request)
-    if not target_area or target_area == "Todas":
+    user, coordinator_depto_id = get_authenticated_coordinator(request, explicit_depto_id=departamento_id)
+
+    if departamento_id and user and user.get("role", "").upper() == "ADMINISTRADOR":
+        coordinator_depto_id = departamento_id
+
+    # Fallback por parámetro 'area' si vino como string
+    if not coordinator_depto_id and area and area != "Todas":
+        conn_tmp = get_db()
+        cur_tmp = conn_tmp.cursor()
+        norm_a = normalize_area_name(area)
+        cur_tmp.execute("SELECT id FROM departamentos WHERE nombre = ? OR codigo = ? LIMIT 1", (norm_a, norm_a))
+        d_row = cur_tmp.fetchone()
+        conn_tmp.close()
+        if d_row:
+            coordinator_depto_id = d_row[0]
+
+    if not coordinator_depto_id:
         return JSONResponse(
             status_code=400,
-            content={"error": "Debe especificar el área del coordinador o contar con una sesión activa con área técnica asignada."}
+            content={"error": "No se pudo determinar el departamento del coordinador. Inicie sesión con un usuario con departamento_id asignado."}
         )
 
     conn = get_db()
     cur = conn.cursor()
 
-    where_user_area, _ = parse_area_filter(target_area, "u")
-
-    # Consultar operadores activos del área (excluyendo administradores y coordinadores de la lista asignable)
-    cur.execute(f"""
+    # FILTRADO: role 'ESPECIALISTA' u 'OPERADOR' y departamento_id del coordinador
+    cur.execute("""
     SELECT u.id, u.name, u.email, u.role, u.area, u.avatar, u.shift, u.status, u.departamento_id,
            COALESCE(d.nombre, u.area) as departamento_nombre,
            COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo
     FROM users u
     LEFT JOIN departamentos d ON u.departamento_id = d.id
-    WHERE u.status = 'Activo'
-      AND (u.role = 'ESPECIALISTA' OR u.role NOT IN ('ADMINISTRADOR', 'COORDINADOR'))
-      AND {where_user_area}
+    WHERE u.departamento_id = ?
+      AND (UPPER(u.role) IN ('ESPECIALISTA', 'OPERADOR') OR UPPER(u.role) NOT IN ('ADMINISTRADOR', 'COORDINADOR'))
+      AND u.status = 'Activo'
     ORDER BY u.name ASC
-    """)
-    ops = [dict(r) for r in cur.fetchall()]
+    """, (coordinator_depto_id,))
 
-    if not ops:
-        # Fallback amplio si ningún usuario tiene rol 'ESPECIALISTA' explícito
-        cur.execute(f"""
+    operators = [dict(r) for r in cur.fetchall()]
+
+    # Fallback: si no hay con rol estricto, buscar todos los activos no-administradores del departamento
+    if not operators:
+        cur.execute("""
         SELECT u.id, u.name, u.email, u.role, u.area, u.avatar, u.shift, u.status, u.departamento_id,
                COALESCE(d.nombre, u.area) as departamento_nombre,
                COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo
         FROM users u
         LEFT JOIN departamentos d ON u.departamento_id = d.id
-        WHERE u.status = 'Activo'
-          AND u.role != 'ADMINISTRADOR'
-          AND {where_user_area}
+        WHERE u.departamento_id = ?
+          AND UPPER(u.role) != 'ADMINISTRADOR'
+          AND u.status = 'Activo'
         ORDER BY u.name ASC
-        """)
-        ops = [dict(r) for r in cur.fetchall()]
+        """, (coordinator_depto_id,))
+        operators = [dict(r) for r in cur.fetchall()]
 
-    # Calcular para cada operador sus puntos activos acumulados y cantidad de tickets en curso
     result = []
-    for op in ops:
+    for op in operators:
         op_id = op["id"]
         cur.execute("""
         SELECT et.id, et.ticket_code, et.status, COALESCE(tt.points, 1) as points
         FROM email_tickets et
         LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
         WHERE (et.operador_id = ? OR et.claimed_by_user_id = ?)
-          AND et.status IN ('EN PROGRESO', 'EN ESPERA')
+          AND UPPER(et.status) IN ('EN PROGRESO', 'EN ESPERA')
         """, (op_id, op_id))
         active_t = cur.fetchall()
 
@@ -907,17 +1040,11 @@ def get_operators_availability(area: Optional[str] = None, request: Request = No
             sat_color = "#EF4444"
 
         result.append({
-            "id": op["id"],
-            "name": op["name"],
-            "email": op["email"],
-            "role": op["role"],
-            "area": op["area"],
-            "departamento_nombre": op["departamento_nombre"],
-            "avatar": op["avatar"],
-            "shift": op["shift"],
-            "status": op["status"],
+            **op,
             "active_tickets_count": active_count,
+            "tickets_activos": active_count,
             "active_points": active_points,
+            "puntos_activos": active_points,
             "saturation_level": sat_label,
             "saturation_color": sat_color
         })
@@ -977,103 +1104,88 @@ def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request
     """
     Asignación explícita de un ticket a un operador por parte del Coordinador de área.
     Validaciones estrictas:
-    1. Que el ticket y el operador existan.
-    2. Si hay un Coordinador en sesión, que pertenezca al área del ticket.
-    3. Que el operador asignado realmente pertenezca al área del ticket.
+    1. Valida que el ticket y el operador existan.
+    2. Valida que el ticket y el operador pertenezcan al mismo departamento del coordinador.
+    3. Actualiza operador_id en el ticket y cambia el status a 'EN PROGRESO'.
+    4. Inserta un registro en ticket_historial_estados documentando la asignación.
     """
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT id, ticket_code, status, departamento_id, area, subject FROM email_tickets WHERE id = ?", (ticket_id,))
+    cur.execute("SELECT id, ticket_code, status, departamento_id, area, subject, fecha_inicio_atencion FROM email_tickets WHERE id = ?", (ticket_id,))
     t_row = cur.fetchone()
     if not t_row:
         conn.close()
-        return JSONResponse(status_code=404, content={"error": "Ticket no encontrado"})
+        return JSONResponse(status_code=404, content={"error": f"Ticket #{ticket_id} no encontrado."})
         
     cur.execute("SELECT id, name, area, role, avatar, departamento_id FROM users WHERE id = ?", (payload.operador_id,))
     u_row = cur.fetchone()
     if not u_row:
         conn.close()
-        return JSONResponse(status_code=404, content={"error": "Operador no encontrado"})
+        return JSONResponse(status_code=404, content={"error": f"Operador #{payload.operador_id} no encontrado."})
 
-    # Resolver quién ejecuta la asignación (Coordinador o Administrador)
-    caller = None
-    caller_id = payload.coordinador_id
-    if not caller_id and request:
-        auth_hdr = request.headers.get("Authorization")
-        if auth_hdr and auth_hdr.startswith("Bearer "):
-            tok = auth_hdr.split("Bearer ")[1].strip()
-            if tok.isdigit():
-                caller_id = int(tok)
-            else:
-                cur.execute("SELECT id, name, area, role FROM users WHERE email = ? OR name = ?", (tok, tok))
-                r = cur.fetchone()
-                if r:
-                    caller = dict(r)
-                    caller_id = caller["id"]
-        if not caller_id:
-            c_cookie = request.cookies.get("auth_user_id")
-            if c_cookie and c_cookie.isdigit():
-                caller_id = int(c_cookie)
+    # Resolver quién ejecuta la asignación (Coordinador autenticado)
+    caller, coord_depto_id = get_authenticated_coordinator(request, payload.coordinador_id)
 
-    if caller_id and not caller:
-        cur.execute("SELECT id, name, area, role FROM users WHERE id = ?", (caller_id,))
-        r = cur.fetchone()
-        if r:
-            caller = dict(r)
+    ticket_depto_id = t_row["departamento_id"]
+    operator_depto_id = u_row["departamento_id"]
 
-    norm_ticket_area = normalize_area_name(t_row["area"])
-    norm_op_area = normalize_area_name(u_row["area"])
+    is_admin = caller and (caller.get("role") or "").upper() == "ADMINISTRADOR"
 
-    # 1. Validación de rol y área del Coordinador (si está en sesión)
-    if caller:
-        caller_role = caller.get("role", "").upper()
-        if caller_role == "COORDINADOR":
-            norm_caller_area = normalize_area_name(caller.get("area"))
-            if norm_caller_area != norm_ticket_area:
-                conn.close()
-                return JSONResponse(
-                    status_code=403,
-                    content={"error": f"Acceso denegado: El coordinador {caller['name']} pertenece al área '{caller['area']}', pero el ticket pertenece a '{t_row['area']}'."}
-                )
-        elif caller_role == "ESPECIALISTA":
+    # 1. Validación de departamento del Coordinador con el Ticket
+    if coord_depto_id and ticket_depto_id and not is_admin:
+        if coord_depto_id != ticket_depto_id:
             conn.close()
             return JSONResponse(
                 status_code=403,
-                content={"error": "La asignación de tickets es exclusiva de los Coordinadores de área."}
+                content={"error": f"Acceso denegado: El coordinador pertenece al departamento {coord_depto_id}, pero el ticket pertenece al departamento {ticket_depto_id}."}
             )
 
-    # 2. VALIDACIÓN CRÍTICA: Validar que el operador asignado realmente pertenece al área del ticket
-    if norm_op_area != norm_ticket_area:
+    # 2. Validación de departamento del Coordinador con el Operador
+    if coord_depto_id and operator_depto_id and not is_admin:
+        if coord_depto_id != operator_depto_id:
+            conn.close()
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"El operador '{u_row['name']}' pertenece al departamento {operator_depto_id}, que no coincide con el del coordinador ({coord_depto_id})."}
+            )
+
+    # 3. VALIDACIÓN CRÍTICA: Ticket y Operador deben pertenecer al mismo departamento
+    if ticket_depto_id and operator_depto_id and ticket_depto_id != operator_depto_id:
         conn.close()
         return JSONResponse(
             status_code=400,
-            content={"error": f"El operador '{u_row['name']}' pertenece al área '{u_row['area']}', que no coincide con el área del ticket '{t_row['area']}'."}
+            content={"error": f"El operador '{u_row['name']}' pertenece al departamento {operator_depto_id}, que no coincide con el departamento del ticket ({ticket_depto_id})."}
         )
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_depto_id = payload.departamento_id or t_row["departamento_id"] or u_row["departamento_id"] or 1
-    new_status = "EN PROGRESO" if t_row["status"] in ("PENDIENTE", "Pendiente") else t_row["status"]
+    new_depto_id = ticket_depto_id or operator_depto_id or coord_depto_id or 1
+    estado_anterior = t_row["status"] or "PENDIENTE"
+    nuevo_status = "EN PROGRESO"
     
+    # 4. Actualizar operador_id en el ticket y cambiar status a 'EN PROGRESO'
     cur.execute("""
     UPDATE email_tickets
     SET operador_id = ?, claimed_by_user_id = ?, departamento_id = ?,
         status = ?, fecha_inicio_atencion = COALESCE(fecha_inicio_atencion, ?)
     WHERE id = ?
-    """, (payload.operador_id, payload.operador_id, new_depto_id, new_status, now_str, ticket_id))
+    """, (payload.operador_id, payload.operador_id, new_depto_id, nuevo_status, now_str, ticket_id))
     
-    assigner_desc = f"por {caller['name']}" if caller else "desde Consola Helpdesk IP"
+    # 5. Insertar un registro en ticket_historial_estados documentando la asignación
+    assigner_desc = f"por {caller['name']}" if caller else "desde Mesa de Asignación (Triage)"
+    nota_cambio = payload.notas or f"Asignado al especialista {u_row['name']} {assigner_desc}"
     cur.execute("""
     INSERT INTO ticket_historial_estados (
         ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
     ) VALUES (?, ?, ?, ?, ?, ?)
     """, (
-        ticket_id, payload.operador_id, t_row["status"], new_status,
-        f"Asignado al operador {u_row['name']} {assigner_desc} ({payload.notas or 'Asignación manual'})",
+        ticket_id, payload.operador_id, estado_anterior, nuevo_status,
+        nota_cambio,
         now_str
     ))
     conn.commit()
     conn.close()
     
+    # 6. Registrar en bitácora forense de auditoría
     client_ip = request.client.host if request and request.client else "127.0.0.1"
     log_audit_event(
         user_id=payload.operador_id,
@@ -1083,7 +1195,7 @@ def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request
         action="ASIGNACION_TICKET",
         entity_type="TICKET",
         entity_id=t_row["ticket_code"],
-        details=f"Ticket {t_row['ticket_code']} ({t_row['area']}) asignado al operador {u_row['name']} ({u_row['area']})",
+        details=f"Ticket {t_row['ticket_code']} ({t_row['area']}) asignado al operador {u_row['name']} ({u_row['area']}). Estado: {nuevo_status}",
         ip_address=client_ip
     )
     return {
@@ -1093,8 +1205,8 @@ def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request
         "operador_id": payload.operador_id,
         "operador_nombre": u_row["name"],
         "operador_area": u_row["area"],
-        "ticket_area": t_row["area"],
-        "status_ticket": new_status,
+        "estado_anterior": estado_anterior,
+        "estado_nuevo": nuevo_status,
         "message": f"Ticket {t_row['ticket_code']} asignado exitosamente a {u_row['name']}"
     }
 
@@ -1239,23 +1351,28 @@ def resume_ticket(ticket_id: int, request: Request = None):
     return {"status": "ok"}
 
 class AutoCompleteTicketPayload(BaseModel):
-    resolution_notes: str
+    resolution_notes: Optional[str] = None
     task_type_id: Optional[int] = None
+    user_id: Optional[int] = None
+    points: Optional[int] = None
+    close_ticket: Optional[bool] = None
 
 @app.post("/api/tickets/{ticket_id}/complete")
 def complete_ticket_automated(ticket_id: int, payload: AutoCompleteTicketPayload, request: Request = None):
     """
-    CRONOMETRAJE 100% AUTOMATIZADO:
-    Calcula la duración exacta transcurrida desde claimed_at hasta ahora,
-    descontando automáticamente el tiempo en pausa (esperas de terreno).
-    Acredita puntos al usuario activo y genera registro de auditoría e historial.
+    CRONOMETRAJE 100% AUTOMATIZADO — FSM FASE 1 (OPERADOR):
+    El operador marca el ticket como resuelto. El sistema calcula la duración exacta
+    descontando el tiempo en pausa (esperas de terreno) y lleva el ticket a estado
+    'POR_VERIFICAR' para que el Coordinador valide los puntos antes del cierre definitivo.
+    Solo cuando el Coordinador confirme (POST /verify), el ticket pasará a 'COMPLETADO'
+    y los puntos se acreditarán en task_logs.
     """
     conn = get_db()
     cur = conn.cursor()
     
     cur.execute("""
     SELECT et.ticket_code, et.claimed_by_user_id, et.operador_id, et.area, et.claimed_at, et.fecha_inicio_atencion,
-           et.total_paused_seconds, et.suggested_task_type_id
+           et.total_paused_seconds, et.suggested_task_type_id, et.status
     FROM email_tickets et
     WHERE et.id = ?
     """, (ticket_id,))
@@ -1263,6 +1380,13 @@ def complete_ticket_automated(ticket_id: int, payload: AutoCompleteTicketPayload
     if not row:
         conn.close()
         return JSONResponse(status_code=404, content={"error": "Ticket no encontrado"})
+
+    if row["status"] == "POR_VERIFICAR":
+        conn.close()
+        return JSONResponse(status_code=400, content={"error": "El ticket ya está pendiente de verificación por el Coordinador."})
+    if row["status"] == "COMPLETADO":
+        conn.close()
+        return JSONResponse(status_code=400, content={"error": "El ticket ya fue cerrado y verificado."})
         
     ticket_code = row["ticket_code"]
     user_id = row["operador_id"] or row["claimed_by_user_id"]
@@ -1294,18 +1418,18 @@ def complete_ticket_automated(ticket_id: int, payload: AutoCompleteTicketPayload
     wait_min = round(total_paused_sec / 60)
     net_min = max(1, round(net_seconds / 60))
     
-    # 2. PUNTOS ASIGNADOS AUTOMÁTICAMENTE
+    # 2. PUNTOS SUGERIDOS (No se acreditan aún — esperan verificación del coordinador)
     task_type_id = payload.task_type_id or default_task_id or 1
     cur.execute("SELECT points, name FROM task_types WHERE id = ?", (task_type_id,))
     tt_row = cur.fetchone()
     points = tt_row[0] if tt_row else 2
     task_name = tt_row[1] if tt_row else "Operación Estándar"
     
-    # 3. ACTUALIZAR ESTADO FSM Y MARCAS DE CIERRE
+    # 3. ACTUALIZAR ESTADO FSM → POR_VERIFICAR (pendiente de aprobación del Coordinador)
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
     cur.execute("""
     UPDATE email_tickets
-    SET status = 'COMPLETADO', completed_at = ?, claimed_by_user_id = ?, operador_id = ?,
+    SET status = 'POR_VERIFICAR', completed_at = ?, claimed_by_user_id = ?, operador_id = ?,
         fecha_cierre = ?, duracion_atencion_minutos = ?
     WHERE id = ?
     """, (now_str, user_id, user_id, now_str, net_min, ticket_id))
@@ -1314,15 +1438,9 @@ def complete_ticket_automated(ticket_id: int, payload: AutoCompleteTicketPayload
     cur.execute("""
     INSERT INTO ticket_historial_estados (
         ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
-    ) VALUES (?, ?, 'En Proceso', 'Resuelto', ?, ?)
-    """, (ticket_id, user_id, payload.resolution_notes or f"Resuelto: {task_name}", now_str))
+    ) VALUES (?, ?, 'EN PROGRESO', 'POR_VERIFICAR', ?, ?)
+    """, (ticket_id, user_id, payload.resolution_notes or f"Operador marcó como resuelto: {task_name}. En espera de verificación del Coordinador.", now_str))
 
-    # 5. REGISTRAR TAREA Y SUMAR PUNTOS AUTOMÁTICAMENTE AL OPERADOR
-    cur.execute("""
-    INSERT INTO task_logs (ticket_code, user_id, task_type_id, description, points, duration_minutes, wait_minutes, net_duration, area, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (ticket_code, user_id, task_type_id, f"Resuelto vía ticket: {task_name} ({payload.resolution_notes})", points, duration_min, wait_min, net_min, area, now_str))
-    
     conn.commit()
     conn.close()
     
@@ -1331,20 +1449,157 @@ def complete_ticket_automated(ticket_id: int, payload: AutoCompleteTicketPayload
     log_audit_event(
         user_id=user_id,
         area=area,
-        action="CIERRE_TICKET",
+        action="RESOLUCION_PENDIENTE",
         entity_type="TICKET",
         entity_id=ticket_code,
-        details=f"Caso cerrado ({task_name}, +{points} pts, {net_min} min netos): {payload.resolution_notes}",
+        details=f"Caso marcado como resuelto por operador ({task_name}, {net_min} min netos). Puntos sugeridos: {points}. Esperando verificación del Coordinador.",
         ip_address=client_ip
     )
     
     return {
         "status": "ok",
+        "fsm_state": "POR_VERIFICAR",
         "ticket": ticket_code,
-        "points": points,
+        "suggested_points": points,
+        "task_name": task_name,
         "duration_minutes": duration_min,
         "net_minutes": net_min,
-        "wait_minutes": wait_min
+        "wait_minutes": wait_min,
+        "message": f"Ticket marcado como resuelto. Pendiente de verificación del Coordinador para acreditar {points} pts."
+    }
+
+
+class VerifyTicketPayload(BaseModel):
+    confirmed_points: Optional[int] = None   # Si el coordinador ajusta los puntos
+    verification_notes: Optional[str] = None
+    coordinador_id: Optional[int] = None
+
+@app.post("/api/tickets/{ticket_id}/verify")
+def verify_ticket_coordinator(ticket_id: int, payload: VerifyTicketPayload, request: Request = None):
+    """
+    FSM FASE 2 — VERIFICACIÓN DEL COORDINADOR:
+    El Coordinador revisa el ticket en estado 'POR_VERIFICAR', ajusta los puntos
+    si lo considera necesario, y lo cierra definitivamente a 'COMPLETADO'.
+    En este momento se acreditan los puntos en task_logs.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Resolver coordinador desde payload, Bearer token o cookie de sesión
+    coord_id = payload.coordinador_id
+    if not coord_id and request:
+        auth_hdr = request.headers.get("Authorization")
+        if auth_hdr and auth_hdr.startswith("Bearer "):
+            tok = auth_hdr.split("Bearer ")[1].strip()
+            if tok.isdigit():
+                coord_id = int(tok)
+        if not coord_id:
+            c_cookie = request.cookies.get("auth_user_id")
+            if c_cookie and c_cookie.isdigit():
+                coord_id = int(c_cookie)
+
+    # Obtener datos del ticket
+    cur.execute("""
+    SELECT et.ticket_code, et.operador_id, et.claimed_by_user_id, et.area, et.departamento_id,
+           et.duracion_atencion_minutos, et.suggested_task_type_id, et.status,
+           et.fecha_inicio_atencion, et.total_paused_seconds
+    FROM email_tickets et WHERE et.id = ?
+    """, (ticket_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return JSONResponse(status_code=404, content={"error": "Ticket no encontrado"})
+
+    if row["status"] not in ("POR_VERIFICAR", "COMPLETADO"):
+        conn.close()
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"El ticket está en estado '{row['status']}' y no puede ser verificado. Solo se pueden verificar tickets en estado POR_VERIFICAR."}
+        )
+    if row["status"] == "COMPLETADO":
+        conn.close()
+        return JSONResponse(status_code=400, content={"error": "El ticket ya fue verificado y cerrado definitivamente."})
+
+    ticket_code = row["ticket_code"]
+    operador_id = row["operador_id"] or row["claimed_by_user_id"]
+    area = row["area"]
+    net_min = row["duracion_atencion_minutos"] or 1
+
+    # Resolver puntos: usa el valor confirmado por el coordinador, o el sugerido originalmente
+    default_task_id = row["suggested_task_type_id"] or 1
+    cur.execute("SELECT points, name FROM task_types WHERE id = ?", (default_task_id,))
+    tt_row = cur.fetchone()
+    original_points = tt_row[0] if tt_row else 2
+    task_name = tt_row[1] if tt_row else "Operación Estándar"
+
+    # El coordinador puede ajustar los puntos (si no se especifican, se usan los originales)
+    final_points = payload.confirmed_points if payload.confirmed_points is not None else original_points
+    final_points = max(1, min(final_points, 16))  # Guardrail: mínimo 1, máximo 16 pts
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 1. Cerrar el ticket definitivamente
+    cur.execute("""
+    UPDATE email_tickets SET status = 'COMPLETADO', fecha_cierre = COALESCE(fecha_cierre, ?)
+    WHERE id = ?
+    """, (now_str, ticket_id))
+
+    # 2. Acreditar puntos en task_logs (esto alimenta las métricas DERS del operador)
+    if operador_id:
+        cur.execute("""
+        INSERT INTO task_logs (
+            ticket_code, user_id, task_type_id, description, points,
+            duration_minutes, wait_minutes, net_duration, area, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
+        """, (
+            ticket_code, operador_id, default_task_id,
+            f"Verificado por Coordinador: {task_name} ({payload.verification_notes or 'Sin notas adicionales'})",
+            final_points, net_min, net_min, area, now_str
+        ))
+
+    # 3. Registrar en historial de estados
+    coord_name = "Coordinador"
+    if coord_id:
+        cur.execute("SELECT name FROM users WHERE id = ?", (coord_id,))
+        cr = cur.fetchone()
+        if cr:
+            coord_name = cr["name"]
+
+    adjustment_note = f" (Puntos ajustados de {original_points} a {final_points})" if final_points != original_points else ""
+    cur.execute("""
+    INSERT INTO ticket_historial_estados (
+        ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
+    ) VALUES (?, ?, 'POR_VERIFICAR', 'COMPLETADO', ?, ?)
+    """, (
+        ticket_id, coord_id,
+        f"Verificado y cerrado por {coord_name}. Puntos acreditados: {final_points}{adjustment_note}. {payload.verification_notes or ''}",
+        now_str
+    ))
+
+    conn.commit()
+    conn.close()
+
+    # 4. Auditoría forense
+    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    log_audit_event(
+        user_id=coord_id,
+        area=area,
+        action="VERIFICACION_TICKET",
+        entity_type="TICKET",
+        entity_id=ticket_code,
+        details=f"Coordinador {coord_name} verificó y cerró el ticket {ticket_code}. Puntos acreditados al operador: {final_points} pts{adjustment_note}.",
+        ip_address=client_ip
+    )
+
+    return {
+        "status": "ok",
+        "fsm_state": "COMPLETADO",
+        "ticket": ticket_code,
+        "final_points": final_points,
+        "original_points": original_points,
+        "adjusted": final_points != original_points,
+        "verified_by": coord_name,
+        "message": f"Ticket {ticket_code} cerrado y {final_points} puntos acreditados al operador."
     }
 
 class TicketReplyPayload(BaseModel):
@@ -1523,7 +1778,7 @@ def auth_login(req: LoginRequest, request: Request = None):
     req_email = req.email.strip().lower()
     pass_hash = hashlib.sha256(req.password.encode('utf-8')).hexdigest()
     
-    cur.execute("SELECT id, name, area, role, avatar, email, password_hash FROM users WHERE LOWER(email) = ?", (req_email,))
+    cur.execute("SELECT id, name, area, role, avatar, email, password_hash, departamento_id FROM users WHERE LOWER(email) = ?", (req_email,))
     user = cur.fetchone()
     conn.close()
     
@@ -1538,7 +1793,8 @@ def auth_login(req: LoginRequest, request: Request = None):
             "email": user["email"],
             "role": user["role"],
             "area": user["area"],
-            "avatar": user["avatar"]
+            "avatar": user["avatar"],
+            "departamento_id": user["departamento_id"]
         }
         client_ip = request.client.host if request and request.client else "127.0.0.1"
         log_audit_event(
@@ -1586,7 +1842,7 @@ def auth_switch_user(payload: SwitchUserPayload, request: Request = None):
     """
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, area, role, avatar, email FROM users WHERE id = ?", (payload.user_id,))
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (payload.user_id,))
     user = cur.fetchone()
     conn.close()
     if not user:
@@ -1614,7 +1870,7 @@ def get_auth_users():
     """Retorna lista de empleados activos para el conmutador de perfil en el dashboard"""
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, area, role, avatar, email, shift FROM users WHERE status = 'Activo' ORDER BY CASE role WHEN 'ADMINISTRADOR' THEN 1 WHEN 'COORDINADOR' THEN 2 ELSE 3 END, name ASC")
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE status = 'Activo' ORDER BY CASE role WHEN 'ADMINISTRADOR' THEN 1 WHEN 'COORDINADOR' THEN 2 ELSE 3 END, name ASC")
     users = [dict(r) for r in cur.fetchall()]
     conn.close()
     return users
@@ -1626,20 +1882,20 @@ def get_current_user_profile(request: Request):
     cur = conn.cursor()
     
     if user_id_cookie and user_id_cookie.isdigit():
-        cur.execute("SELECT id, name, area, role, avatar, email FROM users WHERE id = ?", (int(user_id_cookie),))
+        cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (int(user_id_cookie),))
         row = cur.fetchone()
         if row:
             conn.close()
             return dict(row)
             
     # Default preferido: José Corobo si existe, sino David Rodríguez (Administrador)
-    cur.execute("SELECT id, name, area, role, avatar, email FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1")
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1")
     row = cur.fetchone()
     if row:
         conn.close()
         return dict(row)
 
-    cur.execute("SELECT id, name, area, role, avatar, email FROM users WHERE role = 'ADMINISTRADOR' ORDER BY id ASC LIMIT 1")
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'ADMINISTRADOR' ORDER BY id ASC LIMIT 1")
     row = cur.fetchone()
     conn.close()
     if row:
@@ -1648,10 +1904,11 @@ def get_current_user_profile(request: Request):
     return {
         "id": 27,
         "name": "José Corobo",
-        "area": "Soporte",
+        "area": "Redes de acceso y aprovisionamiento",
         "role": "ESPECIALISTA",
         "avatar": "JC",
-        "email": "joseacorobo@gmail.com"
+        "email": "joseacorobo@gmail.com",
+        "departamento_id": 1
     }
 
 # =============================================================

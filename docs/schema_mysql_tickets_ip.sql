@@ -76,7 +76,7 @@ CREATE TABLE email_tickets (
     sla_minutes INT DEFAULT 45,
     
     -- Ciclo de Vida y Tiempos de Atención
-    status ENUM('PENDIENTE', 'EN PROGRESO', 'EN ESPERA', 'COMPLETADO', 'CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
+    status ENUM('PENDIENTE', 'EN PROGRESO', 'EN ESPERA', 'POR_VERIFICAR', 'COMPLETADO', 'CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_inicio_atencion TIMESTAMP NULL,
     fecha_cierre TIMESTAMP NULL,
