@@ -28,19 +28,21 @@ def init_db():
     )
     """)
     
-    # Semilla oficial de departamentos si está vacía
+    # Semilla oficial de exactamente 5 departamentos técnicos oficiales
     deptos_oficiales = [
-        ('ACCESO_APROV', 'Redes de Acceso y Aprovisionamiento', 'Atención OLT, FTTH, aprovisionamiento de módems y puertos GPON', 1),
-        ('TRAFICO_INALAMBRICO', 'Control de Tráfico e Redes Inalámbricas', 'Monitoreo de saturación RF, balanceo y enlaces inalámbricos', 1),
-        ('SEGURIDAD', 'Seguridad', 'Políticas perimetrales, firewalls, mitigación de ataques y accesos IP', 1),
-        ('TELEFONIA', 'Telefonía', 'Servidores SIP, gateways de voz, troncales IP y numeración', 1),
+        ('ACCESO_APROV', 'Redes de acceso y aprovisionamiento', 'Atención OLT, FTTH, aprovisionamiento de módems y puertos GPON', 1),
+        ('TRAFICO_INALAMBRICO', 'Control de Trafico y Redes inalambricas', 'Monitoreo de saturación RF, balanceo y enlaces inalámbricos', 1),
         ('REDES_WAN', 'Redes WAN', 'Enrutamiento troncal, BGP, MPLS y conectividad interurbana', 1),
-        ('GRANDES_CLIENTES', 'Grandes Clientes', 'Cuentas corporativas dedicadas, enlaces simétricos y atención VIP', 1)
+        ('SEGURIDAD', 'Seguridad', 'Políticas perimetrales, firewalls, mitigación de ataques y accesos IP', 1),
+        ('TELEFONIA', 'Telefonia', 'Servidores SIP, gateways de voz, troncales IP y numeración', 1)
     ]
     cursor.executemany("""
     INSERT OR IGNORE INTO departamentos (codigo, nombre, descripcion, activo)
     VALUES (?, ?, ?, ?)
     """, deptos_oficiales)
+    for code, nom, desc, act in deptos_oficiales:
+        cursor.execute("UPDATE departamentos SET nombre = ?, descripcion = ?, activo = ? WHERE codigo = ?", (nom, desc, act, code))
+    cursor.execute("DELETE FROM departamentos WHERE codigo NOT IN ('ACCESO_APROV', 'TRAFICO_INALAMBRICO', 'REDES_WAN', 'SEGURIDAD', 'TELEFONIA')")
 
     # 2. Usuarios y Roles (Soporta Autenticación RBAC y Operadores por Departamento)
     cursor.execute("""
@@ -76,13 +78,12 @@ def init_db():
     cursor.execute("""
     UPDATE users SET departamento_id = (
         CASE 
-            WHEN area IN ('Soporte', 'Acceso', 'Redes de Acceso') THEN (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
-            WHEN area = 'Cabecera' THEN (SELECT id FROM departamentos WHERE codigo = 'REDES_WAN')
-            WHEN area = 'Telefonía' THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
+            WHEN area IN ('Soporte', 'Acceso', 'Redes de Acceso', 'Redes de acceso y aprovisionamiento') THEN (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
+            WHEN area IN ('Cabecera', 'Redes WAN') THEN (SELECT id FROM departamentos WHERE codigo = 'REDES_WAN')
+            WHEN area IN ('Telefonía', 'Telefonia') THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
             WHEN area LIKE '%Seguridad%' THEN (SELECT id FROM departamentos WHERE codigo = 'SEGURIDAD')
             WHEN area LIKE '%Tráfico%' OR area LIKE '%Trafico%' THEN (SELECT id FROM departamentos WHERE codigo = 'TRAFICO_INALAMBRICO')
-            WHEN area LIKE '%Corporativo%' OR area LIKE '%Grandes%' THEN (SELECT id FROM departamentos WHERE codigo = 'GRANDES_CLIENTES')
-            ELSE 1
+            ELSE (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
         END
     ) WHERE departamento_id IS NULL
     """)
@@ -100,33 +101,33 @@ def init_db():
     )
     """)
 
-    # Catálogo Oficial de Tareas P1 a P5 para las 6 Áreas Técnicas (docs/feature_control_correos.md)
+    # Catálogo Oficial de Tareas P1 a P5 para las 5 Áreas Técnicas
     catalogo_tareas = [
-        # Redes de Acceso y Aprovisionamiento
-        ("P1-SOP-01", "Verificación Estado ONT (Discovery/Whitelist)", "Soporte", 1, 10, "Consulta de señal y estado L2"),
-        ("P1-SOP-02", "Chequeo Potencia TX/RX en OLT", "Soporte", 1, 10, "Validación de atenuación óptica"),
-        ("P2-SOP-01", "Prueba Oficial de Velocidad por CLI", "Soporte", 2, 20, "Test Speedtest puerto GE de ONT"),
-        ("P2-SOP-02", "Resolución Discrepancia MAC (Roja a Verde)", "Soporte", 2, 25, "Corrección de MAC en BD 815"),
-        ("P3-SOP-01", "Desatasco Demonio OLT (VLAN / Whitelist)", "Soporte", 3, 35, "Forzado de registro de abonado"),
-        ("P3-SOP-02", "Traspaso de Puerto PON / Reemplazo Serial", "Soporte", 3, 40, "Migración de cliente FiberHome/Huawei"),
-        ("P4-SOP-01", "Soporte a Modo Bridge con IP Certificada", "Soporte", 5, 60, "Configuración estricta sin refresh"),
-        ("P4-SOP-02", "Remediación Bloqueo BD 815 / Pool IP Agotado", "Soporte", 5, 55, "Desbloqueo de cola de aprovisionamiento"),
-        ("P5-SOP-01", "Atención y Recuperación Falla Tarjeta GCOB", "Soporte", 8, 120, "Restablecimiento masivo de PONs"),
+        # Redes de acceso y aprovisionamiento
+        ("P1-SOP-01", "Verificación Estado ONT (Discovery/Whitelist)", "Redes de acceso y aprovisionamiento", 1, 10, "Consulta de señal y estado L2"),
+        ("P1-SOP-02", "Chequeo Potencia TX/RX en OLT", "Redes de acceso y aprovisionamiento", 1, 10, "Validación de atenuación óptica"),
+        ("P2-SOP-01", "Prueba Oficial de Velocidad por CLI", "Redes de acceso y aprovisionamiento", 2, 20, "Test Speedtest puerto GE de ONT"),
+        ("P2-SOP-02", "Resolución Discrepancia MAC (Roja a Verde)", "Redes de acceso y aprovisionamiento", 2, 25, "Corrección de MAC en BD 815"),
+        ("P3-SOP-01", "Desatasco Demonio OLT (VLAN / Whitelist)", "Redes de acceso y aprovisionamiento", 3, 35, "Forzado de registro de abonado"),
+        ("P3-SOP-02", "Traspaso de Puerto PON / Reemplazo Serial", "Redes de acceso y aprovisionamiento", 3, 40, "Migración de cliente FiberHome/Huawei"),
+        ("P4-SOP-01", "Soporte a Modo Bridge con IP Certificada", "Redes de acceso y aprovisionamiento", 5, 60, "Configuración estricta sin refresh"),
+        ("P4-SOP-02", "Remediación Bloqueo BD 815 / Pool IP Agotado", "Redes de acceso y aprovisionamiento", 5, 55, "Desbloqueo de cola de aprovisionamiento"),
+        ("P5-SOP-01", "Atención y Recuperación Falla Tarjeta GCOB", "Redes de acceso y aprovisionamiento", 8, 120, "Restablecimiento masivo de PONs"),
         
-        # Redes WAN / Cabecera
-        ("P1-CAB-01", "Lectura Telemetría Puerto Switch 10G", "Cabecera", 1, 15, "Revisión de consumo de tráfico"),
-        ("P2-CAB-01", "Inspección y Limpieza de Patch Cord Óptico", "Cabecera", 2, 30, "Mantenimiento físico en rack"),
-        ("P3-CAB-01", "Sustitución Módulo SFP en Switch WAN", "Cabecera", 3, 45, "Reemplazo de transceptor con falla"),
-        ("P4-CAB-01", "Reemplazo Tarjeta Controladora HSWA", "Cabecera", 5, 75, "Mantenimiento crítico de controladora"),
-        ("P5-CAB-01", "Habilitación PortChannel 10G -> 20G / Enlace Troncal", "Cabecera", 8, 120, "Ampliación de capacidad troncal"),
-        ("P5-CAB-02", "Armado y Certificación de Mini Red para OLT", "Cabecera", 8, 150, "Puesta en marcha de nuevo nodo"),
+        # Redes WAN
+        ("P1-CAB-01", "Lectura Telemetría Puerto Switch 10G", "Redes WAN", 1, 15, "Revisión de consumo de tráfico"),
+        ("P2-CAB-01", "Inspección y Limpieza de Patch Cord Óptico", "Redes WAN", 2, 30, "Mantenimiento físico en rack"),
+        ("P3-CAB-01", "Sustitución Módulo SFP en Switch WAN", "Redes WAN", 3, 45, "Reemplazo de transceptor con falla"),
+        ("P4-CAB-01", "Reemplazo Tarjeta Controladora HSWA", "Redes WAN", 5, 75, "Mantenimiento crítico de controladora"),
+        ("P5-CAB-01", "Habilitación PortChannel 10G -> 20G / Enlace Troncal", "Redes WAN", 8, 120, "Ampliación de capacidad troncal"),
+        ("P5-CAB-02", "Armado y Certificación de Mini Red para OLT", "Redes WAN", 8, 150, "Puesta en marcha de nuevo nodo"),
         
-        # Telefonía
-        ("P1-TEL-01", "Consulta Estado Registro SIP en Softswitch", "Telefonía", 1, 10, "Validación de registro activo"),
-        ("P2-TEL-01", "Corrección Básica de Credenciales SIP", "Telefonía", 2, 20, "Reenvío de auth a la ONT"),
-        ("P3-TEL-01", "Depuración Falla Señalización SIP / Timeout", "Telefonía", 3, 35, "Análisis de traza SIP Wireshark"),
-        ("P4-TEL-01", "Diagnóstico Degradación MOS (<4.0) y Jitter", "Telefonía", 5, 60, "Análisis de QoS en VLAN de voz"),
-        ("P5-TEL-01", "Restauración de Enlace Troncal SIP Call Server", "Telefonía", 8, 120, "Falla masiva de telefonía"),
+        # Telefonia
+        ("P1-TEL-01", "Consulta Estado Registro SIP en Softswitch", "Telefonia", 1, 10, "Validación de registro activo"),
+        ("P2-TEL-01", "Corrección Básica de Credenciales SIP", "Telefonia", 2, 20, "Reenvío de auth a la ONT"),
+        ("P3-TEL-01", "Depuración Falla Señalización SIP / Timeout", "Telefonia", 3, 35, "Análisis de traza SIP Wireshark"),
+        ("P4-TEL-01", "Diagnóstico Degradación MOS (<4.0) y Jitter", "Telefonia", 5, 60, "Análisis de QoS en VLAN de voz"),
+        ("P5-TEL-01", "Restauración de Enlace Troncal SIP Call Server", "Telefonia", 8, 120, "Falla masiva de telefonía"),
         
         # Seguridad
         ("P1-SEG-01", "Verificación Estado de Puerto y Aislamiento IP", "Seguridad", 1, 10, "Consulta de tráfico anómalo"),
@@ -135,20 +136,14 @@ def init_db():
         ("P4-SEG-01", "Mitigación y Políticas Perimetrales Firewall / DDoS", "Seguridad", 5, 60, "Mitigación de ataque y políticas"),
         ("P5-SEG-01", "Contención de Incidente Crítico de Seguridad Core", "Seguridad", 8, 120, "Respuesta a incidente mayor"),
         
-        # Control de Tráfico e Redes Inalámbricas
-        ("P1-TRAF-01", "Monitoreo Niveles RF y RSSI en Radioenlace", "Control de Tráfico", 1, 15, "Inspección de enlace inalámbrico"),
-        ("P2-TRAF-01", "Diagnóstico de Pérdida de Paquetes Wireless", "Control de Tráfico", 2, 25, "Análisis de interferencia RF"),
-        ("P3-TRAF-01", "Ajuste QoS y Balanceo de Tráfico RF", "Control de Tráfico", 3, 45, "Reconfiguración de colas de tráfico"),
-        ("P4-TRAF-01", "Reconfiguración Shaping y Ancho de Banda Microondas", "Control de Tráfico", 5, 60, "Optimización de tasa de transmisión"),
-        ("P5-TRAF-01", "Recuperación de Caída de Enlace Troncal Microondas", "Control de Tráfico", 8, 120, "Restablecimiento de enlace PTP"),
-        
-        # Grandes Clientes
-        ("P1-GC-01", "Monitoreo de Enlace Dedicado Corporativo", "Grandes Clientes", 1, 15, "Lectura de estado de circuito VIP"),
-        ("P2-GC-01", "Validación Peering BGP y Enrutamiento Estático VIP", "Grandes Clientes", 2, 30, "Revisión de rutas anunciadas"),
-        ("P3-GC-01", "Ajuste de Subred y Pool IP Público para Gran Cliente", "Grandes Clientes", 3, 45, "Gestión de direccionamiento"),
-        ("P4-GC-01", "Atención VIP Enlace Corporativo Simétrico", "Grandes Clientes", 5, 60, "Soporte prioritario a empresa"),
-        ("P5-GC-01", "Restablecimiento Troncal Fibra Dedicada Corporativa", "Grandes Clientes", 8, 120, "Emergencia en cliente de alta demanda")
+        # Control de Trafico y Redes inalambricas
+        ("P1-TRAF-01", "Monitoreo Niveles RF y RSSI en Radioenlace", "Control de Trafico y Redes inalambricas", 1, 15, "Inspección de enlace inalámbrico"),
+        ("P2-TRAF-01", "Diagnóstico de Pérdida de Paquetes Wireless", "Control de Trafico y Redes inalambricas", 2, 25, "Análisis de interferencia RF"),
+        ("P3-TRAF-01", "Ajuste QoS y Balanceo de Tráfico RF", "Control de Trafico y Redes inalambricas", 3, 45, "Reconfiguración de colas de tráfico"),
+        ("P4-TRAF-01", "Reconfiguración Shaping y Ancho de Banda Microondas", "Control de Trafico y Redes inalambricas", 5, 60, "Optimización de tasa de transmisión"),
+        ("P5-TRAF-01", "Recuperación de Caída de Enlace Troncal Microondas", "Control de Trafico y Redes inalambricas", 8, 120, "Restablecimiento de enlace PTP")
     ]
+    cursor.execute("DELETE FROM task_types WHERE code LIKE 'P%-GC-%'")
     cursor.executemany("""
     INSERT OR IGNORE INTO task_types (code, name, area, points, sla_minutes, description)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -276,13 +271,12 @@ def init_db():
     UPDATE email_tickets SET 
         departamento_id = COALESCE(departamento_id, (
             CASE 
-                WHEN area IN ('Soporte', 'Acceso', 'Redes de Acceso') THEN (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
-                WHEN area = 'Cabecera' THEN (SELECT id FROM departamentos WHERE codigo = 'REDES_WAN')
-                WHEN area = 'Telefonía' THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
+                WHEN area IN ('Soporte', 'Acceso', 'Redes de Acceso', 'Redes de acceso y aprovisionamiento') THEN (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
+                WHEN area IN ('Cabecera', 'Redes WAN') THEN (SELECT id FROM departamentos WHERE codigo = 'REDES_WAN')
+                WHEN area IN ('Telefonía', 'Telefonia') THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
                 WHEN area LIKE '%Seguridad%' THEN (SELECT id FROM departamentos WHERE codigo = 'SEGURIDAD')
                 WHEN area LIKE '%Tráfico%' OR area LIKE '%Trafico%' THEN (SELECT id FROM departamentos WHERE codigo = 'TRAFICO_INALAMBRICO')
-                WHEN area LIKE '%Corporativo%' OR area LIKE '%Grandes%' THEN (SELECT id FROM departamentos WHERE codigo = 'GRANDES_CLIENTES')
-                ELSE 1
+                ELSE (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
             END
         )),
         operador_id = COALESCE(operador_id, claimed_by_user_id),
@@ -350,8 +344,9 @@ def init_db():
         import hashlib
         pass_hash = hashlib.sha256("admin".encode("utf-8")).hexdigest()
         cursor.execute("""
-        INSERT INTO users (name, email, password_hash, area, role, avatar, shift, status)
-        VALUES ('José Corobo', 'joseacorobo@gmail.com', ?, 'Soporte', 'ESPECIALISTA', 'JC', 'Mañana', 'Activo')
+        INSERT INTO users (name, email, password_hash, area, role, avatar, shift, status, departamento_id)
+        VALUES ('José Corobo', 'joseacorobo@gmail.com', ?, 'Redes de acceso y aprovisionamiento', 'ESPECIALISTA', 'JC', 'Mañana', 'Activo',
+                (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV'))
         """, (pass_hash,))
 
     conn.commit()

@@ -1,0 +1,201 @@
+---
+name: Telecom Precision Analytics
+colors:
+  surface: '#f8f9ff'
+  surface-dim: '#cbdbf5'
+  surface-bright: '#f8f9ff'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#eff4ff'
+  surface-container: '#e5eeff'
+  surface-container-high: '#dce9ff'
+  surface-container-highest: '#d3e4fe'
+  on-surface: '#0b1c30'
+  on-surface-variant: '#424655'
+  inverse-surface: '#213145'
+  inverse-on-surface: '#eaf1ff'
+  outline: '#727787'
+  outline-variant: '#c2c6d8'
+  surface-tint: '#0057ce'
+  primary: '#0057cd'
+  on-primary: '#ffffff'
+  primary-container: '#0d6efd'
+  on-primary-container: '#ffffff'
+  inverse-primary: '#b1c5ff'
+  secondary: '#565e74'
+  on-secondary: '#ffffff'
+  secondary-container: '#dae2fd'
+  on-secondary-container: '#5c647a'
+  tertiary: '#845300'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#a66900'
+  on-tertiary-container: '#ffffff'
+  error: '#ba1a1a'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#dae2ff'
+  primary-fixed-dim: '#b1c5ff'
+  on-primary-fixed: '#001946'
+  on-primary-fixed-variant: '#00419e'
+  secondary-fixed: '#dae2fd'
+  secondary-fixed-dim: '#bec6e0'
+  on-secondary-fixed: '#131b2e'
+  on-secondary-fixed-variant: '#3f465c'
+  tertiary-fixed: '#ffddb8'
+  tertiary-fixed-dim: '#ffb95f'
+  on-tertiary-fixed: '#2a1700'
+  on-tertiary-fixed-variant: '#653e00'
+  background: '#f8f9ff'
+  on-background: '#0b1c30'
+  surface-variant: '#d3e4fe'
+typography:
+  display:
+    fontFamily: Inter
+    fontSize: 2rem
+    fontWeight: '700'
+    lineHeight: 2.5rem
+    letterSpacing: -0.025em
+  headline-lg:
+    fontFamily: Inter
+    fontSize: 1.5rem
+    fontWeight: '600'
+    lineHeight: 2rem
+    letterSpacing: -0.02em
+  headline-md:
+    fontFamily: Inter
+    fontSize: 1.25rem
+    fontWeight: '600'
+    lineHeight: 1.75rem
+    letterSpacing: -0.015em
+  headline-sm:
+    fontFamily: Inter
+    fontSize: 1.125rem
+    fontWeight: '600'
+    lineHeight: 1.5rem
+  metric-xl:
+    fontFamily: Inter
+    fontSize: 1.875rem
+    fontWeight: '700'
+    lineHeight: 2.25rem
+    letterSpacing: -0.03em
+  body-lg:
+    fontFamily: Inter
+    fontSize: 1rem
+    fontWeight: '400'
+    lineHeight: 1.5rem
+  body-md:
+    fontFamily: Inter
+    fontSize: 0.875rem
+    fontWeight: '400'
+    lineHeight: 1.25rem
+  body-sm:
+    fontFamily: Inter
+    fontSize: 0.8125rem
+    fontWeight: '400'
+    lineHeight: 1.125rem
+  label-md:
+    fontFamily: Inter
+    fontSize: 0.75rem
+    fontWeight: '600'
+    lineHeight: 1rem
+    letterSpacing: 0.05em
+  label-sm:
+    fontFamily: Inter
+    fontSize: 0.6875rem
+    fontWeight: '500'
+    lineHeight: 0.875rem
+rounded:
+  sm: 0.25rem
+  DEFAULT: 0.5rem
+  md: 0.75rem
+  lg: 1rem
+  xl: 1.5rem
+  full: 9999px
+spacing:
+  gutter: 1.25rem
+  margin: 1.5rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 1rem
+  space-lg: 1.5rem
+  space-xl: 2rem
+---
+
+## Brand & Style
+
+This design system is engineered for mission-critical telecommunications operations, incident management, and network health monitoring. Its primary users—shift coordinators, NOC technicians, and infrastructure directors—require glanceable situational awareness, immediate cognitive clarity, and zero ambiguity under high-stress conditions. 
+
+The aesthetic is **Corporate Modern with Tactile macOS-inspired Glassmorphism**. It combines structured enterprise data density with soft, airy aesthetics: crisp white cards layered over ultra-subtle slate canvas backdrops, delicate 1px borders, translucent frosted navigation panels, and high-contrast telemetry indicators. The emotional response is one of surgical precision, institutional trust, and calm authority.
+
+## Colors
+
+The palette establishes strict semantic clarity, separating navigation, structural containers, and telemetry severity.
+
+- **Primary Accent (`#0d6efd`)**: Used for active selection states, key interaction triggers, primary buttons, and baseline operational metrics. A secondary corporate deep navy (`#1d4ed8` / `#1e40af`) supports multi-series categorical charts.
+- **Secondary & Structural Dark (`#0f172a`, `#1e293b`, `#334155`)**: High-contrast slate navies used for primary metrics, card headers, and critical numeric values.
+- **Tertiary & Alert Signals (`#f59e0b`, `#ea580c`, `#ef4444`)**: Amber and vivid orange designate queued tickets, moderate saturation thresholds, and warnings; red is reserved exclusively for critical incidents and P1 outages.
+- **Canvas & Neutrals (`#f8fafc`, `#f1f5f9`, `#ffffff`, `#e2e8f0`)**: An airy multi-tone foundation. Base canvas sits at `#f8fafc`, interactive card modules sit on crisp `#ffffff`, and borders/dividers use subtle `#e2e8f0`.
+- **Frosted Translucency**: The navigation rail utilizes `rgba(255, 255, 255, 0.85)` with a 16px backdrop blur, mirroring native desktop utilities.
+
+## Typography
+
+Typography relies on **Inter** across all roles to maximize optical legibility for tabular numbers, ticket codes, and operational subtexts.
+
+- **Numbers and Data Visualization**: Tabular lining (`font-variant-numeric: tabular-nums`) must be enabled across all metric blocks, ticket counters, and workload tables to ensure fixed-width vertical alignment.
+- **Section & Card Headers**: Set in semi-bold and bold weights with subtle negative letter spacing (`-0.015em` to `-0.025em`) to maintain structural density.
+- **Metadata & Subtext**: Rendered in mid-tone slates (`#64748b`) at `0.75rem` to `0.8125rem` to prevent visual noise while keeping secondary details instantly accessible.
+
+## Layout & Spacing
+
+The dashboard uses a structured fluid grid system within a pinned desktop workspace:
+- **Left Navigation Rail**: Fixed width (260px desktop, collapsible to 64px icon-only rail on compact screens).
+- **Main Operational Canvas**: Fluid multi-column layout structured around an 8px spatial grid. Gutters maintain `1.25rem` (20px) spacing between analytical widgets.
+- **KPI Summary Row**: Evenly divided 4-column cards spanning the top tier of views to surface immediate metrics before detail tables.
+- **Reflow Rules**:
+  - **Desktop (>= 1280px)**: Persistent sidebar, 4-column KPI strip, split operational view (2/3 ticket queue matrix, 1/3 team saturation bar breakdown).
+  - **Tablet (768px - 1279px)**: Collapsible floating rail, 2-column KPI grid, stacked workflow cards.
+  - **Mobile (< 768px)**: Bottom drawer navigation, 1-column vertically scrollable card stream.
+
+## Elevation & Depth
+
+Visual hierarchy uses crisp boundary containment combined with subtle, ambient ambient illumination rather than harsh drop shadows:
+
+- **Level 0 (App Canvas)**: Deep flat background rendered in `#f8fafc`.
+- **Level 1 (Operational Cards & Workspaces)**: Opaque `#ffffff` surfaces bordered by a hairline stroke (`1px solid #e2e8f0`) with an ambient diffuse shadow: `0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02)`.
+- **Level 2 (Translucent macOS Side Rail)**: Frosted glass effect using `rgba(255, 255, 255, 0.82)` with `backdrop-filter: blur(16px)` and a right-edge border of `1px solid #e2e8f0`.
+- **Level 3 (Interactive Hover & Dragged Items)**: Sub-cards (such as ticket rows and queue cards) lift on hover with `box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06)` and a border shift to `#cbd5e1`.
+- **Level 4 (Modals, Popovers & Context Menus)**: Pure `#ffffff` floating overlays accompanied by `box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12)`.
+
+## Shapes
+
+This design system uses a balanced rounded geometry (`roundedness: 2`):
+- **Base Cards & Modules**: `0.75rem` (12px) to `1rem` (16px) corner radius, providing approachable containment while fitting enterprise dashboards.
+- **Interactive Buttons & Form Fields**: Standardized to `0.5rem` (8px).
+- **Badges, Pills & Avatars**: Fully rounded (`9999px`) pill geometries for technician avatars, priority chips (`P1`–`P5`), and shift indicators.
+
+## Components
+
+### Buttons
+- **Primary**: Solid corporate blue (`#0d6efd`) text in `#ffffff`, 8px radius, height 36px, with a smooth hover state to `#0b5ed7`.
+- **Secondary / Filter Pills**: Soft slate tint (`#f1f5f9`) with slate-700 text (`#334155`), transitioning to active blue (`#0d6efd`) with white text when toggled.
+- **Ghost / Action Icons**: Transparent background, 1px transparent border, hover state surfaces `#f1f5f9`.
+
+### Priority Badges & Metric Chips
+- **P1 (Critical Outage)**: Background `#0f172a`, text `#ffffff`, font-weight 700.
+- **P2 / P3 (Moderate)**: Background `#eff6ff`, text `#1d4ed8` or `#fffbeb` / `#b45309`.
+- **P4 / P5 (Low Severity)**: Neutral slate badge `#f1f5f9`, text `#475569`.
+- **Status Indicator Dots**: 6px circular dot accompanying status copy (green `#10b981` for active, amber `#f59e0b` for pending, blue `#0d6efd` for in-progress).
+
+### Operational Cards
+- Enclosed white containers with top padding of `1.25rem` and internal body padding of `1.25rem`. 
+- Metric cards showcase a small uppercase label (`label-md`) in `#64748b`, an oversized bold integer (`metric-xl`) in `#0f172a`, followed by contextual footer notes.
+
+### Progress & Capacity Bars
+- Track height 6px to 8px, background `#e2e8f0`, filled with rounded pill progress in semantic saturation colors:
+  - Optimal (<=25 pts): Deep blue (`#1e40af`)
+  - Moderate (26–45 pts): Amber (`#f59e0b`)
+  - Overloaded (>45 pts): Navy-black (`#0f172a`) or vermilion (`#ea580c`)
+
+### Data Tables & Ticket Queues
+- Compact vertical padding (`0.625rem` to `0.75rem`), with dividers rendered in `#f1f5f9`.
+- Row-level hover highlights with `#f8fafc`. Ticket code tags rendered in monospaced or tabular Inter font.

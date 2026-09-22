@@ -60,8 +60,8 @@
 
 .dashboard-kpi-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(13, 110, 253, 0.4);
-    box-shadow: inset 0 0 12px rgba(13, 110, 253, 0.12), 0 12px 32px -4px rgba(0, 0, 0, 0.55);
+    border-color: rgba(28, 88, 168, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(28, 88, 168, 0.08);
 }
 
 /* Tarjeta Hero KPI (Meta Ponderada de Produccion) */
@@ -287,3 +287,138 @@ html[data-theme="dark"] .table-corporate-metrics tbody tr:hover {
     box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     overflow: hidden;
 }
+
+/* --------------------------------------------------------------------------
+   8. SISTEMA DE TABS — NAVEGACIÓN PRINCIPAL (VISTA OPERATIVA, RENDIMIENTO, AUDITORÍA)
+   -------------------------------------------------------------------------- */
+
+/* Contenedor pill de tabs */
+.dash-tab-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background-color: #F1F5F9;
+    border-radius: 0.75rem;
+    border: 1px solid #E2E8F0;
+}
+
+html[data-theme="dark"] .dash-tab-nav {
+    background-color: rgba(15, 23, 42, 0.7);
+    border-color: var(--border);
+}
+
+/* Botón base de tab */
+.dash-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: 1.5px solid transparent;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.15s ease;
+    white-space: nowrap;
+    position: relative;
+}
+
+/* Hover suave (sin estar activo) */
+.dash-tab-btn:not(.dash-tab-active):hover {
+    color: var(--text);
+    background-color: rgba(28, 88, 168, 0.06);
+    border-color: rgba(28, 88, 168, 0.15);
+}
+
+html[data-theme="dark"] .dash-tab-btn:not(.dash-tab-active):hover {
+    background-color: rgba(91, 155, 224, 0.1);
+    color: var(--text);
+    border-color: rgba(91, 155, 224, 0.2);
+}
+
+/* Estado activo — borde inferior corporativo + fondo contrastante */
+.dash-tab-btn.dash-tab-active {
+    background-color: #FFFFFF;
+    color: var(--brand);
+    font-weight: 700;
+    border-color: var(--border);
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(28, 88, 168, 0.08) inset;
+    /* Borde inferior corporativo de 2px */
+    border-bottom: 2px solid var(--brand);
+}
+
+html[data-theme="dark"] .dash-tab-btn.dash-tab-active {
+    background-color: var(--panel);
+    color: var(--brand);
+    border-color: var(--border);
+    border-bottom: 2px solid var(--brand);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Icono del tab activo hereda el color */
+.dash-tab-btn.dash-tab-active i,
+.dash-tab-btn.dash-tab-active svg {
+    color: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   9. TARJETAS KPI AUDIT (AUDITORIA FORENSE) — ALINEACIÓN DE BORDES
+   -------------------------------------------------------------------------- */
+
+.card-audit-kpi-blue {
+    background: linear-gradient(135deg, #EAF2FC 0%, #F0F7FF 100%);
+    border: 1px solid #BFDBF7;
+    border-radius: 0.625rem;
+}
+
+.card-audit-kpi-purple {
+    background: linear-gradient(135deg, #F3F0FF 0%, #FAF7FF 100%);
+    border: 1px solid #D4BBFB;
+    border-radius: 0.625rem;
+}
+
+.card-audit-kpi-amber {
+    background: linear-gradient(135deg, #FEF6E0 0%, #FFFBF0 100%);
+    border: 1px solid #F6E0A0;
+    border-radius: 0.625rem;
+}
+
+html[data-theme="dark"] .card-audit-kpi-blue {
+    background: rgba(91, 155, 224, 0.08);
+    border-color: rgba(91, 155, 224, 0.2);
+}
+
+html[data-theme="dark"] .card-audit-kpi-purple {
+    background: rgba(129, 140, 248, 0.08);
+    border-color: rgba(129, 140, 248, 0.2);
+}
+
+html[data-theme="dark"] .card-audit-kpi-amber {
+    background: rgba(245, 194, 77, 0.08);
+    border-color: rgba(245, 194, 77, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   10. BADGE KPI — ESTADO DE COLA (reemplaza semántica de bandeja)
+   -------------------------------------------------------------------------- */
+.badge-kpi-normal {
+    background-color: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+}
+
+.badge-kpi-alert {
+    background-color: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+}
+

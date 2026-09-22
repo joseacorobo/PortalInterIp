@@ -1,0 +1,15 @@
+======LOGICA DE PORTAL===========
+
+##COORDINADOR
+
+EL coordinador de cada area tiene acceso a poder asignarle tareas o tickets identificados con su respectiva fecha de inici
+de cierre y descripcion.
+
+puede decidir a quien asignarle el ticket creado como dejarlo en la web para que alguien lo tome si no es de mucha emergencia, el coordinador 
+puede asignarle una ponderacion de puntaje, evaluando a merito propio el nivel de peso de dicha tareas
+
+##OPERADOR
+
+	Puede ver los tickets creados y tomarlos para buscar solucionarlos, luego mandarlo y dejarlo en estado
+	de espera para que el coordinador verifique y confirme la puntuacion.
+	

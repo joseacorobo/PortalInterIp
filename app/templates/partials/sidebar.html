@@ -1,129 +1,123 @@
-{#
-  Sidebar Partial — Portal Operaciones IP
-  Diseño oficial: Stitch (Telecom Precision Analytics)
-#}
-<aside id="main-sidebar" class="sidebar-container select-none h-screen">
-    <!-- Top Brand & Collapse Button -->
-    <div class="flex items-center justify-between pb-3 mb-2 border-b border-[#E4E9F3]">
-        <div class="flex items-center gap-2 overflow-hidden">
-            <img src="/static/img/inter_logo.png" alt="inter" class="h-6 w-auto object-contain">
-        </div>
-        <button id="btn-toggle-sidebar" onclick="toggleSidebarCollapse()" class="sidebar-collapse-btn" title="Colapsar menú">
-            <i data-lucide="chevron-left" class="w-4 h-4"></i>
-        </button>
-    </div>
-
-    <!-- Contenedor de Navegación -->
-    <div class="flex-1 flex flex-col overflow-y-auto pr-0.5 space-y-4">
-        
-        <!-- Perfil del Ingeniero / Usuario Logeado (Stitch Style) -->
-        <div class="sidebar-user-chip">
-            <div id="sidebar-user-avatar" class="sidebar-avatar">
-                {{ current_user.iniciales if current_user and current_user.iniciales else "CM" }}
-            </div>
-            <div class="sidebar-user-info overflow-hidden">
-                <p id="sidebar-user-name" class="font-semibold text-xs text-[#101828] truncate">
-                    {{ current_user.nombre_completo if current_user else "Carlos Méndez" }}
-                </p>
-                <p id="sidebar-user-role" class="text-[11px] text-[#5B6B89] truncate">
-                    {{ current_user.rol_display if current_user else "Coordinador · Soporte" }}
-                </p>
-            </div>
-        </div>
-
-        <!-- Grupo: PANEL -->
-        <div>
-            <p class="sidebar-section-title sidebar-label-hide">Panel</p>
-            <div class="space-y-1">
-                <button onclick="switchDashboardView('operative')" id="nav-view-operative" class="sidebar-nav-pill active">
-                    <i data-lucide="columns-3" class="w-4 h-4 shrink-0"></i>
-                    <span class="sidebar-label-hide">Vista operativa</span>
-                </button>
-
-                <button onclick="switchDashboardView('metrics')" id="nav-view-metrics" class="sidebar-nav-pill">
-                    <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
-                    <span class="sidebar-label-hide">Métricas</span>
-                </button>
-
-                <button onclick="switchDashboardView('audit')" id="nav-view-reports" class="sidebar-nav-pill">
-                    <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
-                    <span class="sidebar-label-hide">Reportes</span>
-                </button>
-
-                <button onclick="switchDashboardView('inbox')" id="nav-view-mail" class="sidebar-nav-pill">
-                    <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
-                    <span class="sidebar-label-hide">Tickets IP</span>
-                    <span id="sidebar-inbox-badge" class="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#E8F0FE] text-[#1C58A8] sidebar-label-hide">0</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Grupo: ÁREAS (Acordeón Stitch) -->
-        <div>
-            <p class="sidebar-section-title sidebar-label-hide">Áreas</p>
-            <div class="space-y-1">
-                
-                <!-- Acordeón: Redes de Acceso -->
-                <div class="sidebar-accordion-group" id="group-acceso">
-                    <button type="button" onclick="toggleSidebarMenu('acceso')" class="sidebar-accordion-header">
-                        <span class="sidebar-label-hide truncate">Redes de Acceso</span>
-                        <i data-lucide="chevron-down" id="chevron-acceso" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 rotate-180 sidebar-label-hide" style="color: var(--muted);"></i>
-                    </button>
-                    <div id="submenu-acceso" class="sidebar-submenu expanded">
-                        <div class="space-y-0.5 py-1">
-                            <button onclick="changeArea('Soporte')" id="nav-area-soporte" class="sidebar-subitem active">
-                                <span class="sidebar-label-hide">Soporte FTTH</span>
-                                <span id="badge-count-ftth" class="sidebar-counter-blue sidebar-label-hide">14</span>
-                            </button>
-                            <button onclick="changeArea('Cabecera')" id="nav-area-cabecera" class="sidebar-subitem">
-                                <span class="sidebar-label-hide">Cabecera OLT</span>
-                                <span id="badge-count-olt" class="sidebar-counter-yellow sidebar-label-hide">9</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Acordeón: Telefonía VoIP -->
-                <div class="sidebar-accordion-group" id="group-telefonia">
-                    <button type="button" onclick="toggleSidebarMenu('telefonia')" class="sidebar-accordion-header">
-                        <span class="sidebar-label-hide truncate">Telefonía VoIP</span>
-                        <i data-lucide="chevron-down" id="chevron-telefonia" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 sidebar-label-hide" style="color: var(--muted);"></i>
-                    </button>
-                    <div id="submenu-telefonia" class="sidebar-submenu collapsed">
-                        <div class="space-y-0.5 py-1">
-                            <button onclick="changeArea('Telefonía')" id="nav-area-telefonia" class="sidebar-subitem">
-                                <span class="sidebar-label-hide">Soporte VoIP</span>
-                                <span class="sidebar-counter-blue sidebar-label-hide">3</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Acordeón: Otras áreas -->
-                <div class="sidebar-accordion-group" id="group-otras">
-                    <button type="button" onclick="toggleSidebarMenu('otras')" class="sidebar-accordion-header">
-                        <span class="sidebar-label-hide truncate">Otras áreas</span>
-                        <i data-lucide="chevron-down" id="chevron-otras" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 sidebar-label-hide" style="color: var(--muted);"></i>
-                    </button>
-                    <div id="submenu-otras" class="sidebar-submenu collapsed">
-                        <div class="space-y-0.5 py-1">
-                            <button onclick="changeArea('Todas')" class="sidebar-subitem">
-                                <span class="sidebar-label-hide">Todas las Células</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Footer: Modo Claro Toggle -->
-    <div class="sidebar-footer">
-        <button id="theme-toggle-sidebar" onclick="toggleTheme()" class="sidebar-theme-toggle" title="Alternar tema">
-            <i data-lucide="sun" class="w-4 h-4 shrink-0 text-amber-500"></i>
-            <span class="sidebar-label-hide" id="theme-mode-text">Modo claro</span>
-        </button>
-    </div>
-</aside>
+{#
+  Sidebar Partial — Portal Operaciones IP
+  Diseño oficial: Stitch (Telecom Precision Analytics)
+#}
+<aside id="main-sidebar" class="sidebar-container select-none h-screen">
+    <!-- Top Brand & Collapse Button -->
+    <div class="flex items-center justify-between pb-3 mb-2 border-b border-[#E4E9F3]">
+        <div class="flex items-center gap-2 overflow-hidden">
+            <img src="/static/img/inter_logo.png" alt="inter" class="h-6 w-auto object-contain">
+        </div>
+        <button id="btn-toggle-sidebar" onclick="toggleSidebarCollapse()" class="sidebar-collapse-btn" title="Colapsar menú">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- Contenedor de Navegación -->
+    <div class="flex-1 flex flex-col overflow-y-auto pr-0.5 space-y-4">
+        
+        <!-- Perfil del Ingeniero / Usuario Logeado (Stitch Style) -->
+        <div class="sidebar-user-chip">
+            <div id="sidebar-user-avatar" class="sidebar-avatar">
+                {{ current_user.iniciales if current_user and current_user.iniciales else "CM" }}
+            </div>
+            <div class="sidebar-user-info overflow-hidden">
+                <p id="sidebar-user-name" class="font-semibold text-xs text-[#101828] truncate">
+                    {{ current_user.nombre_completo if current_user else "Carlos Méndez" }}
+                </p>
+                <p id="sidebar-user-role" class="text-[11px] text-[#5B6B89] truncate">
+                    {{ current_user.rol_display if current_user else "Coordinador · Soporte" }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Grupo: PANEL -->
+        <div>
+            <p class="sidebar-section-title sidebar-label-hide">Panel</p>
+            <div class="space-y-1">
+                <button onclick="switchDashboardTab('operativa')" id="nav-view-operativa" class="sidebar-nav-pill active">
+                    <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Vista operativa</span>
+                </button>
+
+                <button onclick="switchDashboardTab('rendimiento')" id="nav-view-rendimiento" class="sidebar-nav-pill">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Rendimiento</span>
+                </button>
+
+                <button onclick="switchDashboardTab('auditoria')" id="nav-view-auditoria" class="sidebar-nav-pill">
+                    <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Auditoría Forense</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grupo: ÁREAS (Acordeón Stitch) -->
+        <div>
+            <p class="sidebar-section-title sidebar-label-hide">Áreas</p>
+            <div class="space-y-1">
+                
+                <!-- Acordeón: Redes de Acceso -->
+                <div class="sidebar-accordion-group" id="group-acceso">
+                    <button type="button" onclick="toggleSidebarMenu('acceso')" class="sidebar-accordion-header">
+                        <span class="sidebar-label-hide truncate">Redes de Acceso</span>
+                        <i data-lucide="chevron-down" id="chevron-acceso" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 rotate-180 sidebar-label-hide" style="color: var(--muted);"></i>
+                    </button>
+                    <div id="submenu-acceso" class="sidebar-submenu expanded">
+                        <div class="space-y-0.5 py-1">
+                            <button onclick="changeArea('Soporte')" id="nav-area-soporte" class="sidebar-subitem active">
+                                <span class="sidebar-label-hide">Soporte FTTH</span>
+                                <span id="badge-count-ftth" class="sidebar-counter-blue sidebar-label-hide">14</span>
+                            </button>
+                            <button onclick="changeArea('Cabecera')" id="nav-area-cabecera" class="sidebar-subitem">
+                                <span class="sidebar-label-hide">Cabecera OLT</span>
+                                <span id="badge-count-olt" class="sidebar-counter-yellow sidebar-label-hide">9</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acordeón: Telefonía VoIP -->
+                <div class="sidebar-accordion-group" id="group-telefonia">
+                    <button type="button" onclick="toggleSidebarMenu('telefonia')" class="sidebar-accordion-header">
+                        <span class="sidebar-label-hide truncate">Telefonía VoIP</span>
+                        <i data-lucide="chevron-down" id="chevron-telefonia" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 sidebar-label-hide" style="color: var(--muted);"></i>
+                    </button>
+                    <div id="submenu-telefonia" class="sidebar-submenu collapsed">
+                        <div class="space-y-0.5 py-1">
+                            <button onclick="changeArea('Telefonía')" id="nav-area-telefonia" class="sidebar-subitem">
+                                <span class="sidebar-label-hide">Soporte VoIP</span>
+                                <span class="sidebar-counter-blue sidebar-label-hide">3</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acordeón: Otras áreas -->
+                <div class="sidebar-accordion-group" id="group-otras">
+                    <button type="button" onclick="toggleSidebarMenu('otras')" class="sidebar-accordion-header">
+                        <span class="sidebar-label-hide truncate">Otras áreas</span>
+                        <i data-lucide="chevron-down" id="chevron-otras" class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 sidebar-label-hide" style="color: var(--muted);"></i>
+                    </button>
+                    <div id="submenu-otras" class="sidebar-submenu collapsed">
+                        <div class="space-y-0.5 py-1">
+                            <button onclick="changeArea('Todas')" class="sidebar-subitem">
+                                <span class="sidebar-label-hide">Todas las Células</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer: Modo Claro Toggle -->
+    <div class="sidebar-footer">
+        <button id="theme-toggle-sidebar" onclick="toggleTheme()" class="sidebar-theme-toggle" title="Alternar tema">
+            <i data-lucide="sun" class="w-4 h-4 shrink-0 text-amber-500"></i>
+            <span class="sidebar-label-hide" id="theme-mode-text">Modo claro</span>
+        </button>
+    </div>
+</aside>

@@ -248,7 +248,7 @@ async function loadDashboardData() {
                     critBadge.innerText = "¡Atención Inmediata!";
                 } else {
                     critBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600";
-                    critBadge.innerText = "Bandeja Normal";
+                    critBadge.innerText = "Cola Normal";
                 }
             }
         }
@@ -578,7 +578,7 @@ async function loadCurrentWorkload(areaParam) {
     if (iconSpin) iconSpin.classList.add("animate-spin");
 
     try {
-        const res = await fetch(`/api/workload/current?area=${encodeURIComponent(area)}`);
+        const res = await fetch(`/api/metrics/workload?area=${encodeURIComponent(area)}`);
         if (!res.ok) {
             console.warn(`No se pudo consultar carga actual (${res.status})`);
             return;
@@ -3049,6 +3049,11 @@ async function loadCurrentUserProfile() {
             if (activeTickets && activeTickets.length > 0) {
                 applyInboxFilters();
             }
+
+            // Mesa de Asignación (Triage) exclusiva para Coordinadores
+            if (typeof checkCoordinatorRoleAndInitTriage === 'function') {
+                checkCoordinatorRoleAndInitTriage(user);
+            }
         }
     } catch (e) {
         console.error("Error loading user profile:", e);
@@ -3144,6 +3149,426 @@ async function logoutSession() {
 }
 
 // =============================================================
+// TOAST NOTIFICATIONS (TELECOM PRECISION ANALYTICS)
+// =============================================================
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function showToast(message, type = 'success', duration = 3500) {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = "pointer-events-auto flex items-center gap-3 py-2.5 px-3.5 rounded-xl bg-white dark:bg-slate-800 text-[#0b1c30] dark:text-white border shadow-lg transition-all duration-300 transform -translate-y-2 opacity-0 text-xs";
+
+    let iconSvg = '';
+    let borderColor = '';
+    if (type === 'success') {
+        borderColor = 'border-l-4 border-l-emerald-500 border-slate-200/80 dark:border-slate-700';
+        iconSvg = `<div class="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>`;
+    } else if (type === 'error') {
+        borderColor = 'border-l-4 border-l-rose-500 border-slate-200/80 dark:border-slate-700';
+        iconSvg = `<div class="w-6 h-6 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>`;
+    } else if (type === 'warning') {
+        borderColor = 'border-l-4 border-l-amber-500 border-slate-200/80 dark:border-slate-700';
+        iconSvg = `<div class="w-6 h-6 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>`;
+    } else {
+        borderColor = 'border-l-4 border-l-[#0057cd] border-slate-200/80 dark:border-slate-700';
+        iconSvg = `<div class="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0057cd] dark:text-blue-400 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </div>`;
+    }
+
+    toast.className += ` ${borderColor}`;
+    toast.innerHTML = `
+        ${iconSvg}
+        <div class="flex-1 pr-2 font-medium leading-snug">${escapeHtml(message)}</div>
+        <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs shrink-0 cursor-pointer p-0.5 rounded transition" onclick="this.parentElement.remove()">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    `;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove("-translate-y-2", "opacity-0");
+        toast.classList.add("translate-y-0", "opacity-100");
+    });
+
+    setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("-translate-y-2", "opacity-0");
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// =============================================================
+// MESA DE ASIGNACIÓN (TRIAGE) - EXCLUSIVA PARA COORDINACIÓN
+// =============================================================
+
+window.currentTriageOperators = [];
+
+function getPriorityBadgeClass(p) {
+    const pri = (p || '').toUpperCase();
+    if (pri === 'P1') return 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300';
+    if (pri === 'P2') return 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-950/60 dark:text-orange-300';
+    if (pri === 'P3') return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300';
+    if (pri === 'P4') return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300';
+    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300';
+}
+
+function calcWaitTime(dateStr) {
+    if (!dateStr) return 'Reciente';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Reciente';
+    const diffMs = Date.now() - date.getTime();
+    if (diffMs < 0) return 'Hace un momento';
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return '< 1 min';
+    if (diffMin < 60) return `${diffMin} min`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours}h ${diffMin % 60}m`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ${diffHours % 24}h`;
+}
+
+function buildOperatorOptions(operators) {
+    if (!operators || operators.length === 0) {
+        return '<option value="" disabled selected>No hay especialistas disponibles</option>';
+    }
+    let html = '<option value="" disabled selected>Seleccionar especialista...</option>';
+    operators.forEach(op => {
+        const ptsText = `${op.active_points || 0} pts`;
+        const casesText = `${op.active_tickets_count || 0} caso${op.active_tickets_count === 1 ? '' : 's'}`;
+        const sat = op.saturation_level || 'Disponible';
+        html += `<option value="${op.id}">${escapeHtml(op.name)} (${ptsText} • ${casesText} - ${sat})</option>`;
+    });
+    return html;
+}
+
+function renderTriageRow(t) {
+    const pBadgeClass = getPriorityBadgeClass(t.priority || 'P3');
+    const safeSubject = escapeHtml(t.subject || 'Sin asunto');
+    const safeSender = escapeHtml(t.sender_email || t.requester || 'noc-alerts@inter.com.ve');
+    const safeNode = escapeHtml(t.node_name || 'N/A');
+    const safeSubscriber = escapeHtml(t.subscriber_code || 'N/A');
+    const techDetails = [t.slot_pon, t.serial_pon, t.mac_address].filter(Boolean).map(escapeHtml).join(' • ');
+    const points = t.suggested_points || 1;
+    const taskName = escapeHtml(t.suggested_task_name || 'Incidencia de Área');
+    const sla = t.sla_minutes || 30;
+    const waitTime = calcWaitTime(t.fecha_creacion || t.created_at);
+    const opOptions = buildOperatorOptions(window.currentTriageOperators || []);
+
+    return `
+    <tr id="triage-row-${t.id}" class="hover:bg-blue-50/40 dark:hover:bg-slate-800/40 transition-colors duration-150 border-b border-[#F1F5F9] dark:border-slate-800/60">
+        <td class="py-3 px-3.5 whitespace-nowrap">
+            <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-xs text-[#0057cd] dark:text-blue-400 cursor-pointer hover:underline" onclick="openTicketFromWorkload(${t.id})" title="Ver detalles del ticket">
+                    ${escapeHtml(t.ticket_code || ('#' + t.id))}
+                </span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${pBadgeClass}">
+                    ${escapeHtml(t.priority || 'P3')}
+                </span>
+            </div>
+        </td>
+        <td class="py-3 px-3.5 max-w-[260px]">
+            <div class="font-semibold text-xs text-[#0b1c30] dark:text-slate-100 truncate" title="${safeSubject}">
+                ${safeSubject}
+            </div>
+            <div class="text-[11px] text-[#64748b] dark:text-slate-400 truncate flex items-center gap-1 mt-0.5" title="${safeSender}">
+                <i data-lucide="mail" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                <span class="truncate">${safeSender}</span>
+            </div>
+        </td>
+        <td class="py-3 px-3.5 whitespace-nowrap">
+            <div class="text-[11px] text-[#0b1c30] dark:text-slate-200 flex items-center gap-1.5">
+                <span class="font-medium text-slate-400 text-[10px]">Nodo:</span>
+                <span class="font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px]">${safeNode}</span>
+                <span class="font-medium text-slate-400 text-[10px] ml-1">Abonado:</span>
+                <span class="font-mono font-semibold text-slate-700 dark:text-slate-300 text-[10px]">${safeSubscriber}</span>
+            </div>
+            ${techDetails ? `<div class="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[200px]" title="${techDetails}">${techDetails}</div>` : ''}
+        </td>
+        <td class="py-3 px-3.5 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0057cd] border border-blue-200/60 dark:bg-blue-950/50 dark:text-blue-300">
+                    ${points} pts
+                </span>
+                <span class="text-xs text-slate-700 dark:text-slate-300 font-medium truncate max-w-[150px]" title="${taskName}">
+                    ${taskName}
+                </span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5">
+                SLA: ${sla} min
+            </div>
+        </td>
+        <td class="py-3 px-3.5 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i>
+                <span>${waitTime}</span>
+            </span>
+        </td>
+        <td class="py-3 px-3.5 text-right whitespace-nowrap">
+            <div class="inline-flex items-center gap-2 justify-end">
+                <select id="triage-op-${t.id}" class="text-xs py-1.5 px-2.5 rounded-lg border border-[#cbd5e1] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#0b1c30] dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#0057cd] focus:border-[#0057cd] shadow-2xs font-sans max-w-[230px] truncate cursor-pointer">
+                    ${opOptions}
+                </select>
+                <button id="btn-assign-${t.id}" onclick="assignTriageTicket(${t.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0057cd] hover:bg-[#0046a6] text-white font-semibold text-xs shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer shrink-0">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    <span>Asignar</span>
+                </button>
+            </div>
+        </td>
+    </tr>
+    `;
+}
+
+function checkCoordinatorRoleAndInitTriage(user) {
+    const triagePanel = document.getElementById("coordinator-triage-panel");
+    if (!triagePanel) return;
+
+    const isCoordinator = user && (user.role === 'COORDINADOR');
+    if (isCoordinator) {
+        triagePanel.classList.remove("hidden");
+        const areaBadge = document.getElementById("triage-area-badge");
+        if (areaBadge && user.area) {
+            areaBadge.textContent = "Área: " + user.area;
+        }
+        loadCoordinatorTriage();
+    } else {
+        triagePanel.classList.add("hidden");
+    }
+}
+
+async function loadCoordinatorTriage() {
+    const panel = document.getElementById("coordinator-triage-panel");
+    const tbody = document.getElementById("triage-tickets-tbody");
+    const container = document.getElementById("triage-table-container");
+    const emptyState = document.getElementById("triage-empty-state");
+    const countLabel = document.getElementById("triage-count-label");
+    const areaBadge = document.getElementById("triage-area-badge");
+    const refreshIcon = document.getElementById("icon-refresh-triage");
+
+    if (!panel || !tbody) return;
+
+    const user = window.currentUser;
+    if (!user || user.role !== 'COORDINADOR') {
+        panel.classList.add("hidden");
+        return;
+    }
+
+    const area = user.area || '';
+    if (areaBadge) {
+        areaBadge.textContent = "Área: " + (area || "No especificada");
+    }
+
+    if (refreshIcon) refreshIcon.classList.add("animate-spin");
+
+    try {
+        // 1. Obtener operadores disponibles del área ordenados por menor carga
+        const opsUrl = `/api/operators/availability?area=${encodeURIComponent(area)}`;
+        const opsRes = await fetch(opsUrl);
+        if (opsRes.ok) {
+            window.currentTriageOperators = await opsRes.json();
+        } else {
+            window.currentTriageOperators = [];
+        }
+
+        // 2. Obtener tickets pendientes no asignados del área
+        const ticketsUrl = `/api/tickets/unassigned?area=${encodeURIComponent(area)}`;
+        const tRes = await fetch(ticketsUrl);
+        
+        if (!tRes.ok) {
+            const errData = await tRes.json().catch(() => ({}));
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="py-6 text-center text-rose-600 dark:text-rose-400 text-xs">
+                        <div class="flex items-center justify-center gap-2">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            <span>${escapeHtml(errData.error || "Error consultando tickets sin asignar")}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+
+        const tickets = await tRes.json();
+
+        if (!tickets || tickets.length === 0) {
+            tbody.innerHTML = '';
+            if (container) container.classList.add("hidden");
+            if (emptyState) emptyState.classList.remove("hidden");
+            if (countLabel) countLabel.textContent = "0 casos pendientes";
+        } else {
+            if (container) container.classList.remove("hidden");
+            if (emptyState) emptyState.classList.add("hidden");
+            if (countLabel) {
+                countLabel.textContent = tickets.length === 1 ? "1 caso en espera" : `${tickets.length} casos en espera`;
+            }
+
+            tbody.innerHTML = tickets.map(t => renderTriageRow(t)).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+    } catch (e) {
+        console.error("Error cargando Mesa de Asignación:", e);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="py-6 text-center text-rose-600 text-xs">
+                    Error de conexión al cargar la Mesa de Asignación.
+                </td>
+            </tr>
+        `;
+    } finally {
+        if (refreshIcon) {
+            setTimeout(() => refreshIcon.classList.remove("animate-spin"), 400);
+        }
+    }
+}
+
+async function refreshTriageOperators() {
+    const user = window.currentUser;
+    if (!user || !user.area) return;
+    try {
+        const opsUrl = `/api/operators/availability?area=${encodeURIComponent(user.area)}`;
+        const res = await fetch(opsUrl);
+        if (res.ok) {
+            window.currentTriageOperators = await res.json();
+            const selects = document.querySelectorAll("#triage-tickets-tbody select[id^='triage-op-']");
+            selects.forEach(sel => {
+                const currentVal = sel.value;
+                sel.innerHTML = buildOperatorOptions(window.currentTriageOperators);
+                if (currentVal) sel.value = currentVal;
+            });
+        }
+    } catch (e) {
+        console.error("Error refreshing triage operators:", e);
+    }
+}
+
+async function assignTriageTicket(ticketId) {
+    const selectEl = document.getElementById(`triage-op-${ticketId}`);
+    if (!selectEl) return;
+
+    const opId = selectEl.value;
+    if (!opId) {
+        showToast("Seleccione un especialista para asignar el caso", "warning");
+        selectEl.focus();
+        return;
+    }
+
+    const btn = document.getElementById(`btn-assign-${ticketId}`);
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path></svg> Asignando...`;
+    }
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/assign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                operador_id: parseInt(opId, 10),
+                coordinador_id: window.currentUser ? window.currentUser.id : null,
+                notas: "Asignado desde Mesa de Asignación (Triage)"
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // Eliminar la fila de la tabla visualmente mediante manipulación del DOM con animación
+            const row = document.getElementById(`triage-row-${ticketId}`);
+            if (row) {
+                row.style.transition = "all 0.35s ease-out";
+                row.style.transform = "translateX(30px)";
+                row.style.opacity = "0";
+                row.style.backgroundColor = "#ecfdf5";
+                setTimeout(() => {
+                    row.remove();
+                    checkTriageTableEmpty();
+                }, 350);
+            }
+
+            showToast(data.message || `Ticket #${ticketId} asignado exitosamente`, "success");
+
+            // Refrescar lista de operadores disponibles (para actualizar sus puntos en los otros selects)
+            refreshTriageOperators();
+
+            // Refrescar monitores operativos del dashboard si están presentes
+            if (typeof loadCurrentWorkload === 'function') {
+                loadCurrentWorkload();
+            }
+            if (typeof loadDashboardData === 'function') {
+                loadDashboardData();
+            }
+            if (typeof loadInbox === 'function') {
+                loadInbox();
+            }
+        } else {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+            }
+            showToast(data.error || "No se pudo asignar el ticket.", "error");
+        }
+    } catch (e) {
+        console.error("Error asignando ticket:", e);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+        showToast("Error de conexión al asignar el ticket.", "error");
+    }
+}
+
+function checkTriageTableEmpty() {
+    const tbody = document.getElementById("triage-tickets-tbody");
+    const container = document.getElementById("triage-table-container");
+    const emptyState = document.getElementById("triage-empty-state");
+    const countLabel = document.getElementById("triage-count-label");
+
+    if (!tbody) return;
+    const remainingRows = tbody.querySelectorAll("tr[id^='triage-row-']");
+    const count = remainingRows.length;
+
+    if (countLabel) {
+        countLabel.textContent = count === 1 ? "1 caso en espera" : `${count} casos en espera`;
+    }
+
+    if (count === 0) {
+        if (container) container.classList.add("hidden");
+        if (emptyState) emptyState.classList.remove("hidden");
+        if (countLabel) countLabel.textContent = "0 casos pendientes";
+    } else {
+        if (container) container.classList.remove("hidden");
+        if (emptyState) emptyState.classList.add("hidden");
+    }
+}
+
+window.showToast = showToast;
+window.checkCoordinatorRoleAndInitTriage = checkCoordinatorRoleAndInitTriage;
+window.loadCoordinatorTriage = loadCoordinatorTriage;
+window.assignTriageTicket = assignTriageTicket;
+window.refreshTriageOperators = refreshTriageOperators;
+
+// =============================================================
 // MOTOR DE AUDITORÍA Y TRAZABILIDAD OPERATIVA EN TIEMPO REAL
 // =============================================================
 
@@ -3223,49 +3648,51 @@ async function loadAuditLogs() {
 }
 
 // =============================================================
-// CONMUTADOR DE VISTAS MODULARES (MÉTRICAS / BANDEJA / AUDITORÍA)
+// =============================================================
+// CONMUTADOR DE PESTAÑAS (VISTA OPERATIVA / RENDIMIENTO / AUDITORÍA)
 // =============================================================
 
-let currentDashboardView = 'operative'; // 'operative' | 'metrics' | 'inbox' | 'audit' | 'assistant'
+let currentDashboardTab = 'operativa'; // 'operativa' | 'rendimiento' | 'auditoria' | 'assistant'
 
-function switchDashboardView(viewId) {
-    currentDashboardView = viewId;
-    window.currentDashboardView = viewId;
-    
-    const viewMetrics = document.getElementById('view-metrics');
-    const viewInbox = document.getElementById('view-inbox');
-    const viewAudit = document.getElementById('view-audit');
+function switchDashboardTab(tabName) {
+    currentDashboardTab = tabName;
+    window.currentDashboardTab = tabName;
+    window.currentDashboardView = tabName;
+
+    const tabOperativa = document.getElementById('tab-operativa');
+    const tabRendimiento = document.getElementById('tab-rendimiento');
+    const tabAuditoria = document.getElementById('tab-auditoria');
     const viewAssistant = document.getElementById('view-assistant');
 
-    if (viewMetrics) {
-        if (viewId === 'metrics' || viewId === 'operative') {
-            viewMetrics.classList.remove('hidden');
-            viewMetrics.style.display = 'block';
+    if (tabOperativa) {
+        if (tabName === 'operativa') {
+            tabOperativa.classList.remove('hidden');
+            tabOperativa.style.display = 'block';
         } else {
-            viewMetrics.classList.add('hidden');
-            viewMetrics.style.display = 'none';
+            tabOperativa.classList.add('hidden');
+            tabOperativa.style.display = 'none';
         }
     }
-    if (viewInbox) {
-        if (viewId === 'inbox' || viewId === 'mail') {
-            viewInbox.classList.remove('hidden');
-            viewInbox.style.display = 'block';
+    if (tabRendimiento) {
+        if (tabName === 'rendimiento') {
+            tabRendimiento.classList.remove('hidden');
+            tabRendimiento.style.display = 'block';
         } else {
-            viewInbox.classList.add('hidden');
-            viewInbox.style.display = 'none';
+            tabRendimiento.classList.add('hidden');
+            tabRendimiento.style.display = 'none';
         }
     }
-    if (viewAudit) {
-        if (viewId === 'audit') {
-            viewAudit.classList.remove('hidden');
-            viewAudit.style.display = 'block';
+    if (tabAuditoria) {
+        if (tabName === 'auditoria') {
+            tabAuditoria.classList.remove('hidden');
+            tabAuditoria.style.display = 'block';
         } else {
-            viewAudit.classList.add('hidden');
-            viewAudit.style.display = 'none';
+            tabAuditoria.classList.add('hidden');
+            tabAuditoria.style.display = 'none';
         }
     }
     if (viewAssistant) {
-        if (viewId === 'assistant') {
+        if (tabName === 'assistant') {
             viewAssistant.classList.remove('hidden');
             viewAssistant.style.display = 'block';
         } else {
@@ -3274,64 +3701,58 @@ function switchDashboardView(viewId) {
         }
     }
 
-    // Resaltado de botones en el sidebar de Stitch
-    const btnOperative = document.getElementById('nav-view-operative');
-    const btnMetrics = document.getElementById('nav-view-metrics');
-    const btnReports = document.getElementById('nav-view-reports');
-    const btnMail = document.getElementById('nav-view-mail');
+    // Actualizar botones de pestañas superiores
+    const tabBtnOperativa = document.getElementById('tab-btn-operativa');
+    const tabBtnRendimiento = document.getElementById('tab-btn-rendimiento');
+    const tabBtnAuditoria = document.getElementById('tab-btn-auditoria');
 
-    if (btnOperative) {
-        if (viewId === 'operative') btnOperative.classList.add('active');
-        else btnOperative.classList.remove('active');
-    }
-    if (btnMetrics) {
-        if (viewId === 'metrics') btnMetrics.classList.add('active');
-        else btnMetrics.classList.remove('active');
-    }
-    if (btnReports) {
-        if (viewId === 'audit') btnReports.classList.add('active');
-        else btnReports.classList.remove('active');
-    }
-    if (btnMail) {
-        if (viewId === 'inbox' || viewId === 'mail') btnMail.classList.add('active');
-        else btnMail.classList.remove('active');
-    }
+    [
+        { name: 'operativa', el: tabBtnOperativa },
+        { name: 'rendimiento', el: tabBtnRendimiento },
+        { name: 'auditoria', el: tabBtnAuditoria }
+    ].forEach(t => {
+        if (!t.el) return;
+        t.el.classList.remove('bg-white', 'text-[#1C58A8]', 'shadow-xs', 'font-bold', 'border', 'border-[#E4E9F3]', 'text-[#5B6B89]', 'hover:text-[#101828]', 'font-semibold');
+        if (t.name === tabName) {
+            t.el.classList.add('dash-tab-active');
+        } else {
+            t.el.classList.remove('dash-tab-active');
+        }
+    });
 
-    // Banners contextuales de Stitch
-    const bannerOperative = document.getElementById('banner-operative');
-    const bannerMetrics = document.getElementById('banner-metrics');
-    const bannerReports = document.getElementById('banner-reports');
-    const bannerAssistant = document.getElementById('banner-assistant');
-    const bannerMail = document.getElementById('banner-mail');
+    // Resaltado de botones en el sidebar
+    const btnOperativa = document.getElementById('nav-view-operativa');
+    const btnRendimiento = document.getElementById('nav-view-rendimiento');
+    const btnAuditoria = document.getElementById('nav-view-auditoria');
 
-    if (bannerOperative) bannerOperative.classList.toggle('hidden', viewId !== 'operative');
-    if (bannerMetrics) bannerMetrics.classList.toggle('hidden', viewId !== 'metrics');
-    if (bannerReports) bannerReports.classList.toggle('hidden', viewId !== 'audit');
-    if (bannerAssistant) bannerAssistant.classList.toggle('hidden', viewId !== 'assistant');
-    if (bannerMail) bannerMail.classList.toggle('hidden', viewId !== 'inbox' && viewId !== 'mail');
+    if (btnOperativa) btnOperativa.classList.toggle('active', tabName === 'operativa');
+    if (btnRendimiento) btnRendimiento.classList.toggle('active', tabName === 'rendimiento');
+    if (btnAuditoria) btnAuditoria.classList.toggle('active', tabName === 'auditoria');
 
     // Actualizar breadcrumb si existe
     const bcView = document.getElementById('breadcrumb-view-name');
     if (bcView) {
-        if (viewId === 'operative') bcView.innerText = 'Vista Operativa';
-        else if (viewId === 'metrics') bcView.innerText = 'Métricas & Rendimiento';
-        else if (viewId === 'inbox' || viewId === 'mail') bcView.innerText = 'Tickets IP';
-        else if (viewId === 'audit') bcView.innerText = 'Historial y Auditoría';
-        else if (viewId === 'assistant') bcView.innerText = 'Asistente CLI';
+        if (tabName === 'operativa') bcView.innerText = 'Vista Operativa';
+        else if (tabName === 'rendimiento') bcView.innerText = 'Rendimiento del Turno';
+        else if (tabName === 'auditoria') bcView.innerText = 'Auditoría Forense';
+        else if (tabName === 'assistant') bcView.innerText = 'Asistente CLI';
     }
 
-    // Acciones de carga y render por vista
-    if (viewId === 'audit') {
+    // Acciones de carga y render por pestaña
+    if (tabName === 'auditoria') {
         if (typeof loadReportsData === 'function') loadReportsData();
-        if (typeof loadFeed === 'function') loadFeed();
         if (typeof loadAuditLogs === 'function') loadAuditLogs();
-    } else if (viewId === 'inbox' || viewId === 'mail') {
-        if (typeof loadInbox === 'function') loadInbox();
-        if (typeof loadMailWorkerStatus === 'function') loadMailWorkerStatus();
-    } else if (viewId === 'metrics' || viewId === 'operative') {
+    } else if (tabName === 'operativa') {
+        if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+        if (typeof loadFeed === 'function') loadFeed();
+        if (window.currentUser && window.currentUser.role === 'COORDINADOR' && typeof loadCoordinatorTriage === 'function') {
+            loadCoordinatorTriage();
+        }
+    } else if (tabName === 'rendimiento') {
         if (window.chartHourly && typeof window.chartHourly.resize === 'function') window.chartHourly.resize();
         if (window.chartTechnicians && typeof window.chartTechnicians.resize === 'function') window.chartTechnicians.resize();
         if (window.chartWeights && typeof window.chartWeights.resize === 'function') window.chartWeights.resize();
+        if (typeof loadDashboardData === 'function') loadDashboardData();
     }
 
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -3339,7 +3760,25 @@ function switchDashboardView(viewId) {
     }
 }
 
+// Alias backward-compatibility
+function switchDashboardView(viewId) {
+    if (viewId === 'operative' || viewId === 'operativa') {
+        switchDashboardTab('operativa');
+    } else if (viewId === 'metrics' || viewId === 'rendimiento') {
+        switchDashboardTab('rendimiento');
+    } else if (viewId === 'audit' || viewId === 'auditoria' || viewId === 'reports') {
+        switchDashboardTab('auditoria');
+    } else if (viewId === 'assistant') {
+        switchDashboardTab('assistant');
+    } else {
+        switchDashboardTab('operativa');
+    }
+}
+
+window.switchDashboardTab = switchDashboardTab;
+window.switchTab = switchDashboardTab;
 window.switchDashboardView = switchDashboardView;
+
 window.loadCurrentUserProfile = loadCurrentUserProfile;
 window.loadUsersDropdownList = loadUsersDropdownList;
 window.toggleUserDropdown = toggleUserDropdown;

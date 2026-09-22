@@ -767,3 +767,11 @@ def get_current_workload(area: str = "Todas") -> dict:
         }
     finally:
         conn.close()
+
+def export_productivity_report(area: str = "Todas", range_filter: str = "all") -> io.BytesIO:
+    """
+    Genera en memoria (.xlsx) el reporte gerencial de productividad y KPIs
+    con openpyxl para su retorno mediante StreamingResponse.
+    """
+    return generate_excel_report(area=area, range_filter=range_filter)
+

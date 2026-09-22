@@ -6,14 +6,14 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from services.mail_worker import mail_worker_instance
-from services.reports import get_managerial_summary, generate_excel_report, get_current_workload
+from services.reports import get_managerial_summary, generate_excel_report, get_current_workload, export_productivity_report
 from services.email_parser import TelcoEmailParser
 from services.audit import log_audit_event, get_audit_logs
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Tuple
 import sqlite3
 from datetime import datetime
 from database import get_db, init_db
@@ -44,14 +44,143 @@ def mail_portal_view():
 def inbox_portal_view():
     return FileResponse(os.path.join(BASE_DIR, "templates", "mail.html"))
 
+# ─────────────────────────────────────────────────────────────
+# CATÁLOGO DE LAS 5 ÁREAS TÉCNICAS OFICIALES Y NORMALIZACIÓN
+# ─────────────────────────────────────────────────────────────
+OFFICIAL_AREAS = [
+    "Redes de acceso y aprovisionamiento",
+    "Control de Trafico y Redes inalambricas",
+    "Redes WAN",
+    "Seguridad",
+    "Telefonia",
+]
+
+AREA_MAPPING = {
+    # 1. Redes de acceso y aprovisionamiento
+    "redes de acceso y aprovisionamiento": "Redes de acceso y aprovisionamiento",
+    "redes de acceso": "Redes de acceso y aprovisionamiento",
+    "acceso y aprovisionamiento": "Redes de acceso y aprovisionamiento",
+    "acceso": "Redes de acceso y aprovisionamiento",
+    "soporte": "Redes de acceso y aprovisionamiento",
+    "acceso_aprov": "Redes de acceso y aprovisionamiento",
+    "ftth": "Redes de acceso y aprovisionamiento",
+
+    # 2. Control de Trafico y Redes inalambricas
+    "control de trafico y redes inalambricas": "Control de Trafico y Redes inalambricas",
+    "control de trafico e redes inalambricas": "Control de Trafico y Redes inalambricas",
+    "control de tráfico e redes inalámbricas": "Control de Trafico y Redes inalambricas",
+    "control de tráfico y redes inalámbricas": "Control de Trafico y Redes inalambricas",
+    "control de trafico": "Control de Trafico y Redes inalambricas",
+    "control de tráfico": "Control de Trafico y Redes inalambricas",
+    "trafico y redes inalambricas": "Control de Trafico y Redes inalambricas",
+    "trafico inalambrico": "Control de Trafico y Redes inalambricas",
+    "tráfico inalámbrico": "Control de Trafico y Redes inalambricas",
+    "trafico_inalambrico": "Control de Trafico y Redes inalambricas",
+    "inalambricas": "Control de Trafico y Redes inalambricas",
+    "inalámbricas": "Control de Trafico y Redes inalambricas",
+
+    # 3. Redes WAN
+    "redes wan": "Redes WAN",
+    "wan": "Redes WAN",
+    "cabecera": "Redes WAN",
+    "redes_wan": "Redes WAN",
+    "redes y wan": "Redes WAN",
+
+    # 4. Seguridad
+    "seguridad": "Seguridad",
+    "seguridad perimetral": "Seguridad",
+
+    # 5. Telefonia
+    "telefonia": "Telefonia",
+    "telefonía": "Telefonia",
+    "telefonia ip": "Telefonia",
+    "telefonía ip": "Telefonia",
+}
+
+def normalize_area_name(area: Optional[str]) -> Optional[str]:
+    """Normaliza cualquier denominación o variante al nombre oficial exacto"""
+    if not area:
+        return None
+    val = area.strip().lower()
+    if val in ["todas", "todas las áreas", "todas las celulas", "todas las células", "all"]:
+        return "Todas"
+    import unicodedata
+    nfkd = unicodedata.normalize('NFKD', val)
+    unaccented = "".join([c for c in nfkd if not unicodedata.combining(c)])
+    if val in AREA_MAPPING:
+        return AREA_MAPPING[val]
+    if unaccented in AREA_MAPPING:
+        return AREA_MAPPING[unaccented]
+    for k, target in AREA_MAPPING.items():
+        if k in val or k in unaccented:
+            return target
+    return area.strip()
+
+def resolve_coordinator_area(area: Optional[str] = None, request: Request = None) -> Tuple[Optional[str], Optional[dict]]:
+    """
+    Obtiene el área objetivo del coordinador:
+    1. Si se pasa `area` como parámetro, se normaliza y se usa.
+    2. Si no, se extrae el usuario de la sesión (cookie auth_user_id, token Bearer o encabezado X-Area).
+    3. Devuelve (area_normalizada, dict_usuario)
+    """
+    user = None
+    user_id = None
+    
+    if request:
+        # Header X-Area explícito
+        if not area and request.headers.get("X-Area"):
+            area = request.headers.get("X-Area")
+            
+        # Auth Token Bearer o Cookie auth_user_id
+        auth_hdr = request.headers.get("Authorization")
+        if auth_hdr and auth_hdr.startswith("Bearer "):
+            token = auth_hdr.split("Bearer ")[1].strip()
+            if token.isdigit():
+                user_id = int(token)
+            else:
+                conn = get_db()
+                cur = conn.cursor()
+                cur.execute("SELECT id, name, area, role, email FROM users WHERE email = ? OR name = ?", (token, token))
+                row = cur.fetchone()
+                conn.close()
+                if row:
+                    user = dict(row)
+                    user_id = user["id"]
+        if not user_id:
+            cookie_val = request.cookies.get("auth_user_id")
+            if cookie_val and cookie_val.isdigit():
+                user_id = int(cookie_val)
+                
+    if user_id and not user:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, name, area, role, email FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            user = dict(row)
+            
+    if not area and user:
+        area = user.get("area")
+        
+    normalized = normalize_area_name(area)
+    return normalized, user
+
 def parse_area_filter(area: str, table_prefix: str = ""):
     col = f"{table_prefix}.area" if table_prefix else "area"
     if not area or area in ["Todas", "Todas las Áreas", "Todas las Células"]:
         return "1=1", []
-    elif area in ["Acceso", "Redes de Acceso"]:
-        return f"{col} IN ('Soporte', 'Cabecera')", []
-    elif area in ["Servicios", "Servicios y Clientes", "Otras"]:
-        return f"{col} IN ('Telefonía')", []
+    norm = normalize_area_name(area)
+    if norm == "Redes de acceso y aprovisionamiento":
+        return f"({col} = 'Redes de acceso y aprovisionamiento' OR {col} IN ('Soporte', 'Acceso', 'Redes de Acceso'))", []
+    elif norm == "Control de Trafico y Redes inalambricas":
+        return f"({col} = 'Control de Trafico y Redes inalambricas' OR {col} LIKE '%Tráfico%' OR {col} LIKE '%Trafico%')", []
+    elif norm == "Redes WAN":
+        return f"({col} = 'Redes WAN' OR {col} IN ('Cabecera', 'Redes y WAN'))", []
+    elif norm == "Seguridad":
+        return f"({col} = 'Seguridad' OR {col} LIKE '%Seguridad%')", []
+    elif norm == "Telefonia":
+        return f"({col} = 'Telefonia' OR {col} IN ('Telefonía', 'Telefonía IP'))", []
     else:
         return f"{col} = ?", [area]
 
@@ -571,6 +700,53 @@ def move_ticket_to_folder(ticket_id: int, payload: MoveFolderPayload, request: R
         "new_folder": new_folder
     }
 
+# =============================================================
+# ASIGNACIÓN EXCLUSIVA PARA COORDINADORES DE LAS 5 ÁREAS
+# (Definido antes de /api/tickets/{ticket_id} para evitar colisión de ruta)
+# =============================================================
+
+@app.get("/api/tickets/unassigned")
+def get_unassigned_tickets(area: Optional[str] = None, request: Request = None):
+    """
+    Retorna únicamente los tickets en estado 'Pendiente' que pertenezcan al área
+    del coordinador logueado (recibida como parámetro query o extraída del token/cookie de sesión).
+    """
+    target_area, user = resolve_coordinator_area(area, request)
+    if not target_area or target_area == "Todas":
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Debe especificar el área del coordinador o contar con una sesión activa con área técnica asignada."}
+        )
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    where_clause, _ = parse_area_filter(target_area, "et")
+
+    cur.execute(f"""
+    SELECT et.id, et.ticket_code, et.sender_email, et.subject, et.full_body, et.area,
+           et.departamento_id, COALESCE(d.nombre, et.area) as departamento_nombre,
+           COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo,
+           et.subscriber_code, et.serial_pon, et.node_name, et.slot_pon, et.mac_address,
+           et.status, et.claimed_by_user_id, et.operador_id,
+           tt.name as suggested_task_name, tt.points as suggested_points, tt.id as suggested_task_id, tt.code as task_code,
+           COALESCE(tt.sla_minutes, 30) as sla_minutes,
+           COALESCE(et.fecha_creacion, et.created_at) as fecha_creacion,
+           et.created_at, et.source, COALESCE(et.folder, 'INBOX') as folder
+    FROM email_tickets et
+    LEFT JOIN departamentos d ON et.departamento_id = d.id
+    LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
+    WHERE (UPPER(et.status) = 'PENDIENTE' OR et.status = 'Pendiente')
+      AND et.operador_id IS NULL
+      AND et.claimed_by_user_id IS NULL
+      AND {where_clause}
+    ORDER BY et.created_at DESC
+    """)
+
+    tickets = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return tickets
+
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket_detail(ticket_id: int):
     conn = get_db()
@@ -647,10 +823,115 @@ class AssignTicketPayload(BaseModel):
     operador_id: int
     departamento_id: Optional[int] = None
     notas: Optional[str] = None
+    coordinador_id: Optional[int] = None
+
+# =============================================================
+# ASIGNACIÓN EXCLUSIVA: DISPONIBILIDAD Y ASIGNACIÓN DE OPERADORES
+# =============================================================
+
+
+@app.get("/api/operators/availability")
+def get_operators_availability(area: Optional[str] = None, request: Request = None):
+    """
+    Retorna los operadores del área específica del coordinador, ordenados de menor
+    a mayor carga de trabajo (puntos activos en tickets en atención).
+    """
+    target_area, user = resolve_coordinator_area(area, request)
+    if not target_area or target_area == "Todas":
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Debe especificar el área del coordinador o contar con una sesión activa con área técnica asignada."}
+        )
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    where_user_area, _ = parse_area_filter(target_area, "u")
+
+    # Consultar operadores activos del área (excluyendo administradores y coordinadores de la lista asignable)
+    cur.execute(f"""
+    SELECT u.id, u.name, u.email, u.role, u.area, u.avatar, u.shift, u.status, u.departamento_id,
+           COALESCE(d.nombre, u.area) as departamento_nombre,
+           COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo
+    FROM users u
+    LEFT JOIN departamentos d ON u.departamento_id = d.id
+    WHERE u.status = 'Activo'
+      AND (u.role = 'ESPECIALISTA' OR u.role NOT IN ('ADMINISTRADOR', 'COORDINADOR'))
+      AND {where_user_area}
+    ORDER BY u.name ASC
+    """)
+    ops = [dict(r) for r in cur.fetchall()]
+
+    if not ops:
+        # Fallback amplio si ningún usuario tiene rol 'ESPECIALISTA' explícito
+        cur.execute(f"""
+        SELECT u.id, u.name, u.email, u.role, u.area, u.avatar, u.shift, u.status, u.departamento_id,
+               COALESCE(d.nombre, u.area) as departamento_nombre,
+               COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo
+        FROM users u
+        LEFT JOIN departamentos d ON u.departamento_id = d.id
+        WHERE u.status = 'Activo'
+          AND u.role != 'ADMINISTRADOR'
+          AND {where_user_area}
+        ORDER BY u.name ASC
+        """)
+        ops = [dict(r) for r in cur.fetchall()]
+
+    # Calcular para cada operador sus puntos activos acumulados y cantidad de tickets en curso
+    result = []
+    for op in ops:
+        op_id = op["id"]
+        cur.execute("""
+        SELECT et.id, et.ticket_code, et.status, COALESCE(tt.points, 1) as points
+        FROM email_tickets et
+        LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
+        WHERE (et.operador_id = ? OR et.claimed_by_user_id = ?)
+          AND et.status IN ('EN PROGRESO', 'EN ESPERA')
+        """, (op_id, op_id))
+        active_t = cur.fetchall()
+
+        active_count = len(active_t)
+        active_points = sum(t["points"] for t in active_t)
+
+        if active_points == 0:
+            sat_label = "Disponible"
+            sat_color = "#10B981"
+        elif active_points <= 4:
+            sat_label = "Baja Carga"
+            sat_color = "#1C58A8"
+        elif active_points <= 8:
+            sat_label = "Carga Moderada"
+            sat_color = "#F59E0B"
+        else:
+            sat_label = "Sobrecarga"
+            sat_color = "#EF4444"
+
+        result.append({
+            "id": op["id"],
+            "name": op["name"],
+            "email": op["email"],
+            "role": op["role"],
+            "area": op["area"],
+            "departamento_nombre": op["departamento_nombre"],
+            "avatar": op["avatar"],
+            "shift": op["shift"],
+            "status": op["status"],
+            "active_tickets_count": active_count,
+            "active_points": active_points,
+            "saturation_level": sat_label,
+            "saturation_color": sat_color
+        })
+
+    conn.close()
+
+    # Ordenar de MENOR a MAYOR carga de trabajo (puntos activos)
+    result.sort(key=lambda x: (x["active_points"], x["active_tickets_count"], x["name"]))
+    return result
+
 
 @app.get("/api/departamentos")
 def get_departamentos_endpoint():
-    """Retorna los 6 departamentos oficiales con métricas de tickets en cola y resueltos"""
+    """Retorna los 5 departamentos oficiales con métricas de tickets en cola y resueltos"""
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
@@ -693,37 +974,101 @@ def get_operadores_endpoint(depto_id: Optional[int] = None):
 
 @app.post("/api/tickets/{ticket_id}/assign")
 def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request = None):
-    """Asignación explícita de un ticket a un operador y/o departamento"""
+    """
+    Asignación explícita de un ticket a un operador por parte del Coordinador de área.
+    Validaciones estrictas:
+    1. Que el ticket y el operador existan.
+    2. Si hay un Coordinador en sesión, que pertenezca al área del ticket.
+    3. Que el operador asignado realmente pertenezca al área del ticket.
+    """
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT ticket_code, status, departamento_id, area, subject FROM email_tickets WHERE id = ?", (ticket_id,))
+    cur.execute("SELECT id, ticket_code, status, departamento_id, area, subject FROM email_tickets WHERE id = ?", (ticket_id,))
     t_row = cur.fetchone()
     if not t_row:
         conn.close()
         return JSONResponse(status_code=404, content={"error": "Ticket no encontrado"})
         
-    cur.execute("SELECT id, name, area, role, avatar FROM users WHERE id = ?", (payload.operador_id,))
+    cur.execute("SELECT id, name, area, role, avatar, departamento_id FROM users WHERE id = ?", (payload.operador_id,))
     u_row = cur.fetchone()
     if not u_row:
         conn.close()
         return JSONResponse(status_code=404, content={"error": "Operador no encontrado"})
-        
+
+    # Resolver quién ejecuta la asignación (Coordinador o Administrador)
+    caller = None
+    caller_id = payload.coordinador_id
+    if not caller_id and request:
+        auth_hdr = request.headers.get("Authorization")
+        if auth_hdr and auth_hdr.startswith("Bearer "):
+            tok = auth_hdr.split("Bearer ")[1].strip()
+            if tok.isdigit():
+                caller_id = int(tok)
+            else:
+                cur.execute("SELECT id, name, area, role FROM users WHERE email = ? OR name = ?", (tok, tok))
+                r = cur.fetchone()
+                if r:
+                    caller = dict(r)
+                    caller_id = caller["id"]
+        if not caller_id:
+            c_cookie = request.cookies.get("auth_user_id")
+            if c_cookie and c_cookie.isdigit():
+                caller_id = int(c_cookie)
+
+    if caller_id and not caller:
+        cur.execute("SELECT id, name, area, role FROM users WHERE id = ?", (caller_id,))
+        r = cur.fetchone()
+        if r:
+            caller = dict(r)
+
+    norm_ticket_area = normalize_area_name(t_row["area"])
+    norm_op_area = normalize_area_name(u_row["area"])
+
+    # 1. Validación de rol y área del Coordinador (si está en sesión)
+    if caller:
+        caller_role = caller.get("role", "").upper()
+        if caller_role == "COORDINADOR":
+            norm_caller_area = normalize_area_name(caller.get("area"))
+            if norm_caller_area != norm_ticket_area:
+                conn.close()
+                return JSONResponse(
+                    status_code=403,
+                    content={"error": f"Acceso denegado: El coordinador {caller['name']} pertenece al área '{caller['area']}', pero el ticket pertenece a '{t_row['area']}'."}
+                )
+        elif caller_role == "ESPECIALISTA":
+            conn.close()
+            return JSONResponse(
+                status_code=403,
+                content={"error": "La asignación de tickets es exclusiva de los Coordinadores de área."}
+            )
+
+    # 2. VALIDACIÓN CRÍTICA: Validar que el operador asignado realmente pertenece al área del ticket
+    if norm_op_area != norm_ticket_area:
+        conn.close()
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"El operador '{u_row['name']}' pertenece al área '{u_row['area']}', que no coincide con el área del ticket '{t_row['area']}'."}
+        )
+
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_depto_id = payload.departamento_id or t_row["departamento_id"] or 1
+    new_depto_id = payload.departamento_id or t_row["departamento_id"] or u_row["departamento_id"] or 1
+    new_status = "EN PROGRESO" if t_row["status"] in ("PENDIENTE", "Pendiente") else t_row["status"]
     
     cur.execute("""
     UPDATE email_tickets
-    SET operador_id = ?, claimed_by_user_id = ?, departamento_id = ?
+    SET operador_id = ?, claimed_by_user_id = ?, departamento_id = ?,
+        status = ?, fecha_inicio_atencion = COALESCE(fecha_inicio_atencion, ?)
     WHERE id = ?
-    """, (payload.operador_id, payload.operador_id, new_depto_id, ticket_id))
+    """, (payload.operador_id, payload.operador_id, new_depto_id, new_status, now_str, ticket_id))
     
+    assigner_desc = f"por {caller['name']}" if caller else "desde Consola Helpdesk IP"
     cur.execute("""
     INSERT INTO ticket_historial_estados (
         ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
     ) VALUES (?, ?, ?, ?, ?, ?)
     """, (
-        ticket_id, payload.operador_id, t_row["status"], t_row["status"],
-        f"Asignado al operador {u_row['name']} ({payload.notas or 'Asignación manual'})",
+        ticket_id, payload.operador_id, t_row["status"], new_status,
+        f"Asignado al operador {u_row['name']} {assigner_desc} ({payload.notas or 'Asignación manual'})",
         now_str
     ))
     conn.commit()
@@ -738,14 +1083,19 @@ def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request
         action="ASIGNACION_TICKET",
         entity_type="TICKET",
         entity_id=t_row["ticket_code"],
-        details=f"Ticket {t_row['ticket_code']} asignado a {u_row['name']}",
+        details=f"Ticket {t_row['ticket_code']} ({t_row['area']}) asignado al operador {u_row['name']} ({u_row['area']})",
         ip_address=client_ip
     )
     return {
         "status": "ok",
         "ticket_id": ticket_id,
+        "ticket_code": t_row["ticket_code"],
         "operador_id": payload.operador_id,
-        "operador_nombre": u_row["name"]
+        "operador_nombre": u_row["name"],
+        "operador_area": u_row["area"],
+        "ticket_area": t_row["area"],
+        "status_ticket": new_status,
+        "message": f"Ticket {t_row['ticket_code']} asignado exitosamente a {u_row['name']}"
     }
 
 @app.post("/api/tickets/{ticket_id}/claim")
@@ -1409,3 +1759,131 @@ def generate_command(payload: dict):
     if cmd:
         return {"command": cmd}
     return {"error": "Comando no encontrado o parometros involidos."}, 400
+
+# =============================================================
+# ENDPOINTS: MÉTRICAS DE CARGA DE TRABAJO Y EXPORTACIÓN EXCEL
+# =============================================================
+
+class TaskDetailModel(BaseModel):
+    id: Optional[int] = None
+    code: Optional[str] = None
+    name: Optional[str] = None
+    points: Optional[int] = 0
+    sla_minutes: Optional[int] = 0
+
+class ActiveTicketDetailModel(BaseModel):
+    id: int
+    ticket_code: Optional[str] = None
+    subject: str
+    subscriber_code: Optional[str] = None
+    serial_pon: Optional[str] = None
+    node_name: Optional[str] = None
+    slot_pon: Optional[str] = None
+    mac_address: Optional[str] = None
+    operator_id: Optional[int] = None
+    operator_name: Optional[str] = None
+    operator_avatar: Optional[str] = None
+    operator_role: Optional[str] = None
+    operator_area: Optional[str] = None
+    department_id: Optional[int] = None
+    department_name: Optional[str] = None
+    department_code: Optional[str] = None
+    task: Optional[TaskDetailModel] = None
+    points: int = 0
+    started_at: Optional[str] = None
+    elapsed_minutes: int = 0
+    sla_minutes: int = 0
+    sla_percentage: float = 0.0
+    sla_status: str = "ok"
+    sla_label: Optional[str] = "Dentro de SLA"
+    sla_color: Optional[str] = "blue"
+
+class OperatorWorkloadDetail(BaseModel):
+    operator_id: int
+    name: str
+    email: Optional[str] = None
+    role: Optional[str] = None
+    area: Optional[str] = None
+    avatar: Optional[str] = None
+    department_id: Optional[int] = None
+    department_name: Optional[str] = None
+    department_code: Optional[str] = None
+    active_tickets_count: int = 0
+    active_points: int = 0
+    max_elapsed_minutes: int = 0
+    saturation_level: str
+    saturation_badge: str
+    saturation_color: str
+    active_tickets: List[ActiveTicketDetailModel] = []
+
+class AreaWorkloadDetail(BaseModel):
+    area: str
+    department_id: Optional[int] = None
+    department_name: Optional[str] = None
+    department_code: Optional[str] = None
+    active_tickets_count: int = 0
+    active_points: int = 0
+    active_operators_count: int = 0
+    share_percentage: float = 0.0
+    saturation_status: str
+    tickets: List[ActiveTicketDetailModel] = []
+
+class WorkloadSummary(BaseModel):
+    total_active_tickets: int = 0
+    total_active_points: int = 0
+    active_operators_count: int = 0
+    total_available_operators: int = 0
+    avg_elapsed_minutes: float = 0.0
+    bottleneck_area: str
+    most_loaded_operator: str
+    system_status: str
+
+class WorkloadMetric(BaseModel):
+    status: str
+    timestamp: str
+    filter_area: str
+    summary: WorkloadSummary
+    by_operator: List[OperatorWorkloadDetail] = []
+    by_area: List[AreaWorkloadDetail] = []
+    active_tickets_list: List[ActiveTicketDetailModel] = []
+
+
+@app.get("/api/metrics/workload", response_model=WorkloadMetric)
+def get_workload_metrics(area: str = "Todas"):
+    """
+    Calcula en tiempo real los tickets 'En Progreso' y puntos de complejidad (P1-P5)
+    agrupados por operador y por célula/área técnica desde la base de datos.
+    """
+    return get_current_workload(area=area)
+
+
+@app.get("/api/workload/current", response_model=WorkloadMetric)
+def get_workload_current_alias(area: str = "Todas"):
+    """Alias para compatibilidad con llamadas existentes del monitor"""
+    return get_current_workload(area=area)
+
+
+@app.get("/api/reports/export")
+def export_productivity_report_endpoint(area: str = "Todas", range_filter: str = "all"):
+    """
+    Genera en memoria un libro Excel (.xlsx) con los KPIs gerenciales, balance de célula
+    y productividad de especialistas, retornándolo como StreamingResponse.
+    """
+    stream = export_productivity_report(area=area, range_filter=range_filter)
+    safe_area = area.replace(" ", "_").lower()
+    filename = f"reporte_kpi_operaciones_{safe_area}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
+@app.get("/api/reports/export/excel")
+def export_reports_excel_alias(area: str = "Todas", range_filter: str = "all"):
+    """Alias para compatibilidad con rutas previas de descarga de reportes"""
+    return export_productivity_report_endpoint(area=area, range_filter=range_filter)
+
