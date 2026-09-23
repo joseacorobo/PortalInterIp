@@ -259,10 +259,10 @@
         <!-- Perfil Usuario -->
         <div class="flex-1 flex flex-col overflow-y-auto space-y-4 pr-1">
             <div class="flex items-center gap-2.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
-                <div id="sidebar-user-avatar" class="w-8 h-8 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-sm">CM</div>
+                <div id="sidebar-user-avatar" class="w-8 h-8 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-sm">{{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</div>
                 <div class="overflow-hidden">
-                    <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">Carlos Méndez</p>
-                    <p id="sidebar-user-role" class="text-[11px] text-[#94A3B8] truncate">Coordinador · Soporte</p>
+                    <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">{{ current_user.name if current_user else 'Usuario NOC' }}</p>
+                    <p id="sidebar-user-role" class="text-[11px] text-[#94A3B8] truncate">{% if current_user %}{{ current_user.role }} · {{ current_user.area }}{% else %}Operaciones IP{% endif %}</p>
                 </div>
             </div>
 
@@ -384,8 +384,20 @@
                     <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-white/50 pointer-events-none"></i>
                     <input type="text" id="global-search-input" onkeyup="handleGlobalSearch(this.value)" placeholder="Buscar ticket o serial..." class="w-48 pl-8 pr-3 py-1 text-xs bg-white/5 rounded-lg text-white placeholder-white/50 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] focus:w-60 transition-all">
                 </div>
-                <div onclick="showToast('Usuario conectado: Carlos Méndez (ID #9042)')" class="w-7 h-7 rounded-md text-white flex items-center justify-center font-bold text-[11px] bg-[#1C58A8] border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition">
-                    CM
+                <div class="relative">
+                    <button type="button" onclick="toggleUserDropdown()" class="w-7 h-7 rounded-md text-white flex items-center justify-center font-bold text-[11px] bg-[#1C58A8] border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition" id="header-user-avatar" title="Perfil y conmutador de usuario">{{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</button>
+                    <div id="user-profile-dropdown" class="hidden absolute right-0 top-9 w-72 bg-white rounded-xl border border-gray-200 shadow-xl z-50 text-gray-900 p-3">
+                        <div class="pb-2 mb-2 border-b border-gray-100">
+                            <p id="header-user-name" class="text-xs font-bold text-gray-900">{{ current_user.name if current_user else 'Usuario NOC' }}</p>
+                            <p id="header-user-role" class="text-[10px] text-gray-500">{% if current_user %}{{ current_user.role }} ({{ current_user.area }}){% endif %}</p>
+                            <p id="dropdown-user-fullname" class="hidden">{{ current_user.name if current_user else '' }}</p>
+                            <p id="dropdown-user-email" class="text-[10px] text-gray-400 truncate">{{ current_user.email if current_user else '' }}</p>
+                            <span id="dropdown-user-badge" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#1C58A8] mt-1 inline-block">{% if current_user %}{{ current_user.role }} - {{ current_user.area }}{% endif %}</span>
+                        </div>
+                        <p class="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Conmutador de perfil</p>
+                        <div id="dropdown-users-list" class="max-h-48 overflow-y-auto space-y-1"></div>
+                        <button type="button" onclick="logoutSession()" class="mt-3 w-full py-1.5 rounded-lg text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition">Cerrar sesión</button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -456,6 +468,75 @@
                             <strong class="text-[#1C58A8] font-bold" id="op-kpi-sla-pct">99.4%</strong> dentro de SLA
                         </div>
                     </div>
+                </div>
+
+                <!-- Mesa de Asignación (Triage) — Coordinador / Administrador -->
+                <div id="coordinator-triage-panel" class="hidden dashboard-chart-card space-y-4 animate-fade-in-up border border-[#BFDBFE] bg-gradient-to-b from-[#F8FBFF] to-white" style="animation-delay: 200ms;">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-sm font-bold text-gray-900">Mesa de Asignación (Triage)</h2>
+                                <span id="triage-area-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área: —</span>
+                                <span id="triage-count-label" class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">0 casos pendientes</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-0.5">Tickets PENDIENTES de tu departamento — seleccione especialista y asigne</p>
+                        </div>
+                        <button type="button" onclick="loadCoordinatorTriage()" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                            <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
+                            <span>Actualizar cola</span>
+                        </button>
+                    </div>
+                    <div id="triage-empty-state" class="hidden py-10 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
+                        <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área. ¡Buen trabajo!</p>
+                        <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos aparecerán aquí automáticamente.</p>
+                    </div>
+                    <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
+                        <table class="table-corporate-metrics min-w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th class="py-2.5 px-3">Ticket</th>
+                                    <th class="py-2.5 px-3">Requerimiento</th>
+                                    <th class="py-2.5 px-3">Parámetros</th>
+                                    <th class="py-2.5 px-3">Tarea / SLA</th>
+                                    <th class="py-2.5 px-3">Espera</th>
+                                    <th class="py-2.5 px-3">Asignación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="triage-tickets-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Torre de Ejecución — Operador (Especialista) -->
+                <div id="operator-assignments-panel" class="dashboard-chart-card space-y-4 animate-fade-in-up" style="animation-delay: 220ms;">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-sm font-bold text-gray-900">Mis Tareas Asignadas</h2>
+                                <span id="operator-assignments-count" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] border border-blue-100">0 tickets</span>
+                                <span id="operator-active-points-badge" class="text-[10px] font-semibold text-gray-600">Carga Activa: 0 pts</span>
+                                <span id="sidebar-operator-badge" class="hidden px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white">0</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-0.5">Casos asignados a ti — poner en proceso, pausar o resolver</p>
+                        </div>
+                        <button type="button" onclick="loadOperatorAssignments(true)" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                            <i data-lucide="rotate-cw" id="icon-refresh-operator" class="w-3.5 h-3.5"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <button type="button" id="optab-all" onclick="setOperatorTaskFilter('all')" class="px-3 py-1.5 rounded-lg bg-white font-bold text-slate-900 shadow-2xs border border-slate-200/60">Todos (<span id="count-optab-all">0</span>)</button>
+                        <button type="button" id="optab-pending" onclick="setOperatorTaskFilter('pending_start')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Por iniciar (<span id="count-optab-pending">0</span>)</button>
+                        <button type="button" id="optab-progress" onclick="setOperatorTaskFilter('in_progress')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En proceso (<span id="count-optab-progress">0</span>)</button>
+                        <button type="button" id="optab-hold" onclick="setOperatorTaskFilter('on_hold')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En espera (<span id="count-optab-hold">0</span>)</button>
+                        <button type="button" id="optab-completed" onclick="setOperatorTaskFilter('completed')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Cerrados (<span id="count-optab-completed">0</span>)</button>
+                        <input type="search" id="operator-task-search" oninput="filterOperatorAssignmentsLocal()" placeholder="Buscar ticket..." class="ml-auto text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 w-40 focus:ring-1 focus:ring-[#1C58A8]">
+                    </div>
+                    <div id="operator-empty-assignments" class="hidden py-10 px-4 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80">
+                        <p id="operator-empty-title" class="text-sm font-bold text-gray-800">¡Bandeja de Tareas al Día!</p>
+                        <p id="operator-empty-desc" class="text-xs text-gray-500 mt-1">No tienes tareas en esta categoría en este momento.</p>
+                    </div>
+                    <div id="operator-assignments-list" class="space-y-3"></div>
                 </div>
 
                 <!-- Carga de Trabajo Actual (Operadores en Vivo - Casos Activos) -->
@@ -1472,7 +1553,8 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 text-xs" id="ticket-table-rows">
-                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="olt" data-ticket="#INC-4830">
+                                <!-- Filas generadas por loadDispatchQueue / fetchLiveTickets -->
+                                <tr class="hidden" data-area="olt" data-ticket="#INC-4830">
                                     <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4830</td>
                                     <td class="py-2.5 px-3 font-medium text-gray-900">Banco Universal Corp</td>
                                     <td class="py-2.5 px-3 text-gray-700">Caída enlace secundario MetroEthernet OLT-04</td>
@@ -1528,8 +1610,14 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="queue-empty-state" class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-amber-200 bg-amber-50/30 mt-3">
+                        <p class="text-sm font-bold text-amber-900">No hay tickets pendientes de asignación</p>
+                        <p class="text-xs text-amber-800/70 mt-1">{% if current_user and current_user.role == 'COORDINADOR' %}Tu mesa de triage está vacía — excelente balance del turno.{% else %}La cola de despacho está al día.{% endif %}</p>
+                    </div>
                 </div>
             </section>
+
+            <section id="tab-coordinacion" class="space-y-6 hidden"></section>
 
             <!-- ============================================================== -->
             <!-- PESTAÑA 4: AUDITORÍA FORENSE                                  -->
@@ -1559,7 +1647,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100" id="audit-logs-tbody">
-                                <tr class="hover:bg-blue-50/30 transition-colors">
+                                <tr class="hidden hover:bg-blue-50/30 transition-colors" id="audit-placeholder-row">
                                     <td class="font-mono text-xs text-gray-500">2026-03-30 11:42:15</td>
                                     <td class="font-bold text-gray-900">José Corobo</td>
                                     <td><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">TOMA_TICKET</span></td>
@@ -1782,6 +1870,7 @@
     <!-- ============================================================== -->
     <!-- TOAST NOTIFICATION POPUP                                       -->
     <!-- ============================================================== -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
     <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-900 text-white shadow-2xl border border-gray-700 text-xs">
         <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center" id="toast-icon">
             <i data-lucide="check" class="w-3.5 h-3.5"></i>
@@ -1792,6 +1881,7 @@
     <!-- ============================================================== -->
     <!-- JAVASCRIPT CONTROLLERS Y LÓGICA DE NEGOCIO                     -->
     <!-- ============================================================== -->
+    <script src="/static/js/theme.js"></script>
     <script>
         // Inicializar Iconos Lucide
         lucide.createIcons();
@@ -1850,7 +1940,7 @@
 
             if (window.lucide) lucide.createIcons();
         }
-        window.switchDashboardTab = switchDashboardTab;
+        window.__switchStitchTab = switchDashboardTab;
 
         function toggleSubmenu() {
             const sub = document.getElementById('tickets-submenu');
@@ -2042,16 +2132,24 @@
             try {
                 const cleanId = rawIdToAssign || parseInt(ticketToAssign.replace(/[^0-9]/g, ''));
                 if (cleanId) {
-                    await fetch(`/api/tickets/${cleanId}/assign`, {
+                    const assignRes = await fetch(`/api/tickets/${cleanId}/assign`, {
                         method: 'POST',
+                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             operador_id: operatorId || 2,
-                            departamento_id: 1,
-                            task_type_id: 1,
-                            status: 'ASIGNADO'
+                            coordinador_id: window.currentUser ? window.currentUser.id : null,
+                            status: 'ASIGNADO',
+                            notas: 'Asignado desde modal de despacho'
                         })
                     });
+                    if (!assignRes.ok) {
+                        const err = await assignRes.json().catch(() => ({}));
+                        showToast(err.error || 'No se pudo asignar el ticket', 'error');
+                        return;
+                    }
+                    if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
+                    if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
                 }
             } catch (err) {
                 console.log('Error asignando en backend:', err);
@@ -2213,7 +2311,7 @@
                 toast.classList.remove('translate-y-0', 'opacity-100');
             }, 3200);
         }
-        window.showToast = showToast;
+        window.__stitchShowToast = showToast;
 
         // ==============================================================
         // LÓGICA DE DATOS: VISTA OPERATIVA (KPIs REALES)
@@ -2616,13 +2714,14 @@
         }
 
         async function fetchLiveTickets() {
+            if (typeof window.loadDispatchQueue === 'function') {
+                return window.loadDispatchQueue();
+            }
             try {
-                const res = await fetch('/api/tickets/unassigned');
+                const res = await fetch('/api/tickets/unassigned', { credentials: 'include' });
                 if (res.ok) {
                     const tickets = await res.json();
-                    if (Array.isArray(tickets) && tickets.length > 0) {
-                        renderTicketsQueue(tickets);
-                    }
+                    renderTicketsQueue(Array.isArray(tickets) ? tickets : []);
                 }
             } catch (err) {
                 console.log('Operando con tickets en buffer local', err);
@@ -2630,8 +2729,19 @@
         }
 
         function renderTicketsQueue(tickets) {
+            if (typeof window.renderDispatchQueue === 'function') {
+                window.renderDispatchQueue(tickets || []);
+                return;
+            }
             const tbody = document.getElementById('ticket-table-rows');
             if (!tbody) return;
+            const emptyEl = document.getElementById('queue-empty-state');
+            if (!tickets || tickets.length === 0) {
+                tbody.innerHTML = '';
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                return;
+            }
+            if (emptyEl) emptyEl.classList.add('hidden');
 
             const rowsHtml = tickets.slice(0, 15).map(t => {
                 const code = t.ticket_code ? (t.ticket_code.startsWith('#') ? t.ticket_code : '#' + t.ticket_code) : '#INC-4830';
@@ -2719,6 +2829,40 @@
             fetchLiveOperators();
             fetchLiveTickets();
         });
+    </script>
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        (function stitchDashboardBridge() {
+            const coreSwitch = window.switchDashboardTab;
+            window.switchDashboardTab = function (tabName) {
+                const stitchOnly = ['tickets', 'inbox', 'configuracion'];
+                if (stitchOnly.includes(tabName) && typeof window.__switchStitchTab === 'function') {
+                    window.__switchStitchTab(tabName);
+                    if (tabName === 'tickets' && typeof window.loadDispatchQueue === 'function') {
+                        window.loadDispatchQueue();
+                    }
+                    if (tabName === 'tickets' && typeof window.loadTableroOperators === 'function') {
+                        window.loadTableroOperators();
+                    }
+                    return;
+                }
+                if (typeof coreSwitch === 'function') {
+                    coreSwitch(tabName);
+                } else if (typeof window.__switchStitchTab === 'function') {
+                    window.__switchStitchTab(tabName);
+                }
+            };
+            const coreToast = window.showToast;
+            window.showToast = function (message, type, duration) {
+                if (typeof coreToast === 'function') {
+                    coreToast(message, type, duration);
+                    return;
+                }
+                if (typeof window.__stitchShowToast === 'function') {
+                    window.__stitchShowToast(message);
+                }
+            };
+        })();
     </script>
 </body>
 </html>

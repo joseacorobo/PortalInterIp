@@ -1,0 +1,25 @@
+# ROL: Arquitecto de Software Principal y Product Manager Técnico (ITSM).
+# ESTADO DEL PROYECTO: Tenemos un diseño UI nuevo en `app/templates/dashboard.html` y `app/static/js/dashboard.js`, pero perdimos la lógica dinámica. Es un cascarón vacío.
+
+# REGLA DE ORO INQUEBRANTABLE:
+TIENES PROHIBIDO DAÑAR EL DISEÑO VISUAL. No elimines clases de Tailwind ni modifiques la estructura CSS. Tu trabajo es estrictamente inyectar la lógica de backend dentro del caparazón visual actual.
+
+# PLAN DE EJECUCIÓN:
+
+## FASE 1: Reconexión Primordial (Data Binding)
+1. Analiza `app/main.py` y `app/database.py` para entender los roles y los endpoints.
+2. En `dashboard.html`, reemplaza los textos estáticos con variables Jinja2 reales (ej. `{{ current_user.name }}`). Configura la visibilidad de los paneles usando `{% if current_user.role == 'COORDINADOR' %}`.
+3. Asegúrate de que los botones de "Asignar", "Poner en Proceso", y los `<select>` tengan los atributos `id=""` o `data-ticket-id=""` necesarios.
+4. En `dashboard.js`, reescribe las funciones necesarias para que consuman los endpoints usando `fetch()` y actualicen el DOM.
+
+## FASE 2: Validación del Flujo Crítico
+1. Coordinador (Triage): Debe ver tickets `PENDIENTES` de su área, seleccionar a un operador en el `<select>` y hacer clic en "Asignar".
+2. Operador: Debe ver sus tickets asignados. Debe poder hacer clic en "Poner en Proceso" o "Resolver" conectando con la API.
+
+## FASE 3: Mejoras UX / ITSM
+1. Implementa feedback visual (spinners de carga en los botones durante los `fetch()`) y notificaciones Toast (éxito/error).
+2. Maneja los 'Empty States': Si no hay tickets, muestra un mensaje amigable en lugar de una tabla rota.
+3. Bloquea botones lógicamente (ej. no permitir "Asignar" si no hay operador seleccionado).
+
+# CIERRE:
+Cuando termines, escribe un breve resumen en la terminal sobre qué endpoints reconectaste y qué IDs añadiste.

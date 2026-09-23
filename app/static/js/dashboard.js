@@ -66,6 +66,11 @@ function updateThemeIcon(isDark) {
     // No necesita manipulación adicional
 }
 
+function resolveChartCanvas(primaryId, fallbackId) {
+    const el = document.getElementById(primaryId) || (fallbackId ? document.getElementById(fallbackId) : null);
+    return el ? el.getContext('2d') : null;
+}
+
 function getThemeColors() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     return {
@@ -339,7 +344,8 @@ function renderAreaProgress(areaPoints, totalPoints) {
 }
 
 function renderHourlyChart(hourlyData) {
-    const ctx = document.getElementById('chartHourly').getContext('2d');
+    const ctx = resolveChartCanvas('chartHourly', 'chartHourlyDemo');
+    if (!ctx) return;
     if (chartHourly) chartHourly.destroy();
     
     const c = getThemeColors();
@@ -409,7 +415,8 @@ function renderHourlyChart(hourlyData) {
 }
 
 function renderTechniciansChart(techData) {
-    const ctx = document.getElementById('chartTechnicians').getContext('2d');
+    const ctx = resolveChartCanvas('chartTechnicians', 'chartTechniciansDemo');
+    if (!ctx) return;
     if (chartTechnicians) chartTechnicians.destroy();
     
     const c = getThemeColors();
@@ -674,8 +681,10 @@ function renderCurrentWorkload(data) {
         }
     }
 
-    // 3. Matriz de Operadores
-    const opsContainer = document.getElementById("workload-operators-grid");
+    // 3. Matriz de Operadores (vista rendimiento y vista operativa / tablero)
+    const opsContainer = document.getElementById("workload-operators-grid")
+        || document.getElementById("active-operators-grid")
+        || document.getElementById("operators-grid-cards");
     if (opsContainer) {
         opsContainer.innerHTML = "";
         const ops = data.by_operator || [];
@@ -800,7 +809,8 @@ function openTicketFromWorkload(ticketId) {
 }
 
 function renderWeightsChart(weightsData) {
-    const ctx = document.getElementById('chartWeights').getContext('2d');
+    const ctx = resolveChartCanvas('chartWeights', 'chartWeightsDemo');
+    if (!ctx) return;
     if (chartWeights) chartWeights.destroy();
     
     const c = getThemeColors();
@@ -3045,7 +3055,7 @@ window.currentUser = null;
 
 async function loadCurrentUserProfile() {
     try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
             const user = await res.json();
             window.currentUser = user;
@@ -3211,7 +3221,20 @@ function escapeHtml(str) {
 
 function showToast(message, type = 'success', duration = 3500) {
     const container = document.getElementById("toast-container");
-    if (!container) return;
+    if (!container) {
+        const legacy = document.getElementById("toast-notification");
+        const legacyMsg = document.getElementById("toast-message");
+        if (legacy && legacyMsg) {
+            legacyMsg.innerText = message;
+            legacy.classList.remove("translate-y-24", "opacity-0");
+            legacy.classList.add("translate-y-0", "opacity-100");
+            setTimeout(() => {
+                legacy.classList.add("translate-y-24", "opacity-0");
+                legacy.classList.remove("translate-y-0", "opacity-100");
+            }, duration);
+        }
+        return;
+    }
 
     const toast = document.createElement("div");
     toast.className = "pointer-events-auto flex items-center gap-3 py-2.5 px-3.5 rounded-xl bg-white dark:bg-slate-800 text-[#0b1c30] dark:text-white border shadow-lg transition-all duration-300 transform -translate-y-2 opacity-0 text-xs";
@@ -3261,6 +3284,137 @@ function showToast(message, type = 'success', duration = 3500) {
         toast.classList.add("-translate-y-2", "opacity-0");
         setTimeout(() => toast.remove(), 300);
     }, duration);
+}
+
+// =============================================================
+// COLA DE DESPACHO (TABLERO DE TICKETS — STITCH UI)
+// =============================================================
+
+function mapAreaFilterTag(area) {
+    const a = (area || '').toLowerCase();
+    if (a.includes('ftth') || a.includes('acceso') || a.includes('aprovision')) return 'ftth';
+    if (a.includes('cabecera') || a.includes('olt') || a.includes('wan')) return a.includes('wan') && !a.includes('olt') ? 'wan' : 'olt';
+    if (a.includes('voip') || a.includes('telef')) return 'voip';
+    return 'wan';
+}
+
+function buildDispatchPriorityBadge(t) {
+    const pts = t.suggested_points || 3;
+    const prioLabel = t.priority ? `${t.priority} - ${pts >= 8 ? 'Crítico' : pts >= 5 ? 'Alto' : 'Estándar'}` : (pts >= 8 ? 'P1 - Crítico' : pts >= 5 ? 'P2 - Alto' : 'P3 - Estándar');
+    const isP1 = pts >= 8 || (String(t.priority || '').toUpperCase() === 'P1') || (String(t.priority || '').toUpperCase() === 'P5');
+    if (isP1) {
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30 flex items-center gap-1 w-max"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>${prioLabel}</span>`;
+    }
+    if (pts >= 5 || String(t.priority || '').toUpperCase() === 'P2') {
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 w-max">${prioLabel}</span>`;
+    }
+    return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200 w-max">${prioLabel}</span>`;
+}
+
+async function loadDispatchQueue() {
+    const tbody = document.getElementById('ticket-table-rows');
+    const emptyEl = document.getElementById('queue-empty-state');
+    const spin = document.getElementById('refresh-spin-icon');
+    if (spin) spin.classList.add('animate-spin');
+
+    try {
+        const user = window.currentUser;
+        const deptoParam = user && user.departamento_id ? `&departamento_id=${user.departamento_id}` : '';
+        const areaParam = user && user.area ? `area=${encodeURIComponent(user.area)}` : 'area=Todas';
+        const res = await fetch(`/api/tickets/unassigned?${areaParam}${deptoParam}`, { credentials: 'include' });
+        if (!res.ok) {
+            showToast('No se pudo cargar la cola de despacho', 'error');
+            return;
+        }
+        const tickets = await res.json();
+        renderDispatchQueue(Array.isArray(tickets) ? tickets : []);
+    } catch (e) {
+        console.error('loadDispatchQueue', e);
+        showToast('Error de conexión al cargar tickets', 'error');
+    } finally {
+        if (spin) setTimeout(() => spin.classList.remove('animate-spin'), 400);
+    }
+}
+
+function renderDispatchQueue(tickets) {
+    const tbody = document.getElementById('ticket-table-rows');
+    const emptyEl = document.getElementById('queue-empty-state');
+    if (!tbody) return;
+
+    if (!tickets.length) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        updateDispatchQueueBadges(0);
+        return;
+    }
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    tbody.innerHTML = tickets.slice(0, 50).map(t => {
+        const code = t.ticket_code ? (t.ticket_code.startsWith('#') ? t.ticket_code : '#' + t.ticket_code) : `#INC-${t.id}`;
+        const client = escapeHtml(t.subscriber_code || t.sender_email || 'Solicitante NOC');
+        const subject = escapeHtml(t.subject || 'Incidencia de Telecomunicaciones');
+        const area = escapeHtml(t.area || t.departamento_nombre || 'Redes de Acceso');
+        const areaTag = mapAreaFilterTag(t.area || t.departamento_nombre);
+        const prioBadge = buildDispatchPriorityBadge(t);
+        const prioLabel = t.priority || 'P3';
+        const safeSerial = escapeHtml(t.serial_pon || '—');
+        const safeSlot = escapeHtml(t.slot_pon || '—');
+
+        return `
+        <tr class="hover:bg-blue-50/40 transition-colors" data-area="${areaTag}" data-ticket="${code}" data-rawid="${t.id}">
+            <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">${code}</td>
+            <td class="py-2.5 px-3 font-medium text-gray-900">${client}</td>
+            <td class="py-2.5 px-3 text-gray-700 max-w-xs truncate" title="${subject}">${subject}</td>
+            <td class="py-2.5 px-3 text-gray-600 font-medium">${area}</td>
+            <td class="py-2.5 px-3">${prioBadge}</td>
+            <td class="py-2.5 px-3">
+                <button type="button" onclick="openTicketWorkspace(${t.id})" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                    <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
+                </button>
+            </td>
+            <td class="py-2.5 px-3 text-right">
+                <button onclick="promptAssignTicket('${code}', '${area.replace(/'/g, "\\'")}', ${t.id})" class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar Ahora</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+    updateDispatchQueueBadges(tickets.length);
+}
+
+function updateDispatchQueueBadges(total) {
+    ['queue-badge-count', 'kpi-queue-count', 'sidebar-inbox-badge', 'sub-badge-count'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = id === 'queue-badge-count' ? `${total} Tickets` : String(total);
+    });
+}
+
+async function loadTableroOperators() {
+    const user = window.currentUser;
+    const area = user && user.area ? user.area : '';
+    const deptoParam = user && user.departamento_id ? `&departamento_id=${user.departamento_id}` : '';
+    try {
+        const res = await fetch(`/api/operators/availability?area=${encodeURIComponent(area)}${deptoParam}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const ops = await res.json();
+        if (!Array.isArray(ops)) return;
+
+        const totalEl = document.getElementById('kpi-total-ops');
+        const availEl = document.getElementById('kpi-avail-count');
+        const progEl = document.getElementById('kpi-in-progress-count');
+        if (totalEl) totalEl.textContent = ops.length;
+        const avail = ops.filter(o => (o.active_tickets_count || 0) === 0).length;
+        const busy = ops.length - avail;
+        if (availEl) availEl.textContent = avail;
+        if (progEl) progEl.textContent = busy;
+
+        if (typeof loadCurrentWorkload === 'function') {
+            loadCurrentWorkload(user && user.area ? user.area : 'Todas');
+        }
+    } catch (e) {
+        console.warn('loadTableroOperators', e);
+    }
 }
 
 // =============================================================
@@ -3393,7 +3547,7 @@ function renderTriageRow(t) {
                     </select>
                     <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                 </div>
-                <button id="btn-assign-${t.id}" onclick="assignTriageTicket(${t.id})" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1C58A8] hover:bg-[#154687] text-white text-xs font-semibold shadow-xs hover:shadow transition duration-150 active:scale-95 cursor-pointer shrink-0" type="button" title="Asignar caso al especialista seleccionado">
+                <button id="btn-assign-${t.id}" onclick="assignTriageTicket(${t.id})" disabled class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1C58A8] hover:bg-[#154687] text-white text-xs font-semibold shadow-xs hover:shadow transition duration-150 active:scale-95 cursor-pointer shrink-0 opacity-50 cursor-not-allowed" type="button" title="Asignar caso al especialista seleccionado">
                     <i data-lucide="send" class="w-3 h-3"></i>
                     <span>Asignar</span>
                 </button>
@@ -3496,6 +3650,7 @@ async function loadCoordinatorTriage() {
 
             tbody.innerHTML = tickets.map(t => renderTriageRow(t)).join('');
             if (window.lucide) lucide.createIcons();
+            wireTriageAssignButtons();
         }
 
         // Sincronizar Módulo de Asignación Rápida
@@ -3601,6 +3756,9 @@ async function assignTriageTicket(ticketId) {
             if (typeof loadInbox === 'function') {
                 loadInbox();
             }
+            if (typeof loadDispatchQueue === 'function') {
+                loadDispatchQueue();
+            }
         } else {
             if (btn) {
                 btn.disabled = false;
@@ -3616,6 +3774,23 @@ async function assignTriageTicket(ticketId) {
         }
         showToast("Error de conexión al asignar el ticket.", "error");
     }
+}
+
+function wireTriageAssignButtons() {
+    document.querySelectorAll('#triage-tickets-tbody select.select-operator[data-ticket-id]').forEach(sel => {
+        const tid = sel.getAttribute('data-ticket-id');
+        const btn = document.getElementById(`btn-assign-${tid}`);
+        if (!btn || sel.dataset.wired === '1') return;
+        sel.dataset.wired = '1';
+        const syncDisabled = () => {
+            const hasOp = !!sel.value;
+            btn.disabled = !hasOp;
+            btn.classList.toggle('opacity-50', !hasOp);
+            btn.classList.toggle('cursor-not-allowed', !hasOp);
+        };
+        syncDisabled();
+        sel.addEventListener('change', syncDisabled);
+    });
 }
 
 function checkTriageTableEmpty() {
@@ -4428,6 +4603,11 @@ function focusOperatorAssignments() {
 
 function showStitchAssignmentToast(ticket) {
     const toast = document.getElementById("toast-assignment");
+    if (!toast) {
+        const code = ticket ? (ticket.ticket_code || `#INC-${ticket.id}`) : 'nuevo ticket';
+        showToast(`Nueva asignación: ${code}. Revise sus tareas.`, 'success');
+        return;
+    }
     const codeEl = document.getElementById("toast-assignment-code");
     const timeEl = document.getElementById("toast-assignment-time");
     const bodyEl = document.getElementById("toast-assignment-body");
@@ -4456,7 +4636,10 @@ function showStitchSuccessToast(title, desc) {
     const titleEl = document.getElementById("toast-success-title");
     const descEl = document.getElementById("toast-success-desc");
 
-    if (!toast) return;
+    if (!toast) {
+        showToast(desc ? `${title}: ${desc}` : (title || 'Operación completada'), 'success');
+        return;
+    }
 
     if (titleEl) titleEl.textContent = title || "Acción Exitosa";
     if (descEl) descEl.textContent = desc || "Operación completada satisfactoriamente.";
@@ -4708,6 +4891,10 @@ window.closeCreateTicketModal = closeCreateTicketModal;
 window.onNewTicketDeptoChange = onNewTicketDeptoChange;
 window.handleCreateTicketSubmit = handleCreateTicketSubmit;
 window.loadOperatorAssignments = loadOperatorAssignments;
+window.loadDispatchQueue = loadDispatchQueue;
+window.renderDispatchQueue = renderDispatchQueue;
+window.loadTableroOperators = loadTableroOperators;
+window.wireTriageAssignButtons = wireTriageAssignButtons;
 window.renderOperatorAssignmentCard = renderOperatorAssignmentCard;
 window.startProcessingTicket = startProcessingTicket;
 window.showStitchAssignmentToast = showStitchAssignmentToast;
@@ -4749,7 +4936,7 @@ function changeAuditActionFilter(actionVal) {
 }
 
 async function loadAuditLogs() {
-    const tbody = document.getElementById("audit-tbody");
+    const tbody = document.getElementById("audit-tbody") || document.getElementById("audit-logs-tbody");
     if (!tbody) return;
 
     try {
@@ -4832,6 +5019,9 @@ function switchDashboardTab(tabName) {
     const tabRendimiento = document.getElementById('tab-rendimiento');
     const tabAuditoria = document.getElementById('tab-auditoria');
     const tabCoordinacion = document.getElementById('tab-coordinacion');
+    const tabTickets = document.getElementById('tab-tickets');
+    const tabInbox = document.getElementById('tab-inbox');
+    const tabConfig = document.getElementById('tab-configuracion');
     const viewAssistant = document.getElementById('view-assistant');
 
     if (tabOperativa) {
@@ -4879,6 +5069,13 @@ function switchDashboardTab(tabName) {
             viewAssistant.style.display = 'none';
         }
     }
+    [tabTickets, tabInbox, tabConfig].forEach(el => {
+        if (!el) return;
+        const id = el.id.replace('tab-', '');
+        const active = tabName === id;
+        el.classList.toggle('hidden', !active);
+        el.style.display = active ? 'block' : 'none';
+    });
 
     // Actualizar botones de pestañas superiores
     const tabBtnOperativa = document.getElementById('tab-btn-operativa');
@@ -4911,6 +5108,12 @@ function switchDashboardTab(tabName) {
     if (btnRendimiento) btnRendimiento.classList.toggle('active', tabName === 'rendimiento');
     if (btnAuditoria) btnAuditoria.classList.toggle('active', tabName === 'auditoria');
     if (btnCoordinacion) btnCoordinacion.classList.toggle('active', tabName === 'coordinacion');
+    const btnTickets = document.getElementById('nav-view-tickets');
+    const btnInbox = document.getElementById('nav-view-inbox');
+    const btnConfig = document.getElementById('nav-view-configuracion');
+    if (btnTickets) btnTickets.classList.toggle('active', tabName === 'tickets');
+    if (btnInbox) btnInbox.classList.toggle('active', tabName === 'inbox');
+    if (btnConfig) btnConfig.classList.toggle('active', tabName === 'configuracion');
 
     // Actualizar breadcrumb si existe
     const bcView = document.getElementById('breadcrumb-view-name');
@@ -4920,15 +5123,20 @@ function switchDashboardTab(tabName) {
         else if (tabName === 'auditoria') bcView.innerText = 'Auditoría Forense';
         else if (tabName === 'assistant') bcView.innerText = 'Asistente CLI';
         else if (tabName === 'coordinacion') bcView.innerText = 'Mesa de Coordinación';
+        else if (tabName === 'tickets') bcView.innerText = 'Tablero de Tickets y Operadores Activos';
+        else if (tabName === 'inbox') bcView.innerText = 'Consola de Tickets (M365)';
+        else if (tabName === 'configuracion') bcView.innerText = 'Configuración del NOC';
     }
 
     // Acciones de carga y render por pestaña
     if (tabName === 'auditoria') {
         if (typeof loadReportsData === 'function') loadReportsData();
         if (typeof loadAuditLogs === 'function') loadAuditLogs();
+        if (typeof loadLiveAuditLogs === 'function') loadLiveAuditLogs();
     } else if (tabName === 'operativa') {
         if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
         if (typeof loadFeed === 'function') loadFeed();
+        if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(false);
         if (window.currentUser && (window.currentUser.role === 'COORDINADOR' || window.currentUser.role === 'ADMINISTRADOR') && typeof loadCoordinatorTriage === 'function') {
             loadCoordinatorTriage();
         }
@@ -4940,6 +5148,11 @@ function switchDashboardTab(tabName) {
     } else if (tabName === 'coordinacion') {
         if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
         if (typeof loadPendingVerification === 'function') loadPendingVerification();
+    } else if (tabName === 'tickets') {
+        loadDispatchQueue();
+        loadTableroOperators();
+    } else if (tabName === 'inbox') {
+        if (typeof loadInbox === 'function') loadInbox();
     }
 
     if (window.lucide && typeof window.lucide.createIcons === 'function') {

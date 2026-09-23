@@ -12,6 +12,7 @@ from services.audit import log_audit_event, get_audit_logs
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import Optional, List, Tuple
 import sqlite3
@@ -22,15 +23,62 @@ app = FastAPI(title="Operaciones IP - Dashboard de Métricas y Puntos por Área"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+
+def resolve_dashboard_user(request: Request) -> dict:
+    """Usuario de sesión para render SSR del dashboard (cookie auth_user_id)."""
+    user_id = None
+    cookie_val = request.cookies.get("auth_user_id")
+    if cookie_val and cookie_val.isdigit():
+        user_id = int(cookie_val)
+    conn = get_db()
+    cur = conn.cursor()
+    row = None
+    if user_id:
+        cur.execute(
+            "SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?",
+            (user_id,),
+        )
+        row = cur.fetchone()
+    if not row:
+        cur.execute(
+            "SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1"
+        )
+        row = cur.fetchone()
+    if not row:
+        cur.execute(
+            "SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1"
+        )
+        row = cur.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return {
+        "id": 1,
+        "name": "Adelis Mejia",
+        "area": "Redes de acceso y aprovisionamiento",
+        "role": "COORDINADOR",
+        "avatar": "AM",
+        "email": "adelis.mejia@inter.com.ve",
+        "departamento_id": 1,
+    }
 
 @app.on_event("startup")
 def startup_event():
     init_db()
     mail_worker_instance.start()
 
-@app.get("/", response_class=FileResponse)
-def dashboard_view():
-    return FileResponse(os.path.join(BASE_DIR, "templates", "dashboard.html"))
+@app.get("/", response_class=HTMLResponse)
+def dashboard_view(request: Request):
+    user = resolve_dashboard_user(request)
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "current_user": user,
+        },
+    )
 
 @app.get("/login", response_class=FileResponse)
 def login_view():
