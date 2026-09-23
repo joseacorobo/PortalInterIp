@@ -1,0 +1,20 @@
+﻿{
+  "name": "Portal Operaciones IP - Inter",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "Portal Operaciones IP",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  },
+  "postCreateCommand": "pip install -r infra/requirements.txt && python app/seed.py",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python"
+      ]
+    }
+  }
+}
