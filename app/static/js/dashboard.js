@@ -2290,48 +2290,68 @@ function startLiveTimer(claimedAtStr) {
 
 function closeWorkspaceModal() {
     if (liveTimerInterval) clearInterval(liveTimerInterval);
-    loadInbox();
+    const modal = document.getElementById("modalTicketWorkspace");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+    if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(true);
+    if (typeof loadInbox === 'function') loadInbox();
 }
 
 async function togglePauseTicket() {
     if (!currentOpenTicket) return;
     
     if (currentOpenTicket.status === 'EN PROGRESO') {
-        await fetch(`/api/tickets/${currentOpenTicket.id}/pause`, { method: 'POST' });
+        await fetch(`/api/tickets/${currentOpenTicket.id}/pause`, { method: 'POST', credentials: 'include' });
         currentOpenTicket.status = 'EN ESPERA';
         const btnText = document.getElementById("btn-pause-text");
-        if (btnText) btnText.innerText = "Reanudar";
+        if (btnText) btnText.innerText = "Reanudar Caso";
         const stBadge = document.getElementById("ws-ticket-status-badge");
         if (stBadge) {
-            stBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 flex items-center gap-1";
-            stBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> En Espera`;
+            stBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5";
+            stBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> En Espera / Pausa`;
         }
         if (liveTimerInterval) clearInterval(liveTimerInterval);
+        if (typeof showStitchSuccessToast === 'function') {
+            showStitchSuccessToast("Pausa Técnica Registrada", `El caso #${currentOpenTicket.ticket_code || currentOpenTicket.id} está en espera.`);
+        }
     } else {
-        await fetch(`/api/tickets/${currentOpenTicket.id}/resume`, { method: 'POST' });
+        await fetch(`/api/tickets/${currentOpenTicket.id}/resume`, { method: 'POST', credentials: 'include' });
         currentOpenTicket.status = 'EN PROGRESO';
         const btnText = document.getElementById("btn-pause-text");
-        if (btnText) btnText.innerText = "Pausar";
+        if (btnText) btnText.innerText = "Pausar (En Espera)";
         const stBadge = document.getElementById("ws-ticket-status-badge");
         if (stBadge) {
-            stBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#0078D4] border border-blue-100 flex items-center gap-1";
-            stBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-[#0078D4] animate-pulse"></span> En Atención`;
+            stBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200 flex items-center gap-1.5";
+            stBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#1C58A8] animate-pulse"></span> En Atención`;
         }
-        startLiveTimer(currentOpenTicket.claimed_at);
+        startLiveTimer(currentOpenTicket.fecha_inicio_atencion || currentOpenTicket.claimed_at);
+        if (typeof showStitchSuccessToast === 'function') {
+            showStitchSuccessToast("Atención Reanudada", `El cronómetro del caso #${currentOpenTicket.ticket_code || currentOpenTicket.id} continúa.`);
+        }
     }
-    applyInboxFilters();
+    if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(true);
 }
 
 async function submitCompleteAutomated(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!currentOpenTicket) return;
     
     const notesEl = document.getElementById("ws_resolution_notes");
-    const notes = notesEl ? notesEl.value : "";
+    const notes = notesEl ? notesEl.value.trim() : "";
+    if (!notes) {
+        if (typeof showStitchSuccessToast === 'function') {
+            showStitchSuccessToast("Notas Requeridas", "Por favor ingresa las notas de diagnóstico o resolución del caso.");
+        }
+        if (notesEl) notesEl.focus();
+        return;
+    }
     
     try {
         const res = await fetch(`/api/tickets/${currentOpenTicket.id}/complete`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 resolution_notes: notes,
@@ -2340,13 +2360,25 @@ async function submitCompleteAutomated(e) {
         });
         
         const result = await res.json();
-        if (result.status === 'ok') {
-            selectedTicketId = null;
+        if (res.ok && result.status === 'ok') {
             closeWorkspaceModal();
-            loadDashboardData();
+            if (typeof showStitchSuccessToast === 'function') {
+                showStitchSuccessToast("¡Caso Resuelto con Éxito!", `El Ticket #${result.ticket || currentOpenTicket.ticket_code} fue enviado a verificación de Coordinación.`);
+            }
+            if (typeof loadOperatorAssignments === 'function') await loadOperatorAssignments(true);
+            if (typeof loadCoordinatorTriage === 'function') await loadCoordinatorTriage();
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+        } else {
+            if (typeof showStitchSuccessToast === 'function') {
+                showStitchSuccessToast("Error al Completar", result.error || "No se pudo registrar la resolución.");
+            }
         }
     } catch (err) {
         console.error("Error completing ticket:", err);
+        if (typeof showStitchSuccessToast === 'function') {
+            showStitchSuccessToast("Error", "Error de comunicación al resolver el caso.");
+        }
     }
 }
 
@@ -3055,6 +3087,11 @@ async function loadCurrentUserProfile() {
             if (typeof checkCoordinatorRoleAndInitTriage === 'function') {
                 checkCoordinatorRoleAndInitTriage(user);
             }
+
+            // Refrescar panel de tareas del Operador
+            if (typeof loadOperatorAssignments === 'function') {
+                loadOperatorAssignments(true);
+            }
         }
     } catch (e) {
         console.error("Error loading user profile:", e);
@@ -3131,6 +3168,15 @@ async function switchUserProfile(userId) {
             toggleUserDropdown(false);
             await loadCurrentUserProfile();
             await loadInbox();
+            if (typeof loadOperatorAssignments === 'function') {
+                await loadOperatorAssignments(true);
+            }
+            if (typeof loadCoordinatorTriage === 'function') {
+                await loadCoordinatorTriage();
+            }
+            if (typeof loadCurrentWorkload === 'function') {
+                await loadCurrentWorkload();
+            }
             if (window.currentDashboardView === 'audit') {
                 await loadAuditLogs();
             }
@@ -3225,11 +3271,27 @@ window.currentTriageOperators = [];
 
 function getPriorityBadgeClass(p) {
     const pri = (p || '').toUpperCase();
-    if (pri === 'P1') return 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300';
-    if (pri === 'P2') return 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-950/60 dark:text-orange-300';
-    if (pri === 'P3') return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300';
-    if (pri === 'P4') return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300';
-    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300';
+    if (pri === 'P1') return 'bg-rose-50 text-rose-700 border border-rose-200';
+    if (pri === 'P2') return 'bg-amber-50 text-amber-800 border border-amber-200';
+    if (pri === 'P3') return 'bg-blue-50 text-blue-800 border border-blue-200';
+    if (pri === 'P4') return 'bg-surface-container-low text-on-surface-variant border border-outline-variant';
+    return 'bg-surface-container-low text-on-surface-variant border border-outline-variant';
+}
+
+function getPriorityBarClass(p) {
+    const pri = (p || '').toUpperCase();
+    if (pri === 'P1') return 'bg-error';
+    if (pri === 'P2') return 'bg-amber-500';
+    if (pri === 'P3') return 'bg-blue-500';
+    return 'bg-outline';
+}
+
+function getPrioritySeverityName(p) {
+    const pri = (p || '').toUpperCase();
+    if (pri === 'P1') return 'CRÍTICO';
+    if (pri === 'P2') return 'ALTO';
+    if (pri === 'P3') return 'MEDIO';
+    return 'PROGRAMADO';
 }
 
 function calcWaitTime(dateStr) {
@@ -3262,11 +3324,14 @@ function buildOperatorOptions(operators) {
 }
 
 function renderTriageRow(t) {
-    const pBadgeClass = getPriorityBadgeClass(t.priority || 'P3');
+    const p = (t.priority || 'P3').toUpperCase();
+    const pBadgeClass = getPriorityBadgeClass(p);
+    const pBarColor = getPriorityBarClass(p);
+    const pSeverity = getPrioritySeverityName(p);
     const safeSubject = escapeHtml(t.subject || 'Sin asunto');
-    const safeSender = escapeHtml(t.sender_email || t.requester || 'noc-alerts@inter.com.ve');
-    const safeNode = escapeHtml(t.node_name || 'N/A');
-    const safeSubscriber = escapeHtml(t.subscriber_code || 'N/A');
+    const safeSender = escapeHtml(t.sender_email || t.requester || 'NOC / Solicitud');
+    const safeNode = escapeHtml(t.node_name || 'Nodo Central');
+    const safeSubscriber = escapeHtml(t.subscriber_code || 'Abonado');
     const techDetails = [t.slot_pon, t.serial_pon, t.mac_address].filter(Boolean).map(escapeHtml).join(' • ');
     const points = t.suggested_points || 1;
     const taskName = escapeHtml(t.suggested_task_name || 'Incidencia de Área');
@@ -3275,61 +3340,61 @@ function renderTriageRow(t) {
     const opOptions = buildOperatorOptions(window.currentTriageOperators || []);
 
     return `
-    <tr id="triage-row-${t.id}" class="hover:bg-blue-50/40 dark:hover:bg-slate-800/40 transition-colors duration-150 border-b border-[#F1F5F9] dark:border-slate-800/60">
-        <td class="py-3 px-3.5 whitespace-nowrap">
+    <tr id="triage-row-${t.id}" class="hover:bg-slate-50/70 transition-colors relative group border-b border-slate-100">
+        <td class="py-3.5 pl-4 pr-3 align-middle">
+            <div class="flex items-center gap-2.5">
+                <span class="w-1.5 h-9 rounded-full ${pBarColor} shrink-0" title="Severidad ${p}"></span>
+                <div class="flex flex-col">
+                    <button onclick="openTicketWorkspace ? openTicketWorkspace(${t.id}) : openTicketFromWorkload(${t.id})" class="font-mono text-xs font-bold text-[#1C58A8] hover:text-[#154687] text-left transition cursor-pointer" title="Ver detalles del ticket">
+                        #${escapeHtml(t.ticket_code || t.id)}
+                    </button>
+                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold ${pBadgeClass} mt-1 w-fit">
+                        ${p} ${pSeverity}
+                    </span>
+                </div>
+            </div>
+        </td>
+        <td class="py-3.5 px-3 align-middle max-w-[260px]">
+            <div class="flex flex-col">
+                <span class="font-semibold text-slate-800 text-xs line-clamp-1 truncate" title="${safeSubject}">
+                    ${safeSubject}
+                </span>
+                <div class="flex items-center gap-1.5 text-slate-400 text-[11px] mt-0.5" title="${safeSender}">
+                    <i data-lucide="mail" class="w-3 h-3 text-slate-400"></i>
+                    <span class="truncate"><span class="font-medium text-slate-500">De:</span> ${safeSender}</span>
+                </div>
+            </div>
+        </td>
+        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+            <div class="flex flex-col text-xs font-mono">
+                <span class="text-slate-800 font-semibold">${safeNode}</span>
+                <span class="text-slate-400 text-[11px]">${safeSubscriber}</span>
+                ${techDetails ? `<span class="text-slate-500 text-[10px] mt-0.5 truncate max-w-[190px]" title="${techDetails}">${techDetails}</span>` : ''}
+            </div>
+        </td>
+        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-1.5">
+                    <span class="font-medium text-slate-800 text-xs truncate max-w-[160px]" title="${taskName}">${taskName}</span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100/80">+${points} pts</span>
+                </div>
+                <span class="text-[10px] text-slate-400 mt-0.5">SLA: <strong>${sla}m</strong></span>
+            </div>
+        </td>
+        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+            <span class="font-mono text-xs font-bold text-slate-700">${waitTime}</span>
+        </td>
+        <td class="py-3.5 pl-3 pr-4 align-middle whitespace-nowrap">
+            <!-- Selector de Asignación Sutil y Minimalista (Stitch Design) -->
             <div class="flex items-center gap-2">
-                <span class="font-mono font-bold text-xs text-[#0057cd] dark:text-blue-400 cursor-pointer hover:underline" onclick="openTicketFromWorkload(${t.id})" title="Ver detalles del ticket">
-                    ${escapeHtml(t.ticket_code || ('#' + t.id))}
-                </span>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${pBadgeClass}">
-                    ${escapeHtml(t.priority || 'P3')}
-                </span>
-            </div>
-        </td>
-        <td class="py-3 px-3.5 max-w-[260px]">
-            <div class="font-semibold text-xs text-[#0b1c30] dark:text-slate-100 truncate" title="${safeSubject}">
-                ${safeSubject}
-            </div>
-            <div class="text-[11px] text-[#64748b] dark:text-slate-400 truncate flex items-center gap-1 mt-0.5" title="${safeSender}">
-                <i data-lucide="user" class="w-3 h-3 text-slate-400 shrink-0"></i>
-                <span class="truncate"><span class="font-medium text-slate-600 dark:text-slate-300">Solicitante:</span> ${safeSender}</span>
-            </div>
-        </td>
-        <td class="py-3 px-3.5 whitespace-nowrap">
-            <div class="text-[11px] text-[#0b1c30] dark:text-slate-200 flex items-center gap-1.5">
-                <span class="font-medium text-slate-400 text-[10px]">Nodo:</span>
-                <span class="font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px]">${safeNode}</span>
-                <span class="font-medium text-slate-400 text-[10px] ml-1">Abonado:</span>
-                <span class="font-mono font-semibold text-slate-700 dark:text-slate-300 text-[10px]">${safeSubscriber}</span>
-            </div>
-            ${techDetails ? `<div class="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[200px]" title="${techDetails}">${techDetails}</div>` : ''}
-        </td>
-        <td class="py-3 px-3.5 whitespace-nowrap">
-            <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0057cd] border border-blue-200/60 dark:bg-blue-950/50 dark:text-blue-300">
-                    ${points} pts
-                </span>
-                <span class="text-xs text-slate-700 dark:text-slate-300 font-medium truncate max-w-[150px]" title="${taskName}">
-                    ${taskName}
-                </span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5">
-                SLA: ${sla} min
-            </div>
-        </td>
-        <td class="py-3 px-3.5 whitespace-nowrap">
-            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i>
-                <span>${waitTime}</span>
-            </span>
-        </td>
-        <td class="py-3 px-3.5 text-right whitespace-nowrap">
-            <div class="inline-flex items-center gap-2 justify-end">
-                <select id="triage-op-${t.id}" class="text-xs py-1.5 px-2.5 rounded-lg border border-[#cbd5e1] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#0b1c30] dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#0057cd] focus:border-[#0057cd] shadow-2xs font-sans max-w-[230px] truncate cursor-pointer">
-                    ${opOptions}
-                </select>
-                <button id="btn-assign-${t.id}" onclick="assignTriageTicket(${t.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0057cd] hover:bg-[#0046a6] text-white font-semibold text-xs shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer shrink-0">
-                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                <div class="relative flex-1 min-w-[200px] max-w-[240px]">
+                    <select id="select-operator-${t.id}" data-ticket-id="${t.id}" class="select-operator w-full appearance-none bg-slate-50/80 hover:bg-slate-100/70 focus:bg-white border border-slate-200/90 text-slate-800 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:border-[#1C58A8] focus:ring-2 focus:ring-blue-100/60 transition cursor-pointer font-medium shadow-2xs">
+                        ${opOptions}
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+                <button id="btn-assign-${t.id}" onclick="assignTriageTicket(${t.id})" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1C58A8] hover:bg-[#154687] text-white text-xs font-semibold shadow-xs hover:shadow transition duration-150 active:scale-95 cursor-pointer shrink-0" type="button" title="Asignar caso al especialista seleccionado">
+                    <i data-lucide="send" class="w-3 h-3"></i>
                     <span>Asignar</span>
                 </button>
             </div>
@@ -3386,8 +3451,9 @@ async function loadCoordinatorTriage() {
 
     try {
         // 1. Obtener operadores disponibles del área ordenados por menor carga
-        const opsUrl = `/api/operators/availability?area=${encodeURIComponent(area)}`;
-        const opsRes = await fetch(opsUrl);
+        const deptoParam = user.departamento_id ? `&departamento_id=${user.departamento_id}` : '';
+        const opsUrl = `/api/operators/availability?area=${encodeURIComponent(area)}${deptoParam}`;
+        const opsRes = await fetch(opsUrl, { credentials: 'include' });
         if (opsRes.ok) {
             window.currentTriageOperators = await opsRes.json();
         } else {
@@ -3395,8 +3461,8 @@ async function loadCoordinatorTriage() {
         }
 
         // 2. Obtener tickets pendientes no asignados del área
-        const ticketsUrl = `/api/tickets/unassigned?area=${encodeURIComponent(area)}`;
-        const tRes = await fetch(ticketsUrl);
+        const ticketsUrl = `/api/tickets/unassigned?area=${encodeURIComponent(area)}${deptoParam}`;
+        const tRes = await fetch(ticketsUrl, { credentials: 'include' });
         
         if (!tRes.ok) {
             const errData = await tRes.json().catch(() => ({}));
@@ -3431,6 +3497,11 @@ async function loadCoordinatorTriage() {
             tbody.innerHTML = tickets.map(t => renderTriageRow(t)).join('');
             if (window.lucide) lucide.createIcons();
         }
+
+        // Sincronizar Módulo de Asignación Rápida
+        if (typeof populateQuickAssignControls === 'function') {
+            populateQuickAssignControls(tickets || [], window.currentTriageOperators || []);
+        }
     } catch (e) {
         console.error("Error cargando Mesa de Asignación:", e);
         tbody.innerHTML = `
@@ -3455,7 +3526,7 @@ async function refreshTriageOperators() {
         const res = await fetch(opsUrl);
         if (res.ok) {
             window.currentTriageOperators = await res.json();
-            const selects = document.querySelectorAll("#triage-tickets-tbody select[id^='triage-op-']");
+            const selects = document.querySelectorAll("#triage-tickets-tbody select.select-operator, #triage-tickets-tbody select[id^='select-operator-'], #triage-tickets-tbody select[id^='triage-op-']");
             selects.forEach(sel => {
                 const currentVal = sel.value;
                 sel.innerHTML = buildOperatorOptions(window.currentTriageOperators);
@@ -3468,7 +3539,9 @@ async function refreshTriageOperators() {
 }
 
 async function assignTriageTicket(ticketId) {
-    const selectEl = document.getElementById(`triage-op-${ticketId}`);
+    const selectEl = document.getElementById(`select-operator-${ticketId}`)
+                  || document.getElementById(`triage-op-${ticketId}`)
+                  || document.getElementById("select-operator");
     if (!selectEl) return;
 
     const opId = selectEl.value;
@@ -3488,6 +3561,7 @@ async function assignTriageTicket(ticketId) {
     try {
         const res = await fetch(`/api/tickets/${ticketId}/assign`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 operador_id: parseInt(opId, 10),
@@ -3568,11 +3642,1100 @@ function checkTriageTableEmpty() {
     }
 }
 
+// =============================================================
+// MÓDULO DE ASIGNACIÓN RÁPIDA (STITCH CORPORATE MINIMALISTA)
+// =============================================================
+
+function populateQuickAssignControls(tickets, operators) {
+    const ticketSelect = document.getElementById("quick-ticket-select");
+    const opSelect = document.getElementById("quick-operator-select");
+    const countBadge = document.getElementById("quick-ticket-count-badge");
+
+    if (countBadge) {
+        countBadge.textContent = `${tickets.length} en cola`;
+    }
+
+    if (ticketSelect) {
+        const curVal = ticketSelect.value;
+        let html = '<option value="">Seleccione un ticket pendiente...</option>';
+        tickets.forEach(t => {
+            const shortSubj = (t.subject || '').substring(0, 45);
+            html += `<option value="${t.id}" data-task-id="${t.suggested_task_id || ''}" data-points="${t.suggested_points || 5}" data-code="${t.ticket_code}">${t.ticket_code} · ${escapeHtml(shortSubj)}</option>`;
+        });
+        ticketSelect.innerHTML = html;
+        if (curVal && tickets.some(t => String(t.id) === String(curVal))) {
+            ticketSelect.value = curVal;
+        }
+    }
+
+    if (opSelect) {
+        const curOp = opSelect.value;
+        let html = '<option value="">Seleccione especialista...</option>';
+        operators.forEach(op => {
+            html += `<option value="${op.id}">${op.name} (${op.active_points} pts activos · ${op.saturation_level || 'Disponible'})</option>`;
+        });
+        opSelect.innerHTML = html;
+        if (curOp && operators.some(o => String(o.id) === String(curOp))) {
+            opSelect.value = curOp;
+        }
+    }
+}
+
+function onQuickTicketChange(ticketId) {
+    const ticketSelect = document.getElementById("quick-ticket-select");
+    const taskSelect = document.getElementById("quick-task-select");
+    if (!ticketSelect || !ticketId) return;
+
+    const opt = ticketSelect.options[ticketSelect.selectedIndex];
+    if (!opt) return;
+
+    const taskId = opt.getAttribute("data-task-id");
+    const pts = opt.getAttribute("data-points");
+
+    if (taskSelect && taskId) {
+        taskSelect.value = taskId;
+        onQuickTaskChange(pts);
+    }
+}
+
+function onQuickTaskChange(val) {
+    const taskSelect = document.getElementById("quick-task-select");
+    const dersBadge = document.getElementById("quick-ders-badge");
+    if (!dersBadge) return;
+
+    let pts = val;
+    if (taskSelect) {
+        const opt = taskSelect.options[taskSelect.selectedIndex];
+        if (opt && opt.getAttribute("data-points")) {
+            pts = opt.getAttribute("data-points");
+        }
+    }
+    dersBadge.textContent = `+${pts || 5} pts DERS`;
+}
+
+async function handleQuickAssignSubmit(event) {
+    if (event) event.preventDefault();
+    const ticketSelect = document.getElementById("quick-ticket-select");
+    const taskSelect = document.getElementById("quick-task-select");
+    const opSelect = document.getElementById("quick-operator-select");
+    const btn = document.getElementById("btn-quick-assign");
+
+    if (!ticketSelect || !opSelect) return;
+    const ticketId = ticketSelect.value;
+    const opId = opSelect.value;
+    const taskTypeId = taskSelect ? taskSelect.value : null;
+
+    if (!ticketId) {
+        showStitchSuccessToast("Atención", "Por favor seleccione un ticket pendiente de la cola.");
+        ticketSelect.focus();
+        return;
+    }
+    if (!opId) {
+        showStitchSuccessToast("Atención", "Por favor seleccione un especialista para asignar.");
+        opSelect.focus();
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Asignando...`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    try {
+        const payload = {
+            operador_id: parseInt(opId, 10),
+            task_type_id: taskTypeId ? parseInt(taskTypeId, 10) : null,
+            status: "ASIGNADO",
+            notas: "Despachado desde Módulo de Asignación Rápida"
+        };
+        const res = await fetch(`/api/tickets/${ticketId}/assign`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showStitchSuccessToast("¡Asignación Exitosa!", data.message || `Ticket asignado exitosamente.`);
+            // Refrescar Mesa de Asignación y Operadores
+            await loadCoordinatorTriage();
+            // Refrescar Vista Operativa para ver rendimiento
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+            // Refrescar Mis Asignaciones del operador
+            loadOperatorAssignments(true);
+        } else {
+            showStitchSuccessToast("Error de Asignación", data.error || "No se pudo asignar el caso.");
+        }
+    } catch (e) {
+        console.error("Error en asignación rápida:", e);
+        showStitchSuccessToast("Error de Conexión", "No se pudo conectar con el servidor.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+}
+
+// =============================================================
+// PANEL DEL OPERADOR: TORRE DE EJECUCIÓN & GESTIÓN DE TAREAS
+// =============================================================
+
+window._allOperatorAssignments = [];
+window._currentOperatorFilter = 'all';
+window._knownAssignedTicketIds = new Set();
+window._hasInitialAssignmentsLoaded = false;
+let _cardTimerInterval = null;
+
+async function loadOperatorAssignments(isManual = false) {
+    const listContainer = document.getElementById("operator-assignments-list");
+    const refreshIcon = document.getElementById("icon-refresh-operator");
+
+    if (refreshIcon && isManual) refreshIcon.classList.add("animate-spin");
+
+    try {
+        const res = await fetch('/api/tickets/my-assignments?filter_status=all', { credentials: 'include' });
+        if (!res.ok) return;
+        const tickets = await res.json();
+        window._allOperatorAssignments = tickets || [];
+
+        // 1. Detección de tickets nuevos para disparar Toast de notificación elegante
+        if (window._hasInitialAssignmentsLoaded) {
+            for (const t of tickets) {
+                if (!window._knownAssignedTicketIds.has(t.id) && (t.status === 'ASIGNADO' || t.status === 'PENDIENTE')) {
+                    showStitchAssignmentToast(t);
+                    break;
+                }
+            }
+        }
+
+        window._knownAssignedTicketIds = new Set(tickets.map(t => t.id));
+        window._hasInitialAssignmentsLoaded = true;
+
+        // 2. Actualizar contadores y pastillas de estado
+        updateOperatorFilterCounts(tickets);
+
+        // 3. Renderizar según el filtro activo y búsqueda
+        filterOperatorAssignmentsLocal();
+
+        // 4. Iniciar cronómetro de tarjetas activas
+        startCardTimers();
+    } catch (e) {
+        console.error("Error consultando mis asignaciones:", e);
+    } finally {
+        if (refreshIcon) {
+            setTimeout(() => refreshIcon.classList.remove("animate-spin"), 400);
+        }
+    }
+}
+
+function updateOperatorFilterCounts(tickets) {
+    const all = tickets || [];
+    const countAll = all.length;
+    const countPending = all.filter(t => t.status === 'ASIGNADO' || t.status === 'PENDIENTE').length;
+    const countProgress = all.filter(t => t.status === 'EN PROGRESO').length;
+    const countHold = all.filter(t => t.status === 'EN ESPERA').length;
+    const countCompleted = all.filter(t => t.status === 'POR_VERIFICAR' || t.status === 'COMPLETADO').length;
+
+    const elAll = document.getElementById("count-optab-all");
+    const elPending = document.getElementById("count-optab-pending");
+    const elProgress = document.getElementById("count-optab-progress");
+    const elHold = document.getElementById("count-optab-hold");
+    const elCompleted = document.getElementById("count-optab-completed");
+    const badgeCount = document.getElementById("operator-assignments-count");
+    const sidebarBadge = document.getElementById("sidebar-operator-badge");
+    const ptsBadge = document.getElementById("operator-active-points-badge");
+
+    if (elAll) elAll.textContent = countAll;
+    if (elPending) elPending.textContent = countPending;
+    if (elProgress) elProgress.textContent = countProgress;
+    if (elHold) elHold.textContent = countHold;
+    if (elCompleted) elCompleted.textContent = countCompleted;
+    
+    if (badgeCount) badgeCount.textContent = `${countAll} tickets`;
+    
+    // Sidebar badge muestra casos activos (por iniciar + en progreso)
+    const activeUrgent = countPending + countProgress;
+    if (sidebarBadge) {
+        sidebarBadge.textContent = activeUrgent;
+        sidebarBadge.classList.toggle("hidden", activeUrgent === 0);
+    }
+
+    // Calcular puntos de carga activa
+    const activePoints = all.filter(t => t.status === 'EN PROGRESO').reduce((sum, t) => sum + (t.suggested_points || 0), 0);
+    if (ptsBadge) {
+        ptsBadge.textContent = `Carga Activa: ${activePoints} pts`;
+    }
+}
+
+function setOperatorTaskFilter(filterName) {
+    window._currentOperatorFilter = filterName;
+    
+    const mapping = {
+        'all': 'optab-all',
+        'pending_start': 'optab-pending',
+        'in_progress': 'optab-progress',
+        'on_hold': 'optab-hold',
+        'completed': 'optab-completed'
+    };
+
+    Object.keys(mapping).forEach(k => {
+        const btn = document.getElementById(mapping[k]);
+        if (!btn) return;
+        if (k === filterName) {
+            btn.className = "px-3 py-1.5 rounded-lg bg-white font-bold text-slate-900 shadow-2xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60";
+        } else {
+            btn.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-medium transition cursor-pointer flex items-center gap-1.5";
+        }
+    });
+
+    filterOperatorAssignmentsLocal();
+}
+
+function filterOperatorAssignmentsLocal() {
+    const listContainer = document.getElementById("operator-assignments-list");
+    const emptyNotice = document.getElementById("operator-empty-assignments");
+    const searchInput = document.getElementById("operator-task-search");
+    const query = (searchInput ? searchInput.value : "").trim().toLowerCase();
+
+    const all = window._allOperatorAssignments || [];
+    
+    const filtered = all.filter(t => {
+        const st = (t.status || '').toUpperCase();
+        if (window._currentOperatorFilter === 'pending_start' && st !== 'ASIGNADO' && st !== 'PENDIENTE') return false;
+        if (window._currentOperatorFilter === 'in_progress' && st !== 'EN PROGRESO') return false;
+        if (window._currentOperatorFilter === 'on_hold' && st !== 'EN ESPERA') return false;
+        if (window._currentOperatorFilter === 'completed' && st !== 'POR_VERIFICAR' && st !== 'COMPLETADO') return false;
+
+        if (query) {
+            const matchCode = (t.ticket_code || '').toLowerCase().includes(query);
+            const matchSubj = (t.subject || '').toLowerCase().includes(query);
+            const matchNode = (t.node_name || '').toLowerCase().includes(query);
+            const matchAbon = (t.subscriber_code || '').toLowerCase().includes(query);
+            const matchTask = (t.suggested_task_name || '').toLowerCase().includes(query);
+            if (!matchCode && !matchSubj && !matchNode && !matchAbon && !matchTask) return false;
+        }
+
+        return true;
+    });
+
+    if (!listContainer) return;
+
+    if (filtered.length === 0) {
+        listContainer.innerHTML = '';
+        if (emptyNotice) {
+            emptyNotice.classList.remove("hidden");
+            const emptyTitle = document.getElementById("operator-empty-title");
+            const emptyDesc = document.getElementById("operator-empty-desc");
+            if (query) {
+                if (emptyTitle) emptyTitle.textContent = "No se encontraron tareas coincidentes";
+                if (emptyDesc) emptyDesc.textContent = `No hay tareas asignadas que coincidan con la búsqueda "${query}".`;
+            } else {
+                if (emptyTitle) emptyTitle.textContent = "¡Bandeja de Tareas al Día!";
+                if (emptyDesc) emptyDesc.textContent = "No tienes tareas en esta categoría en este momento.";
+            }
+        }
+    } else {
+        if (emptyNotice) emptyNotice.classList.add("hidden");
+        listContainer.innerHTML = filtered.map(t => renderOperatorAssignmentCard(t)).join('');
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
+function startCardTimers() {
+    if (_cardTimerInterval) clearInterval(_cardTimerInterval);
+    
+    function updateTimers() {
+        const timerEls = document.querySelectorAll(".card-live-timer");
+        if (!timerEls || timerEls.length === 0) return;
+        
+        const now = Date.now();
+        timerEls.forEach(el => {
+            const startStr = el.getAttribute("data-live-timer-start");
+            const pausedSec = parseInt(el.getAttribute("data-paused-seconds") || "0", 10);
+            if (!startStr) return;
+            try {
+                const startMs = new Date(startStr.replace(' ', 'T')).getTime();
+                const diffSec = Math.max(0, Math.floor((now - startMs - (pausedSec * 1000)) / 1000));
+                const hrs = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+                const secs = String(diffSec % 60).padStart(2, '0');
+                el.textContent = `${hrs}:${mins}:${secs}`;
+            } catch (e) {}
+        });
+    }
+
+    updateTimers();
+    _cardTimerInterval = setInterval(updateTimers, 1000);
+}
+
+function renderOperatorAssignmentCard(t) {
+    const st = (t.status || '').toUpperCase();
+    const pts = t.suggested_points || 1;
+    const prio = t.priority || (pts >= 8 ? 'P5' : pts >= 5 ? 'P4' : pts >= 3 ? 'P3' : 'P2');
+    const taskName = escapeHtml(t.suggested_task_name || 'Atención Técnica de Fallas');
+    const subject = escapeHtml(t.subject || 'Sin asunto');
+    const subscriber = t.subscriber_code ? `<span class="inline-flex items-center gap-1 font-mono text-[11px] text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60"><strong class="text-slate-400 font-normal">Abonado:</strong> ${escapeHtml(t.subscriber_code)}</span>` : '';
+    const node = t.node_name ? `<span class="inline-flex items-center gap-1 font-mono text-[11px] text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60"><strong class="text-slate-400 font-normal">Nodo:</strong> ${escapeHtml(t.node_name)}</span>` : '';
+    const mac = t.mac_address && t.mac_address !== 'N/A' ? `<span class="inline-flex items-center gap-1 font-mono text-[11px] text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60"><strong class="text-slate-400 font-normal">MAC:</strong> ${escapeHtml(t.mac_address)}</span>` : '';
+    const area = escapeHtml(t.departamento_nombre || t.area || 'IP');
+    const code = escapeHtml(t.ticket_code || 'INC-' + t.id);
+
+    let borderClass = 'border-l-4 border-l-[#1C58A8]';
+    let statusBadge = '';
+    let actionButtons = '';
+    let timerSnippet = '';
+
+    if (st === 'EN PROGRESO') {
+        borderClass = 'border-l-4 border-l-emerald-500 bg-emerald-50/10 shadow-xs';
+        statusBadge = `
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                En Atención Activa
+            </span>
+        `;
+        timerSnippet = `
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50/90 border border-emerald-200 text-emerald-800">
+                <i data-lucide="timer" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span class="text-[11px] font-medium">Cronómetro:</span>
+                <span class="font-mono font-bold text-xs card-live-timer" data-live-timer-start="${t.fecha_inicio_atencion || t.claimed_at || ''}" data-paused-seconds="${t.total_paused_seconds || 0}">00:00:00</span>
+            </div>
+        `;
+        actionButtons = `
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="togglePauseTicketDirect(${t.id})" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Pausar atención por espera de campo">
+                    <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
+                    <span>Pausar</span>
+                </button>
+                <button onclick="openTicketWorkspace(${t.id})" class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer" title="Abrir espacio de trabajo técnico completo">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-600"></i>
+                    <span>Workspace</span>
+                </button>
+                <button onclick="openQuickResolveModal(${t.id})" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                    <span>Resolver Tarea</span>
+                </button>
+            </div>
+        `;
+    } else if (st === 'EN ESPERA') {
+        borderClass = 'border-l-4 border-l-amber-500 bg-amber-50/15';
+        statusBadge = `
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                En Espera / Pausada
+            </span>
+        `;
+        actionButtons = `
+            <div class="flex items-center gap-2">
+                <button onclick="openTicketWorkspace(${t.id})" class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                    <span>Ver Caso</span>
+                </button>
+                <button onclick="togglePauseTicketDirect(${t.id})" class="px-4 py-2 rounded-xl bg-[#1C58A8] hover:bg-[#154687] text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95">
+                    <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                    <span>Reanudar Tarea</span>
+                </button>
+            </div>
+        `;
+    } else if (st === 'POR_VERIFICAR') {
+        borderClass = 'border-l-4 border-l-purple-500 bg-purple-50/10';
+        statusBadge = `
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3 text-purple-600"></i>
+                Esperando Aprobación DERS
+            </span>
+        `;
+        actionButtons = `
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-purple-700 font-medium">✓ Enviado a Coordinación</span>
+                <button onclick="openTicketWorkspace(${t.id})" class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                    <span>Ver Ficha</span>
+                </button>
+            </div>
+        `;
+    } else if (st === 'COMPLETADO') {
+        borderClass = 'border-l-4 border-l-slate-300 bg-slate-50/40';
+        statusBadge = `
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i>
+                Cerrado y Puntos Acreditados
+            </span>
+        `;
+        actionButtons = `
+            <button onclick="openTicketWorkspace(${t.id})" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-2xs">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                <span>Ver Registro</span>
+            </button>
+        `;
+    } else {
+        // ASIGNADO o PENDIENTE (Por Iniciar)
+        borderClass = 'border-l-4 border-l-[#1C58A8] bg-blue-50/5 shadow-xs';
+        statusBadge = `
+            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200/80 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8] animate-pulse"></span>
+                Asignado · Por Iniciar
+            </span>
+        `;
+        // Botón "Poner en Proceso" diseñado para destacar suavemente (Stitch Minimalista)
+        actionButtons = `
+            <div class="flex items-center gap-2.5">
+                <button onclick="openTicketWorkspace(${t.id})" class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer" title="Revisar información antes de iniciar">
+                    <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500"></i>
+                    <span>Detalles</span>
+                </button>
+                <button id="btn-process-${t.id}" onclick="startProcessingTicket(${t.id})" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1C58A8] hover:bg-[#154687] text-white text-xs font-semibold shadow-xs hover:shadow transition duration-150 active:scale-[0.98] cursor-pointer" title="Poner ticket en atención activa">
+                    <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                    <span>Poner en Proceso</span>
+                </button>
+            </div>
+        `;
+    }
+
+    return `
+    <div id="card-assignment-${t.id}" class="clean-card p-5 rounded-2xl border border-slate-200/90 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-md transition-all duration-200 space-y-3.5 ${borderClass}">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="navigator.clipboard.writeText('${code}'); showToast('Código copiado: ${code}', 'success');" class="font-mono font-bold text-xs text-[#1C58A8] bg-blue-50/80 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-100 transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Hacer clic para copiar código">
+                    <span>#${code}</span>
+                    <i data-lucide="copy" class="w-3 h-3 text-blue-400"></i>
+                </button>
+                <span class="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono">
+                    ${prio} · ${pts} pts DERS
+                </span>
+                ${statusBadge}
+            </div>
+            <div class="flex items-center gap-3">
+                ${timerSnippet}
+                <div class="flex items-center gap-1 text-slate-400 text-xs font-mono shrink-0">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    <span>${t.created_at ? t.created_at.substring(11, 16) : 'Hoy'}</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-sm font-semibold text-slate-900 leading-snug tracking-tight">
+                ${subject}
+            </h3>
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+                <span class="text-xs text-slate-600 font-medium">
+                    Tarea: <strong class="text-slate-800">${taskName}</strong>
+                </span>
+                ${node}
+                ${subscriber}
+                ${mac}
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="text-xs text-slate-500 flex items-center gap-2">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-50 border border-slate-200/80 font-medium text-slate-700">
+                    <i data-lucide="network" class="w-3.5 h-3.5 text-blue-500"></i>
+                    ${area}
+                </span>
+                <span class="text-slate-300">•</span>
+                <span>SLA: <strong class="text-slate-700">${t.sla_minutes || 30}m</strong></span>
+                <span class="text-slate-300">•</span>
+                <span class="text-slate-400 font-mono text-[11px]">${t.sender_email || 'NOC'}</span>
+            </div>
+            ${actionButtons}
+        </div>
+    </div>
+    `;
+}
+
+async function startProcessingTicket(ticketId) {
+    const btn = document.getElementById(`btn-process-${ticketId}`);
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Iniciando...`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/start`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showStitchSuccessToast("Ticket En Progreso", `El Ticket #${data.ticket_code || ticketId} ha sido puesto en proceso exitosamente.`);
+            await loadOperatorAssignments(true);
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+        } else {
+            showStitchSuccessToast("Error", data.error || "No se pudo poner el ticket en proceso.");
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    } catch (e) {
+        console.error("Error iniciando ticket:", e);
+        showStitchSuccessToast("Error", "Error de red al intentar poner el ticket en proceso.");
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+}
+
+async function togglePauseTicketDirect(ticketId) {
+    const t = (window._allOperatorAssignments || []).find(item => item.id === ticketId);
+    const isEnProgreso = t && t.status === 'EN PROGRESO';
+    const action = isEnProgreso ? 'pause' : 'resume';
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/${action}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            const toastTitle = isEnProgreso ? "Tarea en Pausa" : "Tarea Reanudada";
+            const toastMsg = isEnProgreso 
+                ? `El Ticket #${t?.ticket_code || ticketId} ha sido puesto en espera.` 
+                : `El cronómetro del Ticket #${t?.ticket_code || ticketId} continúa corriendo.`;
+            showStitchSuccessToast(toastTitle, toastMsg);
+            await loadOperatorAssignments(true);
+        } else {
+            showStitchSuccessToast("Atención", data.error || "No se pudo cambiar el estado de pausa.");
+        }
+    } catch (e) {
+        console.error("Error pausing/resuming ticket direct:", e);
+    }
+}
+
+function openQuickResolveModal(ticketId) {
+    const t = (window._allOperatorAssignments || []).find(item => item.id === ticketId);
+    if (!t) return;
+
+    const modal = document.getElementById("modalQuickResolveTicket");
+    const idInput = document.getElementById("quick-resolve-ticket-id");
+    const codeEl = document.getElementById("quick-resolve-code");
+    const dersEl = document.getElementById("quick-resolve-ders");
+    const subjEl = document.getElementById("quick-resolve-subject");
+    const taskEl = document.getElementById("quick-resolve-task");
+    const timerEl = document.getElementById("quick-resolve-timer");
+    const notesEl = document.getElementById("quick-resolve-notes");
+
+    if (idInput) idInput.value = t.id;
+    if (codeEl) codeEl.textContent = t.ticket_code || `#INC-${t.id}`;
+    if (dersEl) dersEl.textContent = `+${t.suggested_points || 2} pts (${t.priority || 'P2'})`;
+    if (subjEl) subjEl.textContent = t.subject || 'Sin asunto';
+    if (taskEl) taskEl.textContent = t.suggested_task_name || 'Atención Técnica';
+
+    // Calcular tiempo transcurrido
+    if (timerEl) {
+        let elapsedSec = 60;
+        if (t.fecha_inicio_atencion) {
+            const startMs = new Date(t.fecha_inicio_atencion.replace(' ', 'T')).getTime();
+            const pausedMs = (t.total_paused_seconds || 0) * 1000;
+            elapsedSec = Math.max(30, Math.floor((Date.now() - startMs - pausedMs) / 1000));
+        }
+        const m = Math.floor(elapsedSec / 60);
+        const s = elapsedSec % 60;
+        timerEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    if (notesEl) {
+        notesEl.value = '';
+        setTimeout(() => notesEl.focus(), 150);
+    }
+
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeQuickResolveModal() {
+    const modal = document.getElementById("modalQuickResolveTicket");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+async function handleQuickResolveSubmit(event) {
+    if (event) event.preventDefault();
+    const idInput = document.getElementById("quick-resolve-ticket-id");
+    const notesEl = document.getElementById("quick-resolve-notes");
+    const btn = document.getElementById("btn-quick-resolve-submit");
+
+    const ticketId = idInput ? idInput.value : null;
+    const notes = notesEl ? notesEl.value.trim() : "";
+
+    if (!ticketId || !notes) {
+        showStitchSuccessToast("Campo Obligatorio", "Por favor ingresa las notas de diagnóstico o resolución.");
+        if (notesEl) notesEl.focus();
+        return;
+    }
+
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Finalizando...`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/complete`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                resolution_notes: notes
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            closeQuickResolveModal();
+            showStitchSuccessToast(
+                "¡Tarea Resuelta!",
+                `Ticket ${data.ticket || '#' + ticketId} completado. En espera de aprobación de ${data.suggested_points || ''} pts por Coordinación.`
+            );
+            await loadOperatorAssignments(true);
+            if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+        } else {
+            showStitchSuccessToast("Error", data.error || "No se pudo completar el ticket.");
+        }
+    } catch (e) {
+        console.error("Error completing ticket:", e);
+        showStitchSuccessToast("Error de Conexión", "No se pudo comunicar con el servidor.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+}
+
+async function openTicketWorkspace(ticketId) {
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}`, { credentials: 'include' });
+        if (!res.ok) {
+            showToast("No se pudo cargar la información técnica del ticket", "error");
+            return;
+        }
+        const t = await res.json();
+        currentOpenTicket = t;
+
+        const modal = document.getElementById("modalTicketWorkspace");
+        const codeEl = document.getElementById("ws-ticket-code");
+        const sourceBadge = document.getElementById("ws-ticket-source-badge");
+        const statusBadge = document.getElementById("ws-ticket-status-badge");
+        const senderEl = document.getElementById("ws-ticket-sender");
+        const subjEl = document.getElementById("ws-ticket-subject");
+        const bodyEl = document.getElementById("ws-ticket-body");
+        const bridgeAlert = document.getElementById("ws-bridge-alert");
+        const subCode = document.getElementById("ws-param-subscriber");
+        const serial = document.getElementById("ws-param-serial");
+        const node = document.getElementById("ws-param-node");
+        const slotpon = document.getElementById("ws-param-slotpon");
+        const mac = document.getElementById("ws-param-mac");
+        const ptsBadge = document.getElementById("ws-param-points-badge");
+        const taskName = document.getElementById("ws-param-taskname");
+        const pauseBtnText = document.getElementById("btn-pause-text");
+
+        if (codeEl) codeEl.textContent = t.ticket_code || `#INC-${t.id}`;
+        if (sourceBadge) sourceBadge.textContent = t.source || 'Manual';
+        if (senderEl) senderEl.textContent = t.sender_email || 'coordinacion@inter.com.ve';
+        if (subjEl) subjEl.textContent = t.subject || 'Sin asunto';
+        if (bodyEl) bodyEl.innerHTML = escapeHtml(t.full_body || t.subject || '');
+        
+        const isBridge = (t.subject + ' ' + (t.full_body || '')).toLowerCase().includes('bridge');
+        if (bridgeAlert) bridgeAlert.classList.toggle('hidden', !isBridge);
+
+        if (subCode) subCode.textContent = t.subscriber_code || 'N/A';
+        if (serial) serial.textContent = t.serial_pon || 'N/A';
+        if (node) node.textContent = t.node_name || 'N/A';
+        if (slotpon) slotpon.textContent = t.slot_pon || 'N/A';
+        if (mac) mac.textContent = t.mac_address || 'N/A';
+        
+        const pts = t.suggested_points || 2;
+        const prio = t.priority || (pts >= 8 ? 'P5' : pts >= 5 ? 'P4' : pts >= 3 ? 'P3' : 'P2');
+        if (ptsBadge) ptsBadge.textContent = `+${pts} pts (${prio})`;
+        if (taskName) taskName.textContent = t.suggested_task_name || 'Atención Técnica de Fallas';
+
+        if (statusBadge) {
+            if (t.status === 'EN ESPERA') {
+                statusBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> En Espera / Pausa`;
+            } else if (t.status === 'POR_VERIFICAR') {
+                statusBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-purple-500"></span> Por Verificar`;
+            } else {
+                statusBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200 flex items-center gap-1.5";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#1C58A8] animate-pulse"></span> En Atención`;
+            }
+        }
+
+        if (pauseBtnText) {
+            pauseBtnText.textContent = t.status === 'EN ESPERA' ? 'Reanudar Caso' : 'Pausar (En Espera)';
+        }
+
+        // Timer en vivo
+        if (t.status === 'EN PROGRESO') {
+            startLiveTimer(t.fecha_inicio_atencion || t.claimed_at);
+        } else {
+            if (liveTimerInterval) clearInterval(liveTimerInterval);
+            const timerEl = document.getElementById("ws-live-timer");
+            if (timerEl) {
+                timerEl.textContent = t.status === 'COMPLETADO' ? `${t.duracion_atencion_minutos || 15} min` : (t.status === 'EN ESPERA' ? 'En Pausa' : '00:00:00');
+            }
+        }
+
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        console.error("Error opening workspace:", e);
+        showToast("Error al abrir el espacio de trabajo del ticket", "error");
+    }
+}
+
+function focusOperatorAssignments() {
+    switchDashboardTab('operativa');
+    const panel = document.getElementById("operator-assignments-panel");
+    if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        panel.classList.add("ring-2", "ring-[#1C58A8]", "ring-offset-2");
+        setTimeout(() => {
+            panel.classList.remove("ring-2", "ring-[#1C58A8]", "ring-offset-2");
+        }, 1500);
+    }
+}
+
+// =============================================================
+// NOTIFICACIONES TOAST (STITCH DESIGN SYSTEM)
+// =============================================================
+
+function showStitchAssignmentToast(ticket) {
+    const toast = document.getElementById("toast-assignment");
+    const codeEl = document.getElementById("toast-assignment-code");
+    const timeEl = document.getElementById("toast-assignment-time");
+    const bodyEl = document.getElementById("toast-assignment-body");
+
+    if (!toast) return;
+
+    const tCode = ticket ? (ticket.ticket_code || `#INC-${ticket.id}`) : '#INC-NUEVO';
+    if (codeEl) codeEl.textContent = tCode;
+    if (timeEl) timeEl.textContent = 'Ahora mismo';
+    if (bodyEl && ticket) {
+        bodyEl.innerHTML = `Se te ha asignado el Ticket <span class="font-mono font-semibold text-[#1C58A8] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">${escapeHtml(tCode)}</span>. Revisa tu lista para ponerlo en proceso.`;
+    }
+
+    window._lastNotifiedTicketId = ticket ? ticket.id : null;
+    toast.classList.remove("hidden");
+    toast.classList.add("toast-animate");
+
+    clearTimeout(window._toastAssignmentTimer);
+    window._toastAssignmentTimer = setTimeout(() => {
+        dismissStitchToast("toast-assignment");
+    }, 14000);
+}
+
+function showStitchSuccessToast(title, desc) {
+    const toast = document.getElementById("toast-success");
+    const titleEl = document.getElementById("toast-success-title");
+    const descEl = document.getElementById("toast-success-desc");
+
+    if (!toast) return;
+
+    if (titleEl) titleEl.textContent = title || "Acción Exitosa";
+    if (descEl) descEl.textContent = desc || "Operación completada satisfactoriamente.";
+
+    toast.classList.remove("hidden");
+    toast.classList.add("toast-animate");
+
+    clearTimeout(window._toastSuccessTimer);
+    window._toastSuccessTimer = setTimeout(() => {
+        dismissStitchToast("toast-success");
+    }, 6000);
+}
+
+function dismissStitchToast(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+        el.classList.add("hidden");
+        el.style.opacity = '';
+        el.style.transform = '';
+    }, 300);
+}
+
+function scrollToMyTicket() {
+    dismissStitchToast("toast-assignment");
+    if (typeof switchDashboardTab === 'function') {
+        switchDashboardTab('operativa');
+    }
+    const panel = document.getElementById("operator-assignments-panel");
+    if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        panel.classList.add("ring-2", "ring-[#1C58A8]");
+        setTimeout(() => panel.classList.remove("ring-2", "ring-[#1C58A8]"), 2000);
+    }
+}
+
+function startOperatorPolling() {
+    if (window._operatorPollingInterval) {
+        clearInterval(window._operatorPollingInterval);
+    }
+    // Polling cada 12 segundos según la especificación
+    window._operatorPollingInterval = setInterval(() => {
+        loadOperatorAssignments(false);
+    }, 12000);
+}
+
+// =============================================================
+// MODAL DE CREACIÓN DE TICKET / ASIGNACIÓN CON ID AUTOMÁTICO
+// =============================================================
+
+let _allDepartamentosCatalog = [];
+let _allTaskTypesCache = [];
+
+async function openCreateTicketModal() {
+    const modal = document.getElementById("modalCreateTicket");
+    if (!modal) return;
+
+    const form = document.getElementById("create-ticket-form");
+    if (form) form.reset();
+
+    const deptoSelect = document.getElementById("new-ticket-depto");
+
+    // Cargar departamentos si aún no están en memoria
+    if (!_allDepartamentosCatalog || _allDepartamentosCatalog.length === 0) {
+        try {
+            const res = await fetch('/api/departamentos');
+            if (res.ok) {
+                _allDepartamentosCatalog = await res.json();
+            }
+        } catch (e) {
+            console.error("Error loading departamentos:", e);
+        }
+    }
+
+    if (deptoSelect) {
+        deptoSelect.innerHTML = '';
+        (_allDepartamentosCatalog || []).forEach(d => {
+            const opt = document.createElement("option");
+            opt.value = d.id;
+            opt.textContent = `${d.nombre} (${d.codigo})`;
+            deptoSelect.appendChild(opt);
+        });
+
+        // Seleccionar departamento del usuario autenticado si es coordinador
+        const userDeptoId = window.currentUser?.departamento_id || window._currentUser?.departamento_id;
+        if (userDeptoId && (_allDepartamentosCatalog || []).some(d => d.id == userDeptoId)) {
+            deptoSelect.value = userDeptoId;
+        } else if (_allDepartamentosCatalog.length > 0) {
+            deptoSelect.value = _allDepartamentosCatalog[0].id;
+        }
+    }
+
+    // Disparar carga de tareas y operadores para el depto seleccionado
+    if (deptoSelect && deptoSelect.value) {
+        await onNewTicketDeptoChange(deptoSelect.value);
+    }
+
+    modal.classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+
+    const subjectInput = document.getElementById("new-ticket-subject");
+    if (subjectInput) subjectInput.focus();
+}
+
+function closeCreateTicketModal() {
+    const modal = document.getElementById("modalCreateTicket");
+    if (modal) modal.classList.add("hidden");
+}
+
+async function onNewTicketDeptoChange(deptoId) {
+    const taskSelect = document.getElementById("new-ticket-task");
+    const opSelect = document.getElementById("new-ticket-operator");
+    if (!deptoId) return;
+
+    const numDeptoId = parseInt(deptoId, 10);
+    const deptoObj = (_allDepartamentosCatalog || []).find(d => d.id === numDeptoId);
+    const areaName = deptoObj ? deptoObj.nombre : '';
+
+    // 1. Cargar tareas técnicas de este departamento
+    if (taskSelect) {
+        taskSelect.innerHTML = '<option value="">Cargando tareas técnicas...</option>';
+        try {
+            if (!_allTaskTypesCache || _allTaskTypesCache.length === 0) {
+                const resTasks = await fetch('/api/task-types');
+                if (resTasks.ok) _allTaskTypesCache = await resTasks.json();
+            }
+            const relevantTasks = (_allTaskTypesCache || []).filter(tt => {
+                if (!areaName) return true;
+                return tt.area === areaName || (tt.departamento_id && tt.departamento_id === numDeptoId);
+            });
+            const tasksToUse = relevantTasks.length > 0 ? relevantTasks : _allTaskTypesCache;
+            taskSelect.innerHTML = '<option value="">-- Tarea Técnica Sugerida por Defecto --</option>' +
+                tasksToUse.map(tt => `<option value="${tt.id}">${tt.code}: ${escapeHtml(tt.name)} [${tt.points} pts - SLA ${tt.sla_minutes || 30}m]</option>`).join('');
+        } catch (e) {
+            taskSelect.innerHTML = '<option value="">-- Tarea por defecto (+5 pts) --</option>';
+        }
+    }
+
+    // 2. Cargar operadores específicos de este departamento
+    if (opSelect) {
+        opSelect.innerHTML = '<option value="">Cargando especialistas del área...</option>';
+        try {
+            const resOps = await fetch(`/api/operators/availability?departamento_id=${numDeptoId}`);
+            if (resOps.ok) {
+                const ops = await resOps.json();
+                if (ops.length === 0) {
+                    opSelect.innerHTML = '<option value="">-- Sin especialistas registrados en esta área (Quedará Pendiente) --</option>';
+                } else {
+                    let opHtml = '<option value="">-- Sin Asignar (Dejar en cola Pendiente de despacho) --</option>';
+                    ops.forEach(op => {
+                        opHtml += `<option value="${op.id}">${op.name} (${op.active_points || 0} pts activos · ${op.saturation_level || 'Disponible'})</option>`;
+                    });
+                    opSelect.innerHTML = opHtml;
+                }
+            } else {
+                opSelect.innerHTML = '<option value="">-- Sin Asignar (Dejar en cola Pendiente) --</option>';
+            }
+        } catch (e) {
+            opSelect.innerHTML = '<option value="">-- Sin Asignar (Dejar en cola Pendiente) --</option>';
+        }
+    }
+}
+
+async function handleCreateTicketSubmit(event) {
+    if (event) event.preventDefault();
+    const btn = document.getElementById("btn-create-ticket-submit");
+    const deptoSelect = document.getElementById("new-ticket-depto");
+    const taskSelect = document.getElementById("new-ticket-task");
+    const opSelect = document.getElementById("new-ticket-operator");
+    const subjectInput = document.getElementById("new-ticket-subject");
+    const subscriberInput = document.getElementById("new-ticket-subscriber");
+    const nodeInput = document.getElementById("new-ticket-node");
+    const bodyInput = document.getElementById("new-ticket-body");
+
+    const subject = subjectInput ? subjectInput.value.trim() : "";
+    if (!subject) {
+        showStitchSuccessToast("Campo Obligatorio", "Por favor ingrese el asunto de la incidencia.");
+        if (subjectInput) subjectInput.focus();
+        return;
+    }
+
+    const payload = {
+        subject: subject,
+        body_text: bodyInput ? bodyInput.value.trim() : "",
+        departamento_id: deptoSelect && deptoSelect.value ? parseInt(deptoSelect.value, 10) : null,
+        task_type_id: taskSelect && taskSelect.value ? parseInt(taskSelect.value, 10) : null,
+        operador_id: opSelect && opSelect.value ? parseInt(opSelect.value, 10) : null,
+        subscriber_code: subscriberInput ? subscriberInput.value.trim() : null,
+        node_name: nodeInput ? nodeInput.value.trim() : null
+    };
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Guardando...`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    try {
+        const res = await fetch('/api/tickets/create', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            closeCreateTicketModal();
+            const actionText = data.operador_nombre ? `Asignado a ${data.operador_nombre}` : 'En cola Pendiente';
+            showStitchSuccessToast(
+                `¡Ticket #${data.ticket_code} Creado!`,
+                `ID generado automáticamente · ${data.departamento_nombre} · ${actionText}`
+            );
+
+            // Refrescar Mesa de Coordinación y Triage
+            if (typeof loadCoordinatorTriage === 'function') await loadCoordinatorTriage();
+            if (typeof loadOperatorAssignments === 'function') await loadOperatorAssignments(true);
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadFeed === 'function') loadFeed();
+        } else {
+            showStitchSuccessToast("Error al Crear", data.detail || data.error || "No se pudo crear el ticket.");
+        }
+    } catch (e) {
+        console.error("Error creating ticket:", e);
+        showStitchSuccessToast("Error de Conexión", "No se pudo comunicar con el servidor.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+}
+
+// Exportar funciones globales
 window.showToast = showToast;
 window.checkCoordinatorRoleAndInitTriage = checkCoordinatorRoleAndInitTriage;
 window.loadCoordinatorTriage = loadCoordinatorTriage;
 window.assignTriageTicket = assignTriageTicket;
 window.refreshTriageOperators = refreshTriageOperators;
+window.populateQuickAssignControls = populateQuickAssignControls;
+window.onQuickTicketChange = onQuickTicketChange;
+window.onQuickTaskChange = onQuickTaskChange;
+window.handleQuickAssignSubmit = handleQuickAssignSubmit;
+window.openCreateTicketModal = openCreateTicketModal;
+window.closeCreateTicketModal = closeCreateTicketModal;
+window.onNewTicketDeptoChange = onNewTicketDeptoChange;
+window.handleCreateTicketSubmit = handleCreateTicketSubmit;
+window.loadOperatorAssignments = loadOperatorAssignments;
+window.renderOperatorAssignmentCard = renderOperatorAssignmentCard;
+window.startProcessingTicket = startProcessingTicket;
+window.showStitchAssignmentToast = showStitchAssignmentToast;
+window.showStitchSuccessToast = showStitchSuccessToast;
+window.dismissStitchToast = dismissStitchToast;
+window.scrollToMyTicket = scrollToMyTicket;
+window.startOperatorPolling = startOperatorPolling;
+window.setOperatorTaskFilter = setOperatorTaskFilter;
+window.filterOperatorAssignmentsLocal = filterOperatorAssignmentsLocal;
+window.togglePauseTicketDirect = togglePauseTicketDirect;
+window.openQuickResolveModal = openQuickResolveModal;
+window.closeQuickResolveModal = closeQuickResolveModal;
+window.handleQuickResolveSubmit = handleQuickResolveSubmit;
+window.openTicketWorkspace = openTicketWorkspace;
+window.closeWorkspaceModal = closeWorkspaceModal;
+window.focusOperatorAssignments = focusOperatorAssignments;
+window.startCardTimers = startCardTimers;
+
+// Iniciar polling al cargar la página
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        loadOperatorAssignments(true);
+        startOperatorPolling();
+    });
+} else {
+    loadOperatorAssignments(true);
+    startOperatorPolling();
+}
 
 // =============================================================
 // MOTOR DE AUDITORÍA Y TRAZABILIDAD OPERATIVA EN TIEMPO REAL

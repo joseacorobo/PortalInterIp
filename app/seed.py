@@ -188,40 +188,12 @@ def seed(skip_init: bool = False):
     default_hash = hashlib.sha256("inter2026".encode()).hexdigest()
 
     users_data = [
-        # Área 1: Redes de acceso y aprovisionamiento
-        ("Carlos Méndez",        "Redes de acceso y aprovisionamiento", "COORDINADOR",  "CM", "Mañana",  "Activo", "carlos.mendez@inter.com.ve",      default_hash, dep_map["ACCESO_APROV"]),
-        ("Anais Rodríguez",      "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "AR", "Mañana",  "Activo", "anais.rodriguez@inter.com.ve",    default_hash, dep_map["ACCESO_APROV"]),
-        ("José Gregorio Pérez",  "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "JP", "Tarde",   "Activo", "jose.perez@inter.com.ve",         default_hash, dep_map["ACCESO_APROV"]),
-        ("Mariana Salazar",      "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "MS", "Noche",   "Activo", "mariana.salazar@inter.com.ve",    default_hash, dep_map["ACCESO_APROV"]),
-        ("José Corobo",          "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "JC", "Mañana",  "Activo", "joseacorobo@gmail.com",           default_hash, dep_map["ACCESO_APROV"]),
-
-        # Área 2: Control de Trafico y Redes inalambricas
-        ("Elena Peña",           "Control de Trafico y Redes inalambricas", "COORDINADOR",  "EP", "Mañana", "Activo", "elena.pena@inter.com.ve",        default_hash, dep_map["TRAFICO_INALAMBRICO"]),
-        ("Roberto Morales",      "Control de Trafico y Redes inalambricas", "ESPECIALISTA", "RM", "Mañana", "Activo", "roberto.morales@inter.com.ve",    default_hash, dep_map["TRAFICO_INALAMBRICO"]),
-        ("Vanessa Quintero",     "Control de Trafico y Redes inalambricas", "ESPECIALISTA", "VQ", "Tarde",  "Activo", "vanessa.quintero@inter.com.ve",   default_hash, dep_map["TRAFICO_INALAMBRICO"]),
-        ("Carmen Delgado",       "Control de Trafico y Redes inalambricas", "ESPECIALISTA", "CD", "Noche",  "Activo", "carmen.delgado@inter.com.ve",     default_hash, dep_map["TRAFICO_INALAMBRICO"]),
-
-        # Área 3: Redes WAN
-        ("Luis Eduardo Gómez",   "Redes WAN", "COORDINADOR",  "LG", "Mañana",  "Activo", "luis.gomez@inter.com.ve",         default_hash, dep_map["REDES_WAN"]),
-        ("Ricardo Morales",      "Redes WAN", "ESPECIALISTA", "RM", "Mañana",  "Activo", "ricardo.morales@inter.com.ve",    default_hash, dep_map["REDES_WAN"]),
-        ("Gabriel Torres",       "Redes WAN", "ESPECIALISTA", "GT", "Tarde",   "Activo", "gabriel.torres@inter.com.ve",     default_hash, dep_map["REDES_WAN"]),
-        ("Alejandro Silva",      "Redes WAN", "ESPECIALISTA", "AS", "Noche",   "Activo", "alejandro.silva@inter.com.ve",    default_hash, dep_map["REDES_WAN"]),
-
-        # Área 4: Seguridad
-        ("Marcos Rivas",         "Seguridad", "COORDINADOR",  "MR", "Mañana",  "Activo", "marcos.rivas@inter.com.ve",       default_hash, dep_map["SEGURIDAD"]),
-        ("Nelson Gil",           "Seguridad", "ESPECIALISTA", "NG", "Mañana",  "Activo", "nelson.gil@inter.com.ve",          default_hash, dep_map["SEGURIDAD"]),
-        ("Patricia Blanco",      "Seguridad", "ESPECIALISTA", "PB", "Tarde",   "Activo", "patricia.blanco@inter.com.ve",    default_hash, dep_map["SEGURIDAD"]),
-        ("Javier Rojas",         "Seguridad", "ESPECIALISTA", "JR", "Noche",   "Activo", "javier.rojas@inter.com.ve",       default_hash, dep_map["SEGURIDAD"]),
-
-        # Área 5: Telefonia
-        ("Daniela Castillo",     "Telefonia", "COORDINADOR",  "DC", "Mañana",  "Activo", "daniela.castillo@inter.com.ve",   default_hash, dep_map["TELEFONIA"]),
-        ("Jesús Alberto Vargas", "Telefonia", "ESPECIALISTA", "JV", "Mañana",  "Activo", "jesus.vargas@inter.com.ve",       default_hash, dep_map["TELEFONIA"]),
-        ("Paola Mendoza",        "Telefonia", "ESPECIALISTA", "PM", "Tarde",   "Activo", "paola.mendoza@inter.com.ve",      default_hash, dep_map["TELEFONIA"]),
-        ("Víctor Hernández",     "Telefonia", "ESPECIALISTA", "VH", "Noche",   "Activo", "victor.hernandez@inter.com.ve",   default_hash, dep_map["TELEFONIA"]),
-
-        # Administradores de Sistema
-        ("David Rodríguez",      "Redes de acceso y aprovisionamiento", "ADMINISTRADOR", "DR", "General", "Activo", "david.rodriguez@inter.com.ve", default_hash, dep_map["ACCESO_APROV"]),
-        ("Administrador General","Todas",                               "ADMINISTRADOR", "AD", "General", "Activo", "admin@inter.com.ve",           default_hash, dep_map["ACCESO_APROV"]),
+        # Administrador General (Gestión total del sistema para pruebas)
+        ("Administrador General", "Todas", "ADMINISTRADOR", "AD", "General", "Activo", "admin@inter.com.ve", default_hash, dep_map["ACCESO_APROV"]),
+        # Coordinador Oficial
+        ("Adelis Mejia", "Redes de acceso y aprovisionamiento", "COORDINADOR",  "AM", "Mañana", "Activo", "adelis.mejia@inter.com.ve", default_hash, dep_map["ACCESO_APROV"]),
+        # Especialista Oficial
+        ("José Corobo",  "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "JC", "Mañana", "Activo", "joseacorobo@gmail.com",     default_hash, dep_map["ACCESO_APROV"]),
     ]
     cur.executemany(
         "INSERT INTO users (name, area, role, avatar, shift, status, email, password_hash, departamento_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",

@@ -53,6 +53,7 @@ OFFICIAL_AREAS = [
     "Redes WAN",
     "Seguridad",
     "Telefonia",
+    "Grandes Cuentas",
 ]
 
 AREA_MAPPING = {
@@ -95,6 +96,13 @@ AREA_MAPPING = {
     "telefonía": "Telefonia",
     "telefonia ip": "Telefonia",
     "telefonía ip": "Telefonia",
+
+    # 6. Grandes Cuentas
+    "grandes cuentas": "Grandes Cuentas",
+    "grandes clientes": "Grandes Cuentas",
+    "grandes_cuentas": "Grandes Cuentas",
+    "corporativo": "Grandes Cuentas",
+    "cuentas vip": "Grandes Cuentas",
 }
 
 def normalize_area_name(area: Optional[str]) -> Optional[str]:
@@ -865,6 +873,214 @@ def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional
     conn.close()
     return tickets
 
+@app.get("/api/tickets/my-assignments")
+def get_my_assignments(request: Request, user_id: Optional[int] = None, filter_status: Optional[str] = None):
+    """
+    Retorna la lista de tickets asignados al especialista logueado.
+    Soporta filtro por estado ('active', 'completed', 'all') y selecciona
+    datos completos de cronómetro, pausas y estado de verificación.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    if not user_id and request:
+        cookie_val = request.cookies.get("auth_user_id")
+        if cookie_val and cookie_val.isdigit():
+            user_id = int(cookie_val)
+        if not user_id:
+            x_uid = request.headers.get("X-User-Id")
+            if x_uid and x_uid.isdigit():
+                user_id = int(x_uid)
+    if not user_id:
+        user_id = 2  # Fallback
+
+    status_filter_clause = "AND UPPER(et.status) IN ('ASIGNADO', 'EN PROGRESO', 'EN ESPERA', 'PENDIENTE', 'POR_VERIFICAR')"
+    if filter_status == 'completed':
+        status_filter_clause = "AND UPPER(et.status) IN ('COMPLETADO', 'POR_VERIFICAR')"
+    elif filter_status == 'all':
+        status_filter_clause = "AND UPPER(et.status) IN ('ASIGNADO', 'EN PROGRESO', 'EN ESPERA', 'PENDIENTE', 'POR_VERIFICAR', 'COMPLETADO')"
+    elif filter_status == 'in_progress':
+        status_filter_clause = "AND UPPER(et.status) = 'EN PROGRESO'"
+    elif filter_status == 'pending_start':
+        status_filter_clause = "AND UPPER(et.status) IN ('ASIGNADO', 'PENDIENTE')"
+    elif filter_status == 'on_hold':
+        status_filter_clause = "AND UPPER(et.status) = 'EN ESPERA'"
+
+    cur.execute(f"""
+    SELECT et.id, et.ticket_code, et.sender_email, et.subject, et.full_body, et.area,
+           et.departamento_id, COALESCE(d.nombre, et.area) as departamento_nombre,
+           COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo,
+           et.subscriber_code, et.serial_pon, et.node_name, et.slot_pon, et.mac_address,
+           et.status, et.claimed_by_user_id, et.operador_id,
+           COALESCE(u_op.name, u_claim.name, 'Sin Asignar') as operador_nombre,
+           tt.name as suggested_task_name, tt.points as suggested_points, tt.id as suggested_task_id, tt.code as task_code,
+           COALESCE(tt.sla_minutes, 30) as sla_minutes,
+           COALESCE(et.fecha_creacion, et.created_at) as fecha_creacion,
+           et.fecha_inicio_atencion, et.claimed_at,
+           et.paused_at, COALESCE(et.total_paused_seconds, 0) as total_paused_seconds,
+           et.fecha_cierre, et.completed_at, et.duracion_atencion_minutos,
+           et.created_at, et.source, COALESCE(et.folder, 'INBOX') as folder
+    FROM email_tickets et
+    LEFT JOIN departamentos d ON et.departamento_id = d.id
+    LEFT JOIN users u_op ON et.operador_id = u_op.id
+    LEFT JOIN users u_claim ON et.claimed_by_user_id = u_claim.id
+    LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
+    WHERE (et.operador_id = ? OR et.claimed_by_user_id = ?)
+      {status_filter_clause}
+    ORDER BY
+      CASE UPPER(et.status)
+        WHEN 'EN PROGRESO' THEN 1
+        WHEN 'ASIGNADO' THEN 2
+        WHEN 'EN ESPERA' THEN 3
+        WHEN 'POR_VERIFICAR' THEN 4
+        WHEN 'PENDIENTE' THEN 5
+        ELSE 6
+      END,
+      COALESCE(et.fecha_inicio_atencion, et.created_at) DESC
+    """, (user_id, user_id))
+
+    rows = cur.fetchall()
+    tickets = []
+    for r in rows:
+        t = dict(r)
+        pts = t.get("suggested_points") or 1
+        t["priority"] = "P5" if pts >= 8 else "P4" if pts >= 5 else "P3" if pts >= 3 else "P2" if pts >= 2 else "P1"
+        tickets.append(t)
+
+    conn.close()
+    return tickets
+
+class CreateTicketPayload(BaseModel):
+    subject: str
+    body_text: Optional[str] = ""
+    departamento_id: Optional[int] = None
+    area: Optional[str] = None
+    subscriber_code: Optional[str] = None
+    node_name: Optional[str] = None
+    serial_pon: Optional[str] = None
+    mac_address: Optional[str] = None
+    task_type_id: Optional[int] = None
+    task_id: Optional[int] = None
+    operador_id: Optional[int] = None
+    assigned_to_user_id: Optional[int] = None
+    sender_email: Optional[str] = "coordinacion@inter.com.ve"
+
+@app.post("/api/tickets/create")
+def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
+    """
+    Crea un ticket nuevo con código/ID autogenerado automáticamente (INC-XXXXX).
+    Si se proporciona un operador_id, el ticket se asigna inmediatamente (estado 'ASIGNADO').
+    Si no, queda en estado 'PENDIENTE' para despacho por el Coordinador de área.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    # 1. Generación AUTOMÁTICA del ID / Código de ticket único
+    cur.execute("SELECT MAX(id) FROM email_tickets")
+    max_id_row = cur.fetchone()
+    next_id = (max_id_row[0] or 700) + 1
+
+    import random
+    cur.execute("SELECT ticket_code FROM email_tickets WHERE ticket_code LIKE 'INC-%' ORDER BY id DESC LIMIT 200")
+    existing_codes = {r[0] for r in cur.fetchall()}
+
+    cand_num = 70000 + next_id
+    ticket_code = f"INC-{cand_num}"
+    attempts = 0
+    while ticket_code in existing_codes and attempts < 100:
+        cand_num = random.randint(70000, 99999)
+        ticket_code = f"INC-{cand_num}"
+        attempts += 1
+
+    # 2. Resolver departamento y área
+    user, coord_depto_id = get_authenticated_coordinator(request)
+    depto_id = payload.departamento_id or coord_depto_id or 1
+
+    cur.execute("SELECT nombre FROM departamentos WHERE id = ?", (depto_id,))
+    d_row = cur.fetchone()
+    depto_nombre = d_row[0] if d_row else (payload.area or "Redes de acceso y aprovisionamiento")
+
+    # 3. Resolver operador si se especificó asignación directa
+    op_name = None
+    operador_id = payload.operador_id or payload.assigned_to_user_id
+    task_type_id = payload.task_type_id or payload.task_id
+    if operador_id:
+        cur.execute("SELECT name, area, role, departamento_id FROM users WHERE id = ?", (operador_id,))
+        u_op = cur.fetchone()
+        if u_op:
+            op_name = u_op["name"]
+            if not payload.departamento_id and u_op["departamento_id"]:
+                depto_id = u_op["departamento_id"]
+        else:
+            operador_id = None
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    status = "ASIGNADO" if operador_id else "PENDIENTE"
+
+    # 4. Insertar ticket en la base de datos
+    cur.execute("""
+    INSERT INTO email_tickets (
+        ticket_code, sender_email, subject, full_body, area, departamento_id,
+        subscriber_code, serial_pon, node_name, mac_address, suggested_task_type_id,
+        operador_id, claimed_by_user_id, status, source, created_at, fecha_creacion
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'MANUAL_COORDINADOR', ?, ?)
+    """, (
+        ticket_code,
+        payload.sender_email or "coordinacion@inter.com.ve",
+        payload.subject.strip(),
+        payload.body_text or payload.subject.strip(),
+        depto_nombre,
+        depto_id,
+        payload.subscriber_code or "N/A",
+        payload.serial_pon or "N/A",
+        payload.node_name or "N/A",
+        payload.mac_address or "N/A",
+        task_type_id,
+        operador_id,
+        operador_id,
+        status,
+        now_str,
+        now_str
+    ))
+    new_ticket_id = cur.lastrowid
+
+    # 5. Insertar historial de estado
+    nota = f"Ticket creado y asignado directamente a {op_name}" if operador_id else "Ticket creado en estado Pendiente para despacho de área"
+    cur.execute("""
+    INSERT INTO ticket_historial_estados (
+        ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
+    ) VALUES (?, ?, 'CREADO', ?, ?, ?)
+    """, (new_ticket_id, operador_id or 1, status, nota, now_str))
+
+    conn.commit()
+    conn.close()
+
+    # 6. Auditoría forense
+    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    creator_id = user["id"] if user else 1
+    creator_name = user["name"] if user else "Coordinación"
+    log_audit_event(
+        user_id=creator_id,
+        user_name=creator_name,
+        action="CREAR_TICKET",
+        entity_type="TICKET",
+        entity_id=ticket_code,
+        details=f"Ticket {ticket_code} ({depto_nombre}) creado con ID automático. Estado: {status}" + (f", asignado a {op_name}" if op_name else ""),
+        ip_address=client_ip
+    )
+
+    return {
+        "status": "ok",
+        "ticket_id": new_ticket_id,
+        "ticket_code": ticket_code,
+        "departamento_id": depto_id,
+        "departamento_nombre": depto_nombre,
+        "operador_id": operador_id,
+        "operador_nombre": op_name,
+        "estado": status,
+        "message": f"Ticket #{ticket_code} creado exitosamente con ID automático" + (f" y asignado a {op_name}." if op_name else ".")
+    }
+
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket_detail(ticket_id: int):
     conn = get_db()
@@ -940,8 +1156,24 @@ class ClaimTicketPayload(BaseModel):
 class AssignTicketPayload(BaseModel):
     operador_id: int
     departamento_id: Optional[int] = None
+    task_type_id: Optional[int] = None
     notas: Optional[str] = None
     coordinador_id: Optional[int] = None
+    status: Optional[str] = "ASIGNADO"
+
+@app.get("/api/task-types")
+def get_task_types_catalog(area: Optional[str] = None):
+    """Retorna el catálogo oficial de tareas técnicas P1-P5 con sus puntos DERS y SLAs"""
+    conn = get_db()
+    cur = conn.cursor()
+    if area and area != "Todas":
+        norm_area = normalize_area_name(area)
+        cur.execute("SELECT id, code, name, area, points, sla_minutes, description FROM task_types WHERE area = ? OR area LIKE ? ORDER BY points ASC, code ASC", (norm_area, f"%{area}%"))
+    else:
+        cur.execute("SELECT id, code, name, area, points, sla_minutes, description FROM task_types ORDER BY area ASC, points ASC, code ASC")
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
 
 # =============================================================
 # ASIGNACIÓN EXCLUSIVA: DISPONIBILIDAD Y ASIGNACIÓN DE OPERADORES
@@ -952,13 +1184,14 @@ class AssignTicketPayload(BaseModel):
 def get_operators_availability(departamento_id: Optional[int] = None, area: Optional[str] = None, request: Request = None):
     """
     Retorna la lista de usuarios de la tabla users donde su role sea 'Especialista' (u 'Operador')
-    y su departamento_id coincida con el del coordinador autenticado.
+    y su departamento_id coincida con el del coordinador autenticado o con el departamento_id solicitado.
     Calcula dinámicamente sus puntos activos actuales (active_points / puntos_activos) a partir de
     los tickets en estado 'EN PROGRESO' o 'EN ESPERA'.
     """
     user, coordinator_depto_id = get_authenticated_coordinator(request, explicit_depto_id=departamento_id)
 
-    if departamento_id and user and user.get("role", "").upper() == "ADMINISTRADOR":
+    # Si se envía departamento_id explícito en la consulta (ej. para asignar en cualquier depto o en el modal), se prioriza
+    if departamento_id:
         coordinator_depto_id = departamento_id
 
     # Fallback por parámetro 'area' si vino como string
@@ -1019,7 +1252,7 @@ def get_operators_availability(departamento_id: Optional[int] = None, area: Opti
         FROM email_tickets et
         LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
         WHERE (et.operador_id = ? OR et.claimed_by_user_id = ?)
-          AND UPPER(et.status) IN ('EN PROGRESO', 'EN ESPERA')
+          AND UPPER(et.status) IN ('EN PROGRESO', 'EN ESPERA', 'ASIGNADO')
         """, (op_id, op_id))
         active_t = cur.fetchall()
 
@@ -1100,13 +1333,13 @@ def get_operadores_endpoint(depto_id: Optional[int] = None):
     return rows
 
 @app.post("/api/tickets/{ticket_id}/assign")
-def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request = None):
+def assign_ticket(ticket_id: int, request: Request, payload: AssignTicketPayload):
     """
     Asignación explícita de un ticket a un operador por parte del Coordinador de área.
     Validaciones estrictas:
     1. Valida que el ticket y el operador existan.
     2. Valida que el ticket y el operador pertenezcan al mismo departamento del coordinador.
-    3. Actualiza operador_id en el ticket y cambia el status a 'EN PROGRESO'.
+    3. Actualiza operador_id en el ticket y establece el status como 'ASIGNADO' (o 'EN PROGRESO').
     4. Inserta un registro en ticket_historial_estados documentando la asignación.
     """
     conn = get_db()
@@ -1160,15 +1393,24 @@ def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     new_depto_id = ticket_depto_id or operator_depto_id or coord_depto_id or 1
     estado_anterior = t_row["status"] or "PENDIENTE"
-    nuevo_status = "EN PROGRESO"
+    nuevo_status = payload.status or "ASIGNADO"
     
-    # 4. Actualizar operador_id en el ticket y cambiar status a 'EN PROGRESO'
-    cur.execute("""
-    UPDATE email_tickets
-    SET operador_id = ?, claimed_by_user_id = ?, departamento_id = ?,
-        status = ?, fecha_inicio_atencion = COALESCE(fecha_inicio_atencion, ?)
-    WHERE id = ?
-    """, (payload.operador_id, payload.operador_id, new_depto_id, nuevo_status, now_str, ticket_id))
+    # 4. Actualizar operador_id en el ticket, tarea técnica si se especificó, y estado asignado
+    if payload.task_type_id:
+        cur.execute("""
+        UPDATE email_tickets
+        SET operador_id = ?, claimed_by_user_id = ?, departamento_id = ?,
+            status = ?,
+            suggested_task_type_id = ?
+        WHERE id = ?
+        """, (payload.operador_id, payload.operador_id, new_depto_id, nuevo_status, payload.task_type_id, ticket_id))
+    else:
+        cur.execute("""
+        UPDATE email_tickets
+        SET operador_id = ?, claimed_by_user_id = ?, departamento_id = ?,
+            status = ?
+        WHERE id = ?
+        """, (payload.operador_id, payload.operador_id, new_depto_id, nuevo_status, ticket_id))
     
     # 5. Insertar un registro en ticket_historial_estados documentando la asignación
     assigner_desc = f"por {caller['name']}" if caller else "desde Mesa de Asignación (Triage)"
@@ -1208,6 +1450,81 @@ def assign_ticket(ticket_id: int, payload: AssignTicketPayload, request: Request
         "estado_anterior": estado_anterior,
         "estado_nuevo": nuevo_status,
         "message": f"Ticket {t_row['ticket_code']} asignado exitosamente a {u_row['name']}"
+    }
+
+@app.post("/api/tickets/{ticket_id}/start")
+@app.post("/api/tickets/{ticket_id}/in-progress")
+def start_ticket_work(ticket_id: int, request: Request):
+    """
+    Pone un ticket en proceso de atención técnica ('EN PROGRESO').
+    Registra fecha_inicio_atencion y el cambio de estado en el historial.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT id, ticket_code, status, area, subject, operador_id, claimed_by_user_id, fecha_inicio_atencion FROM email_tickets WHERE id = ?", (ticket_id,))
+    t_row = cur.fetchone()
+    if not t_row:
+        conn.close()
+        return JSONResponse(status_code=404, content={"error": f"Ticket #{ticket_id} no encontrado."})
+
+    user_id = None
+    if request:
+        cookie_val = request.cookies.get("auth_user_id")
+        if cookie_val and cookie_val.isdigit():
+            user_id = int(cookie_val)
+        if not user_id:
+            x_uid = request.headers.get("X-User-Id")
+            if x_uid and x_uid.isdigit():
+                user_id = int(x_uid)
+    if not user_id:
+        user_id = t_row["operador_id"] or t_row["claimed_by_user_id"] or 2
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    estado_anterior = t_row["status"] or "ASIGNADO"
+
+    cur.execute("""
+    UPDATE email_tickets
+    SET status = 'EN PROGRESO',
+        operador_id = COALESCE(operador_id, ?),
+        claimed_by_user_id = COALESCE(claimed_by_user_id, ?),
+        fecha_inicio_atencion = COALESCE(fecha_inicio_atencion, ?),
+        claimed_at = COALESCE(claimed_at, ?),
+        total_paused_seconds = 0
+    WHERE id = ?
+    """, (user_id, user_id, now_str, now_str, ticket_id))
+
+    cur.execute("""
+    INSERT INTO ticket_historial_estados (
+        ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
+    ) VALUES (?, ?, ?, 'EN PROGRESO', 'Operador puso el ticket en proceso de atención técnica', ?)
+    """, (ticket_id, user_id, estado_anterior, now_str))
+
+    conn.commit()
+
+    cur.execute("SELECT name, role, area FROM users WHERE id = ?", (user_id,))
+    u_row = cur.fetchone()
+    u_name = u_row["name"] if u_row else "Especialista"
+    conn.close()
+
+    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    log_audit_event(
+        user_id=user_id,
+        user_name=u_name,
+        action="INICIO_ATENCION",
+        entity_type="TICKET",
+        entity_id=t_row["ticket_code"],
+        details=f"Ticket {t_row['ticket_code']} puesto EN PROGRESO por {u_name}",
+        ip_address=client_ip
+    )
+
+    return {
+        "status": "ok",
+        "ticket_id": ticket_id,
+        "ticket_code": t_row["ticket_code"],
+        "estado_anterior": estado_anterior,
+        "estado_nuevo": "EN PROGRESO",
+        "fecha_inicio_atencion": now_str,
+        "message": f"Ticket {t_row['ticket_code']} puesto en proceso correctamente."
     }
 
 @app.post("/api/tickets/{ticket_id}/claim")
@@ -1475,7 +1792,7 @@ class VerifyTicketPayload(BaseModel):
     coordinador_id: Optional[int] = None
 
 @app.post("/api/tickets/{ticket_id}/verify")
-def verify_ticket_coordinator(ticket_id: int, payload: VerifyTicketPayload, request: Request = None):
+def verify_ticket_coordinator(ticket_id: int, payload: Optional[VerifyTicketPayload] = None, request: Request = None):
     """
     FSM FASE 2 — VERIFICACIÓN DEL COORDINADOR:
     El Coordinador revisa el ticket en estado 'POR_VERIFICAR', ajusta los puntos
@@ -1484,6 +1801,8 @@ def verify_ticket_coordinator(ticket_id: int, payload: VerifyTicketPayload, requ
     """
     conn = get_db()
     cur = conn.cursor()
+
+    payload = payload or VerifyTicketPayload()
 
     # Resolver coordinador desde payload, Bearer token o cookie de sesión
     coord_id = payload.coordinador_id
@@ -1876,38 +2195,63 @@ def get_auth_users():
     return users
 
 @app.get("/api/auth/me")
-def get_current_user_profile(request: Request):
-    user_id_cookie = request.cookies.get("auth_user_id")
+def get_current_user_profile(request: Request, user_id: Optional[int] = None):
+    # 0. Query param
+    if not user_id:
+        q_uid = request.query_params.get("user_id")
+        if q_uid and q_uid.isdigit():
+            user_id = int(q_uid)
+
+    # 1. Header X-User-Id
+    if not user_id:
+        x_uid = request.headers.get("X-User-Id")
+        if x_uid and x_uid.isdigit():
+            user_id = int(x_uid)
+        
+    # 2. Bearer token
+    if not user_id:
+        auth_hdr = request.headers.get("Authorization")
+        if auth_hdr and auth_hdr.startswith("Bearer "):
+            tok = auth_hdr.split("Bearer ")[1].strip()
+            if tok.isdigit():
+                user_id = int(tok)
+                
+    # 3. Cookie de sesión
+    if not user_id:
+        user_id_cookie = request.cookies.get("auth_user_id")
+        if user_id_cookie and user_id_cookie.isdigit():
+            user_id = int(user_id_cookie)
+            
     conn = get_db()
     cur = conn.cursor()
     
-    if user_id_cookie and user_id_cookie.isdigit():
-        cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (int(user_id_cookie),))
+    if user_id:
+        cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (user_id,))
         row = cur.fetchone()
         if row:
             conn.close()
             return dict(row)
             
-    # Default preferido: José Corobo si existe, sino David Rodríguez (Administrador)
-    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1")
+    # Default preferido: Coordinador Adelis Mejia, sino José Corobo (Especialista)
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1")
     row = cur.fetchone()
     if row:
         conn.close()
         return dict(row)
 
-    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'ADMINISTRADOR' ORDER BY id ASC LIMIT 1")
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1")
     row = cur.fetchone()
     conn.close()
     if row:
         return dict(row)
         
     return {
-        "id": 27,
-        "name": "José Corobo",
+        "id": 1,
+        "name": "Adelis Mejia",
         "area": "Redes de acceso y aprovisionamiento",
-        "role": "ESPECIALISTA",
-        "avatar": "JC",
-        "email": "joseacorobo@gmail.com",
+        "role": "COORDINADOR",
+        "avatar": "AM",
+        "email": "adelis.mejia@inter.com.ve",
         "departamento_id": 1
     }
 

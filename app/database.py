@@ -28,13 +28,14 @@ def init_db():
     )
     """)
     
-    # Semilla oficial de exactamente 5 departamentos técnicos oficiales
+    # Semilla oficial de departamentos técnicos oficiales
     deptos_oficiales = [
         ('ACCESO_APROV', 'Redes de acceso y aprovisionamiento', 'Atención OLT, FTTH, aprovisionamiento de módems y puertos GPON', 1),
         ('TRAFICO_INALAMBRICO', 'Control de Trafico y Redes inalambricas', 'Monitoreo de saturación RF, balanceo y enlaces inalámbricos', 1),
         ('REDES_WAN', 'Redes WAN', 'Enrutamiento troncal, BGP, MPLS y conectividad interurbana', 1),
         ('SEGURIDAD', 'Seguridad', 'Políticas perimetrales, firewalls, mitigación de ataques y accesos IP', 1),
-        ('TELEFONIA', 'Telefonia', 'Servidores SIP, gateways de voz, troncales IP y numeración', 1)
+        ('TELEFONIA', 'Telefonia', 'Servidores SIP, gateways de voz, troncales IP y numeración', 1),
+        ('GRANDES_CUENTAS', 'Grandes Cuentas', 'Atención técnica especializada a clientes corporativos, enlaces dedicados y cuentas VIP', 1)
     ]
     cursor.executemany("""
     INSERT OR IGNORE INTO departamentos (codigo, nombre, descripcion, activo)
@@ -42,7 +43,7 @@ def init_db():
     """, deptos_oficiales)
     for code, nom, desc, act in deptos_oficiales:
         cursor.execute("UPDATE departamentos SET nombre = ?, descripcion = ?, activo = ? WHERE codigo = ?", (nom, desc, act, code))
-    cursor.execute("DELETE FROM departamentos WHERE codigo NOT IN ('ACCESO_APROV', 'TRAFICO_INALAMBRICO', 'REDES_WAN', 'SEGURIDAD', 'TELEFONIA')")
+    cursor.execute("DELETE FROM departamentos WHERE codigo NOT IN ('ACCESO_APROV', 'TRAFICO_INALAMBRICO', 'REDES_WAN', 'SEGURIDAD', 'TELEFONIA', 'GRANDES_CUENTAS')")
 
     # 2. Usuarios y Roles (Soporta Autenticación RBAC y Operadores por Departamento)
     cursor.execute("""
@@ -83,6 +84,7 @@ def init_db():
             WHEN area IN ('Telefonía', 'Telefonia') THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
             WHEN area LIKE '%Seguridad%' THEN (SELECT id FROM departamentos WHERE codigo = 'SEGURIDAD')
             WHEN area LIKE '%Tráfico%' OR area LIKE '%Trafico%' THEN (SELECT id FROM departamentos WHERE codigo = 'TRAFICO_INALAMBRICO')
+            WHEN area LIKE '%Grandes%' OR area LIKE '%Corporativo%' THEN (SELECT id FROM departamentos WHERE codigo = 'GRANDES_CUENTAS')
             ELSE (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
         END
     ) WHERE departamento_id IS NULL
