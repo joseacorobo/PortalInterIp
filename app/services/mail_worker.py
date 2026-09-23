@@ -81,6 +81,9 @@ class MailWorker:
         self._stop_event.set()
 
     def get_status(self) -> dict:
+        safe_config = dict(self.config)
+        if "imap_password" in safe_config and safe_config["imap_password"]:
+            safe_config["imap_password"] = "********"
         return {
             "is_running": self._is_running,
             "mode": self.config.get("mode", "SIMULATOR"),
@@ -93,7 +96,7 @@ class MailWorker:
             "imap_server": self.config.get("imap_server", ""),
             "imap_user": self.config.get("imap_user", ""),
             "has_password": bool(self.config.get("imap_password", "")),
-            "config": self.config
+            "config": safe_config
         }
 
     def _run_loop(self):

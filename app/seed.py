@@ -25,13 +25,14 @@ ACTIVE_COUNT = 50
 DAYS_BACK = 30
 SEED_RANDOM = 42          # reproducibilidad
 
-# EXACTAMENTE LAS 5 ÁREAS OFICIALES REQUERIDAS
+# EXACTAMENTE LAS 6 ÁREAS OFICIALES REQUERIDAS
 AREAS = [
     "Redes de acceso y aprovisionamiento",
     "Control de Trafico y Redes inalambricas",
     "Redes WAN",
     "Seguridad",
     "Telefonia",
+    "Grandes Clientes",
 ]
 
 ACTIVE_STATUSES = ["PENDIENTE", "EN PROGRESO", "EN ESPERA"]
@@ -82,6 +83,14 @@ SUBJECTS_TMPL = {
         "Enlace troncal SIP caído – Call Server {node}",
         "Credenciales SIP inválidas – Abonado {code}",
         "Eco en línea y retransmisión RTP – {node}",
+    ],
+    "Grandes Clientes": [
+        "Enlace dedicado fibra oscura caído – Cliente Corporativo {code}",
+        "Degradación de latencia y jitter en enlace VIP – Sede {node}",
+        "BGP Down en router de borde cliente corporativo – {code}",
+        "Falla de contingencia / Failover enlace simétrico – {node}",
+        "Ajuste de filtros BGP y prefijos IP anunciados – Cliente {code}",
+        "Saturación de enlace troncal dedicado 1G – Corporativo {code}",
     ],
 }
 
@@ -166,13 +175,14 @@ def seed(skip_init: bool = False):
                 "ticket_historial_estados"]:
         cur.execute(f"DELETE FROM sqlite_sequence WHERE name='{tbl}'")
 
-    # ── 1. EXACTAMENTE LAS 5 ÁREAS EN DEPARTAMENTOS ───────────────
+    # ── 1. EXACTAMENTE LAS 6 ÁREAS EN DEPARTAMENTOS ───────────────
     departamentos = [
         ("ACCESO_APROV",        "Redes de acceso y aprovisionamiento", "Atención OLT, FTTH, aprovisionamiento de módems y puertos GPON", 1),
         ("TRAFICO_INALAMBRICO", "Control de Trafico y Redes inalambricas", "Monitoreo de saturación RF, balanceo y enlaces inalámbricos", 1),
         ("REDES_WAN",           "Redes WAN",                           "Enrutamiento troncal, BGP, MPLS y conectividad interurbana", 1),
         ("SEGURIDAD",           "Seguridad",                           "Políticas perimetrales, firewalls, mitigación de ataques y accesos IP", 1),
         ("TELEFONIA",           "Telefonia",                           "Servidores SIP, gateways de voz, troncales IP y numeración", 1),
+        ("GRANDES_CLIENTES",    "Grandes Clientes",                    "Atención técnica especializada a clientes corporativos, enlaces dedicados y cuentas VIP", 1),
     ]
     cur.executemany(
         "INSERT INTO departamentos (codigo, nombre, descripcion, activo) VALUES (?, ?, ?, ?)",
@@ -190,10 +200,31 @@ def seed(skip_init: bool = False):
     users_data = [
         # Administrador General (Gestión total del sistema para pruebas)
         ("Administrador General", "Todas", "ADMINISTRADOR", "AD", "General", "Activo", "admin@inter.com.ve", default_hash, dep_map["ACCESO_APROV"]),
-        # Coordinador Oficial
+        
+        # 1. Redes de acceso y aprovisionamiento
         ("Adelis Mejia", "Redes de acceso y aprovisionamiento", "COORDINADOR",  "AM", "Mañana", "Activo", "adelis.mejia@inter.com.ve", default_hash, dep_map["ACCESO_APROV"]),
-        # Especialista Oficial
         ("José Corobo",  "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "JC", "Mañana", "Activo", "joseacorobo@gmail.com",     default_hash, dep_map["ACCESO_APROV"]),
+        ("David Rodríguez", "Redes de acceso y aprovisionamiento", "ESPECIALISTA", "DR", "Tarde", "Activo", "david.rodriguez@inter.com.ve", default_hash, dep_map["ACCESO_APROV"]),
+
+        # 2. Control de Trafico y Redes inalambricas
+        ("Gabriel Torres", "Control de Trafico y Redes inalambricas", "COORDINADOR", "GT", "Mañana", "Activo", "gabriel.torres@inter.com.ve", default_hash, dep_map["TRAFICO_INALAMBRICO"]),
+        ("Ricardo Morales", "Control de Trafico y Redes inalambricas", "ESPECIALISTA", "RM", "Mañana", "Activo", "ricardo.morales@inter.com.ve", default_hash, dep_map["TRAFICO_INALAMBRICO"]),
+
+        # 3. Redes WAN
+        ("Marcos Peña", "Redes WAN", "COORDINADOR", "MP", "Mañana", "Activo", "marcos.pena@inter.com.ve", default_hash, dep_map["REDES_WAN"]),
+        ("Alejandro Silva", "Redes WAN", "ESPECIALISTA", "AS", "Mañana", "Activo", "alejandro.silva@inter.com.ve", default_hash, dep_map["REDES_WAN"]),
+
+        # 4. Seguridad
+        ("Valeria Rivas", "Seguridad", "COORDINADOR", "VR", "Mañana", "Activo", "valeria.rivas@inter.com.ve", default_hash, dep_map["SEGURIDAD"]),
+        ("Daniel Castillo", "Seguridad", "ESPECIALISTA", "DC", "Mañana", "Activo", "daniel.castillo@inter.com.ve", default_hash, dep_map["SEGURIDAD"]),
+
+        # 5. Telefonia
+        ("Fernando Gómez", "Telefonia", "COORDINADOR", "FG", "Mañana", "Activo", "fernando.gomez@inter.com.ve", default_hash, dep_map["TELEFONIA"]),
+        ("Mariana Blanco", "Telefonia", "ESPECIALISTA", "MB", "Mañana", "Activo", "mariana.blanco@inter.com.ve", default_hash, dep_map["TELEFONIA"]),
+
+        # 6. Grandes Clientes
+        ("Carlos Mendoza", "Grandes Clientes", "COORDINADOR", "CM", "Mañana", "Activo", "carlos.mendoza@inter.com.ve", default_hash, dep_map["GRANDES_CLIENTES"]),
+        ("Andrea Paredes", "Grandes Clientes", "ESPECIALISTA", "AP", "Mañana", "Activo", "andrea.paredes@inter.com.ve", default_hash, dep_map["GRANDES_CLIENTES"]),
     ]
     cur.executemany(
         "INSERT INTO users (name, area, role, avatar, shift, status, email, password_hash, departamento_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -253,6 +284,13 @@ def seed(skip_init: bool = False):
         ("P4-TEL-01", "Diagnóstico Degradación MOS (<4.0) y Jitter",      "Telefonia", 5,  60, "Análisis de QoS en VLAN de voz"),
         ("P4-TEL-02", "Habilitación Codec G.722 en Perfil de Voz",        "Telefonia", 5,  55, "Configuración avanzada de codecs"),
         ("P5-TEL-01", "Restauración de Enlace Troncal SIP Call Server",   "Telefonia", 8, 120, "Falla masiva de telefonía"),
+
+        # Grandes Clientes
+        ("P1-GC-01", "Monitoreo y Diagnóstico Enlace Corporativo Dedicado", "Grandes Clientes", 1, 15, "Consulta de disponibilidad de enlace corporativo"),
+        ("P2-GC-01", "Verificación Rendimiento y Latencia de Enlace VIP", "Grandes Clientes", 2, 25, "Validación de parámetros y estabilidad corporativa"),
+        ("P3-GC-01", "Reconfiguración BGP / Prefijos IP Grandes Clientes", "Grandes Clientes", 3, 40, "Ajuste de enrutamiento y filtros de prefijos"),
+        ("P4-GC-01", "Atención VIP Enlace Corporativo Simétrico", "Grandes Clientes", 5, 60, "Soporte de alta prioridad a circuito privado"),
+        ("P5-GC-01", "Restauración Crítica Red WAN / Failover Corporativo", "Grandes Clientes", 8, 120, "Recuperación de contingencia en enlace dedicado"),
     ]
     cur.executemany(
         "INSERT INTO task_types (code, name, area, points, sla_minutes, description) VALUES (?, ?, ?, ?, ?, ?)",
@@ -285,6 +323,7 @@ def seed(skip_init: bool = False):
         "Redes WAN": dep_map["REDES_WAN"],
         "Seguridad": dep_map["SEGURIDAD"],
         "Telefonia": dep_map["TELEFONIA"],
+        "Grandes Clientes": dep_map["GRANDES_CLIENTES"],
     }
 
     # ── 4. TICKETS HISTÓRICOS (500 × RESUELTO) ───────────────────
@@ -521,13 +560,13 @@ def seed(skip_init: bool = False):
     conn.commit()
     conn.close()
 
-    print("\n✅ Seed masivo completado exitosamente para las 5 ÁREAS OFICIALES:")
+    print("\n[OK] Seed masivo completado exitosamente para las 6 AREAS OFICIALES:")
     for a in AREAS:
-        print(f"   • Área: {a}")
-    print(f"   • {len(users_data)} usuarios operativos (Coordinadores + Especialistas)")
-    print(f"   • {len(task_types)} tipos de tarea (P1-P5)")
-    print(f"   • {HISTORICAL_COUNT} tickets históricos")
-    print(f"   • {len(active_tickets)} tickets activos")
+        print(f"   - Area: {a}")
+    print(f"   - {len(users_data)} usuarios operativos (Coordinadores + Especialistas)")
+    print(f"   - {len(task_types)} tipos de tarea (P1-P5)")
+    print(f"   - {HISTORICAL_COUNT} tickets historicos")
+    print(f"   - {len(active_tickets)} tickets activos")
 
 
 if __name__ == "__main__":

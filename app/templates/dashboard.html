@@ -114,8 +114,8 @@
         }
 
         .sidebar-container {
-            width: 16rem;
-            min-width: 16rem;
+            width: 17.5rem;
+            min-width: 17.5rem;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border);
             display: flex;
@@ -286,27 +286,27 @@
                     <!-- Tickets Tablero Accordion -->
                     <div class="space-y-1" id="tickets-accordion-group">
                         <button type="button" onclick="switchDashboardTab('tickets'); toggleSubmenu();" id="nav-view-tickets" class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 min-w-0 flex-1">
                                 <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
-                                <span>Tablero de Tickets</span>
+                                <span class="truncate">Tablero de Tickets</span>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <span id="sidebar-inbox-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60">14</span>
-                                <i data-lucide="chevron-down" id="tickets-chevron" class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200"></i>
+                            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+                                <span id="sidebar-inbox-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60 shrink-0">14</span>
+                                <i data-lucide="chevron-down" id="tickets-chevron" class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0"></i>
                             </div>
                         </button>
                         <div id="tickets-submenu" class="pl-6 space-y-1 text-xs transition-all">
                             <button type="button" onclick="switchDashboardTab('tickets')" id="nav-sub-asignacion" class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white transition text-[11px] text-left">
-                                <span class="flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#5B9BE0]"></span>Asignación de Tickets
+                                <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#5B9BE0] shrink-0"></span><span class="truncate">Asignación de Tickets</span>
                                 </span>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA]" id="sub-badge-count">14</span>
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] shrink-0 ml-1" id="sub-badge-count">14</span>
                             </button>
                             <button type="button" onclick="switchDashboardTab('inbox')" id="nav-sub-generales" class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/75 hover:text-white transition text-[11px] text-left">
-                                <span class="flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Consola M365
+                                <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span><span class="truncate">Consola M365</span>
                                 </span>
-                                <span class="text-[10px] text-gray-400 font-mono">Buzón</span>
+                                <span class="text-[10px] text-gray-400 font-mono shrink-0 ml-1">Buzón</span>
                             </button>
                         </div>
                     </div>
@@ -318,29 +318,33 @@
                 </div>
             </div>
 
-            <!-- Grupo ÁREAS IP -->
+            <!-- Grupo ÁREAS IP (6 Departamentos Oficiales) -->
             <div>
                 <p class="text-[10px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1.5">Áreas IP</p>
                 <div class="space-y-1 text-xs">
-                    <div class="p-2 rounded-lg bg-white/5 border border-white/10">
-                        <div class="flex items-center justify-between font-semibold text-gray-200 mb-1">
-                            <span>Redes de Acceso</span>
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400"></i>
-                        </div>
-                        <div class="pl-2 space-y-1 text-gray-300">
-                            <div onclick="selectSidebarArea('ftth')" class="flex justify-between items-center py-0.5 text-[11px] text-[#7CB2EA] font-semibold cursor-pointer hover:underline">
-                                <span>Soporte FTTH</span>
-                                <span class="px-1.5 py-0.2 rounded-full bg-[#1C58A8]/40 text-[#7CB2EA] border border-[#1C58A8]/50">14</span>
-                            </div>
-                            <div onclick="selectSidebarArea('olt')" class="flex justify-between items-center py-0.5 text-[11px] hover:text-white cursor-pointer">
-                                <span>Cabecera OLT</span>
-                                <span class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">9</span>
-                            </div>
-                        </div>
+                    <div onclick="selectSidebarArea('ACCESO_APROV')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
+                        <span class="truncate">Redes de Acceso</span>
+                        <span class="px-1.5 py-0.2 rounded-full bg-[#1C58A8]/40 text-[#7CB2EA] text-[10px] border border-[#1C58A8]/50 shrink-0 ml-1">Acceso</span>
                     </div>
-                    <div onclick="selectSidebarArea('voip')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span>Telefonía VoIP</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300 text-[10px] border border-blue-500/30">3</span>
+                    <div onclick="selectSidebarArea('TRAFICO_INALAMBRICO')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
+                        <span class="truncate">Control de Tráfico</span>
+                        <span class="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300 text-[10px] border border-blue-500/30 shrink-0 ml-1">Tráfico</span>
+                    </div>
+                    <div onclick="selectSidebarArea('REDES_WAN')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
+                        <span class="truncate">Redes WAN</span>
+                        <span class="px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] border border-indigo-500/30 shrink-0 ml-1">WAN</span>
+                    </div>
+                    <div onclick="selectSidebarArea('SEGURIDAD')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
+                        <span class="truncate">Seguridad IP</span>
+                        <span class="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 text-[10px] border border-purple-500/30 shrink-0 ml-1">Seguridad</span>
+                    </div>
+                    <div onclick="selectSidebarArea('TELEFONIA')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
+                        <span class="truncate">Telefonía VoIP</span>
+                        <span class="px-1.5 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] border border-cyan-500/30 shrink-0 ml-1">VoIP</span>
+                    </div>
+                    <div onclick="selectSidebarArea('GRANDES_CLIENTES')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
+                        <span class="truncate">Grandes Clientes</span>
+                        <span class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] border border-amber-500/30 shrink-0 ml-1">VIP</span>
                     </div>
                 </div>
             </div>
@@ -457,7 +461,7 @@
 
                     <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="background: linear-gradient(180deg, #F5F3FF 0%, #EEF2FF 100%); border: 1px solid #DDD6FE; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.05); animation-delay: 200ms;">
                         <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89] mb-1">
-                            <span>TIEMPO PRIMERA RESPUESTA (SLA)</span>
+                            <span>TIEMPO DE PRIMERA ATENCIÓN</span>
                             <i data-lucide="timer" class="w-4 h-4 text-[#2E74C9]"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
@@ -465,45 +469,84 @@
                             <span class="text-xs text-gray-500">minutos</span>
                         </div>
                         <div class="mt-2 text-[11px] text-gray-600">
-                            <strong class="text-[#1C58A8] font-bold" id="op-kpi-sla-pct">99.4%</strong> dentro de SLA
+                            <strong class="text-[#1C58A8] font-bold" id="op-kpi-sla-pct">99.4%</strong> a tiempo (dentro del objetivo)
                         </div>
                     </div>
                 </div>
 
-                <!-- Mesa de Asignación (Triage) — Coordinador / Administrador -->
+                <!-- Mesa de Asignación y Control — Coordinador / Administrador -->
                 <div id="coordinator-triage-panel" class="hidden dashboard-chart-card space-y-4 animate-fade-in-up border border-[#BFDBFE] bg-gradient-to-b from-[#F8FBFF] to-white" style="animation-delay: 200ms;">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h2 class="text-sm font-bold text-gray-900">Mesa de Asignación (Triage)</h2>
+                                <h2 class="text-sm font-bold text-gray-900">Control Operativo de Coordinación</h2>
                                 <span id="triage-area-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área: —</span>
-                                <span id="triage-count-label" class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">0 casos pendientes</span>
                             </div>
-                            <p class="text-[11px] text-gray-500 mt-0.5">Tickets PENDIENTES de tu departamento — seleccione especialista y asigne</p>
+                            <p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y puntos DERS de tu departamento</p>
                         </div>
-                        <button type="button" onclick="loadCoordinatorTriage()" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
-                            <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
-                            <span>Actualizar cola</span>
-                        </button>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <div class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs">
+                                <button type="button" id="btn-triage-subtab-assign" onclick="switchTriageSubTab('assign')" class="px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60">
+                                    <span>Por Asignar</span>
+                                    <span id="triage-count-label" class="text-[10px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">0</span>
+                                </button>
+                                <button type="button" id="btn-triage-subtab-verify" onclick="switchTriageSubTab('verify')" class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer flex items-center gap-1.5">
+                                    <span>Por Aprobar DERS</span>
+                                    <span id="verify-count-label" class="text-[10px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">0</span>
+                                </button>
+                            </div>
+                            <button type="button" onclick="refreshCoordinatorPanel()" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                                <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
+                                <span>Actualizar</span>
+                            </button>
+                        </div>
                     </div>
-                    <div id="triage-empty-state" class="hidden py-10 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
-                        <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área. ¡Buen trabajo!</p>
-                        <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos aparecerán aquí automáticamente.</p>
+
+                    <!-- VISTA 1: POR ASIGNAR (TRIAGE) -->
+                    <div id="triage-assign-view" class="space-y-3">
+                        <div id="triage-empty-state" class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
+                            <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área. ¡Excelente trabajo!</p>
+                            <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos aparecerán aquí automáticamente.</p>
+                        </div>
+                        <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
+                            <table class="table-corporate-metrics min-w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="py-2.5 px-3">Ticket</th>
+                                        <th class="py-2.5 px-3">Requerimiento</th>
+                                        <th class="py-2.5 px-3">Parámetros</th>
+                                        <th class="py-2.5 px-3">Tarea / Tiempo Objetivo</th>
+                                        <th class="py-2.5 px-3">Espera</th>
+                                        <th class="py-2.5 px-3">Asignación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="triage-tickets-tbody"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
-                        <table class="table-corporate-metrics min-w-full text-left">
-                            <thead>
-                                <tr>
-                                    <th class="py-2.5 px-3">Ticket</th>
-                                    <th class="py-2.5 px-3">Requerimiento</th>
-                                    <th class="py-2.5 px-3">Parámetros</th>
-                                    <th class="py-2.5 px-3">Tarea / SLA</th>
-                                    <th class="py-2.5 px-3">Espera</th>
-                                    <th class="py-2.5 px-3">Asignación</th>
-                                </tr>
-                            </thead>
-                            <tbody id="triage-tickets-tbody"></tbody>
-                        </table>
+
+                    <!-- VISTA 2: POR APROBAR DERS (VERIFICACIÓN DE CALIDAD) -->
+                    <div id="triage-verify-view" class="hidden space-y-3">
+                        <div id="verify-empty-state" class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-purple-200 bg-purple-50/30">
+                            <p class="text-sm font-bold text-purple-900">No hay casos pendientes de aprobación.</p>
+                            <p class="text-xs text-purple-700/80 mt-1">Cuando los operadores completen tareas técnicas, aparecerán aquí para tu validación y acreditación de puntos.</p>
+                        </div>
+                        <div id="verify-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
+                            <table class="table-corporate-metrics min-w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="py-2.5 px-3">Ticket</th>
+                                        <th class="py-2.5 px-3">Caso y Notas del Operador</th>
+                                        <th class="py-2.5 px-3">Especialista</th>
+                                        <th class="py-2.5 px-3">Tarea Técnica</th>
+                                        <th class="py-2.5 px-3">Puntos</th>
+                                        <th class="py-2.5 px-3">Duración</th>
+                                        <th class="py-2.5 px-3 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="verify-tickets-tbody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -543,17 +586,17 @@
                 <div class="dashboard-chart-card space-y-4 animate-fade-in-up" id="realtime-workload-section" style="animation-delay: 250ms;">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 border-gray-200 gap-3">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs shrink-0">
                                 <i data-lucide="activity" class="w-4 h-4"></i>
                             </div>
                             <div>
-                                <div class="flex items-center gap-2">
-                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Casos Activos</h2>
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-500/30">
+                                <div class="flex items-center gap-2 flex-nowrap">
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight whitespace-nowrap">Casos Activos</h2>
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-500/30 whitespace-nowrap shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span>
                                         En Vivo
                                     </span>
-                                    <span id="active-cases-count-badge" class="text-[10px] text-gray-500 font-mono">4 Visibles</span>
+                                    <span id="active-cases-count-badge" class="text-[10px] text-gray-500 font-mono whitespace-nowrap shrink-0">Cargando...</span>
                                 </div>
                                 <p class="text-[11px] text-gray-500">Monitoreo de operadores y tickets en atención inmediata</p>
                             </div>
@@ -564,184 +607,25 @@
                                 <label for="area-filter-select" class="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Filtrar por Área:</label>
                                 <select id="area-filter-select" onchange="filterActiveCasesByArea(this.value)" class="bg-transparent text-[11px] font-bold text-[#1C58A8] focus:outline-none cursor-pointer pr-1 border-0 p-0">
                                     <option value="all">Todas las Áreas (General)</option>
-                                    <option value="ftth">Soporte FTTH</option>
-                                    <option value="olt">Cabecera OLT</option>
-                                    <option value="voip">Telefonía VoIP</option>
+                                    <option value="ACCESO_APROV">Redes de Acceso</option>
+                                    <option value="TRAFICO_INALAMBRICO">Control de Tráfico y Wireless</option>
+                                    <option value="REDES_WAN">Redes WAN</option>
+                                    <option value="SEGURIDAD">Seguridad IP</option>
+                                    <option value="TELEFONIA">Telefonía VoIP</option>
+                                    <option value="GRANDES_CLIENTES">Grandes Clientes</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Grid de Casos Activos de Operadores -->
+                    <!-- Grid de Casos Activos de Operadores (Renderizado dinámico vía API) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="active-operators-grid">
-                        <!-- 1. Gabriel Torres -->
-                        <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition space-y-3.5 flex flex-col justify-between border-t-4 border-t-[#1C58A8] interactive-card" data-area="ftth">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-lg bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE] flex items-center justify-center font-bold text-xs shadow-xs">GT</div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-gray-900 leading-tight">Gabriel Torres</h4>
-                                        <p class="text-[11px] text-gray-500">Soporte FTTH</p>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-rose-700 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>Alta carga
-                                </span>
-                            </div>
-                            <div class="p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] text-xs space-y-2.5 transition hover:border-[#1C58A8]/40">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-white text-[#0369A1] border border-blue-200 shadow-2xs cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4814', 'Gabriel Torres')">#INC-4814</span>
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white text-gray-600 font-mono text-[10px] border border-gray-200">
-                                        <i data-lucide="timer" class="w-3 h-3 text-amber-500"></i>
-                                        <span class="op-timer" data-minutes="31">31m</span>
-                                    </span>
-                                </div>
-                                <p class="font-semibold text-gray-800 text-[11px] leading-snug">PortChannel 10G→20G OLT-VAL-02</p>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-[10px] text-gray-500 font-medium">
-                                        <span>Tiempo en Curso</span>
-                                        <span class="font-bold text-rose-600">85%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                        <div class="bg-rose-500 h-1.5 rounded-full" style="width: 85%"></div>
-                                    </div>
-                                </div>
-                                <div class="pt-2 border-t border-dashed border-gray-200 text-[10px] text-gray-600 space-y-0.5">
-                                    <p><strong class="text-gray-700">Nodo:</strong> Valencia 02 (Slot 4 - LAG 2)</p>
-                                    <p><strong class="text-gray-700">Diagnóstico:</strong> Saturación pico en SFP+ 10G</p>
-                                </div>
-                                <div class="flex items-center justify-end pt-1">
-                                    <button type="button" onclick="switchDashboardTab('tickets')" class="text-[11px] font-bold text-[#1C58A8] hover:underline inline-flex items-center gap-1 btn-press">Ver en Consola →</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 2. Luis Gómez -->
-                        <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition space-y-3.5 flex flex-col justify-between border-t-4 border-t-[#2E74C9] interactive-card" data-area="ftth">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-lg bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE] flex items-center justify-center font-bold text-xs shadow-xs">LG</div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-gray-900 leading-tight">Luis Gómez</h4>
-                                        <p class="text-[11px] text-gray-500">Soporte FTTH</p>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Moderada
-                                </span>
-                            </div>
-                            <div class="p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] text-xs space-y-2.5 transition hover:border-[#1C58A8]/40">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-white text-[#0369A1] border border-blue-200 shadow-2xs cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4825', 'Luis Gómez')">#INC-4825</span>
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white text-gray-600 font-mono text-[10px] border border-gray-200">
-                                        <i data-lucide="timer" class="w-3 h-3 text-emerald-600"></i>
-                                        <span class="op-timer" data-minutes="12">12m</span>
-                                    </span>
-                                </div>
-                                <p class="font-semibold text-gray-800 text-[11px] leading-snug">Modo Bridge + IP Certificada</p>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-[10px] text-gray-500 font-medium">
-                                        <span>Tiempo en Curso</span>
-                                        <span class="font-bold text-emerald-600">40%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                        <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 40%"></div>
-                                    </div>
-                                </div>
-                                <div class="pt-2 border-t border-dashed border-gray-200 text-[10px] text-gray-600 space-y-0.5">
-                                    <p><strong class="text-gray-700">Abonado:</strong> Corp Vzla 190.75.12.8/30</p>
-                                    <p><strong class="text-gray-700">Diagnóstico:</strong> Conversión ONT a Bridge puro</p>
-                                </div>
-                                <div class="flex items-center justify-end pt-1">
-                                    <button type="button" onclick="switchDashboardTab('tickets')" class="text-[11px] font-bold text-[#1C58A8] hover:underline inline-flex items-center gap-1 btn-press">Ver en Consola →</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Daniela Castillo -->
-                        <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition space-y-3.5 flex flex-col justify-between border-t-4 border-t-[#0056B3] interactive-card" data-area="voip">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-lg bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE] flex items-center justify-center font-bold text-xs shadow-xs">DC</div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-gray-900 leading-tight">Daniela Castillo</h4>
-                                        <p class="text-[11px] text-gray-500">Telefonía VoIP</p>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-blue-700 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Balanceada
-                                </span>
-                            </div>
-                            <div class="p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] text-xs space-y-2.5 transition hover:border-[#1C58A8]/40">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-white text-[#0369A1] border border-blue-200 shadow-2xs cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4822', 'Daniela Castillo')">#INC-4822</span>
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white text-gray-600 font-mono text-[10px] border border-gray-200">
-                                        <i data-lucide="timer" class="w-3 h-3 text-[#1C58A8]"></i>
-                                        <span class="op-timer" data-minutes="22">22m</span>
-                                    </span>
-                                </div>
-                                <p class="font-semibold text-gray-800 text-[11px] leading-snug">Troncal SIP Sesiones Desfasadas</p>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-[10px] text-gray-500 font-medium">
-                                        <span>Tiempo en Curso</span>
-                                        <span class="font-bold text-[#1C58A8]">65%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                        <div class="bg-[#1C58A8] h-1.5 rounded-full" style="width: 65%"></div>
-                                    </div>
-                                </div>
-                                <div class="pt-2 border-t border-dashed border-gray-200 text-[10px] text-gray-600 space-y-0.5">
-                                    <p><strong class="text-gray-700">SBC Primario:</strong> Caracas Core SBC-01</p>
-                                    <p><strong class="text-gray-700">Diagnóstico:</strong> Reenvío alterno de INVITE / 200 OK</p>
-                                </div>
-                                <div class="flex items-center justify-end pt-1">
-                                    <button type="button" onclick="switchDashboardTab('tickets')" class="text-[11px] font-bold text-[#1C58A8] hover:underline inline-flex items-center gap-1 btn-press">Ver en Consola →</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. Anaís Rodríguez -->
-                        <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition space-y-3.5 flex flex-col justify-between border-t-4 border-t-[#5B9BE0] interactive-card" data-area="olt">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-lg bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE] flex items-center justify-center font-bold text-xs shadow-xs">AR</div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-gray-900 leading-tight">Anaís Rodríguez</h4>
-                                        <p class="text-[11px] text-gray-500">Cabecera OLT</p>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Equilibrada
-                                </span>
-                            </div>
-                            <div class="p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] text-xs space-y-2.5 transition hover:border-[#1C58A8]/40">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-white text-[#0369A1] border border-blue-200 shadow-2xs cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4809', 'Anaís Rodríguez')">#INC-4809</span>
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white text-gray-600 font-mono text-[10px] border border-gray-200">
-                                        <i data-lucide="timer" class="w-3 h-3 text-blue-600"></i>
-                                        <span class="op-timer" data-minutes="18">18m</span>
-                                    </span>
-                                </div>
-                                <p class="font-semibold text-gray-800 text-[11px] leading-snug">Discrepancia MAC roja→verde BD 815</p>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-[10px] text-gray-500 font-medium">
-                                        <span>Tiempo en Curso</span>
-                                        <span class="font-bold text-blue-600">55%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                        <div class="bg-blue-400 h-1.5 rounded-full" style="width: 55%"></div>
-                                    </div>
-                                </div>
-                                <div class="pt-2 border-t border-dashed border-gray-200 text-[10px] text-gray-600 space-y-0.5">
-                                    <p><strong class="text-gray-700">Subred:</strong> BD 815 Cabecera</p>
-                                    <p><strong class="text-gray-700">Diagnóstico:</strong> Reconciliación ARP interfaz PON</p>
-                                </div>
-                                <div class="flex items-center justify-end pt-1">
-                                    <button type="button" onclick="switchDashboardTab('tickets')" class="text-[11px] font-bold text-[#1C58A8] hover:underline inline-flex items-center gap-1 btn-press">Ver en Consola →</button>
-                                </div>
-                            </div>
+                        <div class="col-span-full py-8 text-center text-xs text-gray-400">
+                            <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto text-[#1C58A8] mb-2"></i>
+                            Cargando operadores y casos en atención inmediata...
                         </div>
                     </div>
+                </div>
                 </div>
             </section>
 
@@ -813,234 +697,17 @@
                                     <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Tickets</th>
                                     <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Puntos Acum.</th>
                                     <th class="py-2.5 px-4 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-56">Escala de Carga</th>
-                                    <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">MTTR Neto</th>
+                                    <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Tiempo Promedio de Solución</th>
                                     <th class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Estado Operativo</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white text-xs" id="tbody-ranking-specialists">
-                                <!-- Filas de Especialistas Top -->
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono">
-                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-200/80 shadow-2xs">1</span>
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">LE</div>
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold text-gray-900 text-xs">Luis Eduardo Gómez</span>
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#EAF2FC] text-[#1C58A8] border border-blue-200/60"><span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>2 activo</span>
-                                                </div>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
+                                <tr>
+                                    <td colspan="8" class="py-8 text-center text-gray-400 text-xs">
+                                        <div class="inline-flex items-center gap-2">
+                                            <span class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
+                                            <span>Sincronizando escalafón técnico y métricas de desempeño...</span>
                                         </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Cabecera</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-800">52</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-[#0B3B78] text-[13px]">182 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-[#0B3B78] h-full rounded-full" style="width: 96%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-500 w-7 text-right">96%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-700 font-semibold">55.2m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Sobrecarga
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono">
-                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-700 font-bold text-[11px] border border-gray-200 shadow-2xs">2</span>
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#0056B3] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">GT</div>
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold text-gray-900 text-xs">Gabriel Torres</span>
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#EAF2FC] text-[#1C58A8] border border-blue-200/60"><span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>1 activo</span>
-                                                </div>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Cabecera</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-800">50</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-[#0B3B78] text-[13px]">182 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-[#0B3B78] h-full rounded-full" style="width: 96%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-500 w-7 text-right">96%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-700 font-semibold">57.0m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Sobrecarga
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono">
-                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-50 text-amber-700 font-bold text-[11px] border border-amber-300 shadow-2xs">3</span>
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">DC</div>
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold text-gray-900 text-xs">Daniela Castillo</span>
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#EAF2FC] text-[#1C58A8] border border-blue-200/60"><span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>2 activo</span>
-                                                </div>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Telefonía</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-800">50</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-[#0B3B78] text-[13px]">152 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-[#1C58A8] h-full rounded-full" style="width: 82%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-500 w-7 text-right">82%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-700 font-semibold">33.0m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-500/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Moderado
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono text-gray-400 font-semibold">4</td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#2E74C9] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">VH</div>
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold text-gray-900 text-xs">Víctor Hernández</span>
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#EAF2FC] text-[#1C58A8] border border-blue-200/60"><span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>1 activo</span>
-                                                </div>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Telefonía</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-800">40</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-[#0B3B78] text-[13px]">147 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-[#1C58A8] h-full rounded-full" style="width: 78%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-500 w-7 text-right">78%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-700 font-semibold">43.1m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-500/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Moderado
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono text-gray-400 font-semibold">5</td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">JA</div>
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold text-gray-900 text-xs">Jesús Alberto Vargas</span>
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#EAF2FC] text-[#1C58A8] border border-blue-200/60"><span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>3 activo</span>
-                                                </div>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Telefonía</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-800">46</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-[#0B3B78] text-[13px]">144 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-[#1C58A8] h-full rounded-full" style="width: 76%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-500 w-7 text-right">76%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-700 font-semibold">31.2m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-500/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Moderado
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono text-gray-400 font-semibold">6</td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#5B9BE0] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">CM</div>
-                                            <div>
-                                                <span class="font-bold text-gray-900 text-xs">Carlos Mendoza</span>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Redes de acceso</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-800">6</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-[#0B3B78] text-[13px]">14 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-[#5B9BE0] h-full rounded-full" style="width: 10%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-500 w-7 text-right">10%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-700 font-semibold">1.0m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200/60">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8]"></span>Balanceado
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="py-3 px-3.5 text-center font-mono text-gray-400 font-semibold">7</td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">AM</div>
-                                            <div>
-                                                <span class="font-bold text-gray-900 text-xs">Adelis Mejía</span>
-                                                <p class="text-[10px] text-gray-400 mt-0.5">Especialista NOC</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-gray-700 font-medium">Redes de acceso</td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-gray-400">0</td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-gray-400 text-[13px]">0 pts</td>
-                                    <td class="py-3 px-4">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex-1 bg-[#E4E9F3] h-2 rounded-full overflow-hidden">
-                                                <div class="bg-gray-300 h-full rounded-full" style="width: 0%;"></div>
-                                            </div>
-                                            <span class="text-[10px] font-mono font-semibold text-gray-400 w-7 text-right">0%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right font-mono text-gray-400 font-semibold">0.0m</td>
-                                    <td class="py-3 px-3.5 text-center">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Disponible
-                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1107,7 +774,7 @@
                         <div class="flex items-center gap-3 font-mono text-[11px]">
                             <span>Total Tareas: <strong id="workload-total-tasks" class="text-gray-900">842</strong></span>
                             <span>·</span>
-                            <span>MTTR Promedio: <strong id="workload-avg-mttr" class="text-gray-900">31.5m</strong></span>
+                            <span>Tiempo Promedio de Solución: <strong id="workload-avg-mttr" class="text-gray-900">31.5m</strong></span>
                             <span>·</span>
                             <span>Puntos Totales: <strong id="workload-total-pts" class="text-[#0B3B78]">3.210 pts</strong></span>
                         </div>
@@ -1177,10 +844,12 @@
                             <label for="filter-tablero-area" class="text-xs font-semibold text-gray-600">Área Técnica:</label>
                             <select id="filter-tablero-area" onchange="filterAreaDropdown(this.value)" class="text-xs font-bold text-[#1C58A8] bg-transparent focus:outline-none cursor-pointer pr-2 border-0 p-0">
                                 <option value="all">Todas las Áreas</option>
-                                <option value="ftth">Redes de Acceso &amp; FTTH</option>
-                                <option value="olt">Cabecera OLT</option>
-                                <option value="voip">Telefonía VoIP</option>
-                                <option value="wan">Redes WAN</option>
+                                <option value="ACCESO_APROV">Redes de Acceso &amp; Aprov.</option>
+                                <option value="TRAFICO_INALAMBRICO">Tráfico e Inalámbricas</option>
+                                <option value="REDES_WAN">Redes WAN</option>
+                                <option value="SEGURIDAD">Seguridad de Red</option>
+                                <option value="TELEFONIA">Telefonía VoIP</option>
+                                <option value="GRANDES_CLIENTES">Grandes Clientes</option>
                             </select>
                         </div>
                         <button onclick="openNewTicketModal()" class="px-3.5 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
@@ -1271,248 +940,21 @@
                         </div>
                         <!-- Filter Pills -->
                         <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] p-0.5 bg-gray-100/70 rounded-lg border border-gray-200/80">
-                            <button onclick="filterOperatorsByPill('all', this)" class="filter-pill-btn pill-active px-3 py-1 rounded-md font-bold text-white transition btn-press" data-filter="all">Todos (12)</button>
-                            <button onclick="filterOperatorsByPill('ftth', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="ftth">FTTH (4)</button>
-                            <button onclick="filterOperatorsByPill('olt', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="olt">Cabecera (3)</button>
-                            <button onclick="filterOperatorsByPill('voip', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="voip">Telefonía (3)</button>
-                            <button onclick="filterOperatorsByPill('wan', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="wan">WAN (2)</button>
+                            <button onclick="filterOperatorsByPill('all', this)" class="filter-pill-btn pill-active px-3 py-1 rounded-md font-bold text-white transition btn-press" data-filter="all">Todas</button>
+                            <button onclick="filterOperatorsByPill('ACCESO_APROV', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="ACCESO_APROV">Acceso</button>
+                            <button onclick="filterOperatorsByPill('TRAFICO_INALAMBRICO', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="TRAFICO_INALAMBRICO">Tráfico</button>
+                            <button onclick="filterOperatorsByPill('REDES_WAN', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="REDES_WAN">WAN</button>
+                            <button onclick="filterOperatorsByPill('SEGURIDAD', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="SEGURIDAD">Seguridad</button>
+                            <button onclick="filterOperatorsByPill('TELEFONIA', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="TELEFONIA">Telefonía</button>
+                            <button onclick="filterOperatorsByPill('GRANDES_CLIENTES', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="GRANDES_CLIENTES">Grandes Clientes</button>
                         </div>
                     </div>
 
                     <!-- Operator Cards Grid -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="operators-grid-cards">
-                        <!-- 1. Gabriel Torres -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-rose-500" data-area="olt" data-op="Gabriel Torres">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#1C58A8] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">GT</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">Gabriel Torres</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Cabecera OLT</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30 shrink-0 flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>Sobrecarga
-                                </span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="font-mono font-bold text-[#1C58A8] cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4814', 'Gabriel Torres')">#INC-4814</span>
-                                    <span class="text-gray-400 font-mono op-timer" data-minutes="31">31m en curso</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">94 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-gray-400">1 caso activo</span>
-                                <button type="button" onclick="showOperatorWorkloadModal('Gabriel Torres', 'Cabecera OLT', 94, '#INC-4814', '31m')" class="px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">Ver carga</button>
-                            </div>
-                        </div>
-
-                        <!-- 2. Luis Gómez -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-[#2E74C9]" data-area="olt" data-op="Luis Gómez">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#0056B3] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">LG</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">Luis Gómez</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Cabecera OLT</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-300 shrink-0">En atención</span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="font-mono font-bold text-[#1C58A8] cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4825', 'Luis Gómez')">#INC-4825</span>
-                                    <span class="text-gray-400 font-mono op-timer" data-minutes="12">12m en curso</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">64 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-gray-400">1 caso activo</span>
-                                <button type="button" onclick="showOperatorWorkloadModal('Luis Gómez', 'Cabecera OLT', 64, '#INC-4825', '12m')" class="px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">Ver carga</button>
-                            </div>
-                        </div>
-
-                        <!-- 3. Anaís Rodríguez -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-emerald-500" data-area="ftth" data-op="Anaís Rodríguez">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#5B9BE0] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">AR</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">Anaís Rodríguez</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Soporte FTTH</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-500/30 shrink-0 flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Disponible
-                                </span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="text-emerald-600 font-medium">Sin cola activa</span>
-                                    <span class="text-gray-400">Listo</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">22 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-emerald-600 font-semibold">0 en curso</span>
-                                <button type="button" onclick="assignPendingToOperator('Anaís Rodríguez', 'Soporte FTTH')" class="px-2.5 py-0.5 rounded bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[10px] font-bold shadow-2xs transition btn-press">Asignar</button>
-                            </div>
-                        </div>
-
-                        <!-- 4. José Pérez -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-emerald-500" data-area="ftth" data-op="José Pérez">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">JP</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">José Pérez</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Soporte FTTH</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-500/30 shrink-0 flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Disponible
-                                </span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="text-emerald-600 font-medium">Sin cola activa</span>
-                                    <span class="text-gray-400">Listo</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">18 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-emerald-600 font-semibold">0 en curso</span>
-                                <button type="button" onclick="assignPendingToOperator('José Pérez', 'Soporte FTTH')" class="px-2.5 py-0.5 rounded bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[10px] font-bold shadow-2xs transition btn-press">Asignar</button>
-                            </div>
-                        </div>
-
-                        <!-- 5. Daniela Castillo -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-[#0056B3]" data-area="voip" data-op="Daniela Castillo">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#1C58A8] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">DC</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">Daniela Castillo</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Telefonía VoIP</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">En atención</span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="font-mono font-bold text-[#1C58A8] cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4822', 'Daniela Castillo')">#INC-4822</span>
-                                    <span class="text-gray-400 font-mono op-timer" data-minutes="22">22m en curso</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">39 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-gray-400">1 caso activo</span>
-                                <button type="button" onclick="showOperatorWorkloadModal('Daniela Castillo', 'Telefonía VoIP', 39, '#INC-4822', '22m')" class="px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">Ver carga</button>
-                            </div>
-                        </div>
-
-                        <!-- 6. Víctor Hernández -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-emerald-500" data-area="voip" data-op="Víctor Hernández">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#2E74C9] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">VH</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">Víctor Hernández</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Telefonía VoIP</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-500/30 shrink-0 flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Disponible
-                                </span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="text-emerald-600 font-medium">Sin cola activa</span>
-                                    <span class="text-gray-400">Listo</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">32 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-emerald-600 font-semibold">0 en curso</span>
-                                <button type="button" onclick="assignPendingToOperator('Víctor Hernández', 'Telefonía VoIP')" class="px-2.5 py-0.5 rounded bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[10px] font-bold shadow-2xs transition btn-press">Asignar</button>
-                            </div>
-                        </div>
-
-                        <!-- 7. David Rodríguez -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-emerald-500" data-area="wan" data-op="David Rodríguez">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#1C58A8] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">DR</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">David Rodríguez</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Redes WAN</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-500/30 shrink-0 flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Disponible
-                                </span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="text-emerald-600 font-medium">Sin cola activa</span>
-                                    <span class="text-gray-400">Listo</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">15 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-emerald-600 font-semibold">0 en curso</span>
-                                <button type="button" onclick="assignPendingToOperator('David Rodríguez', 'Redes WAN')" class="px-2.5 py-0.5 rounded bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[10px] font-bold shadow-2xs transition btn-press">Asignar</button>
-                            </div>
-                        </div>
-
-                        <!-- 8. Elena Vásquez -->
-                        <div class="operator-card p-3 rounded-lg border border-gray-200 bg-[#F8FAFC] interactive-card flex flex-col justify-between space-y-2.5 border-t-2 border-t-[#2E74C9]" data-area="wan" data-op="Elena Vásquez">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#0B3B78] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">EV</div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-gray-900 truncate">Elena Vásquez</p>
-                                        <p class="text-[10px] text-gray-500 truncate">Seguridad &amp; Tráfico</p>
-                                    </div>
-                                </div>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">En atención</span>
-                            </div>
-                            <div class="space-y-1 bg-white p-2 rounded border border-gray-100 text-[10px] shadow-2xs">
-                                <div class="flex items-center justify-between text-gray-600">
-                                    <span class="font-mono font-bold text-[#1C58A8] cursor-pointer hover:underline" onclick="openTicketDetail('#INC-4819', 'Elena Vásquez')">#INC-4819</span>
-                                    <span class="text-gray-400 font-mono op-timer" data-minutes="8">8m en curso</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[9px] text-gray-500">
-                                    <span>Puntos Turno</span>
-                                    <span class="font-bold font-mono text-gray-700">48 pts</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t border-gray-200">
-                                <span class="text-[10px] text-gray-400">1 caso activo</span>
-                                <button type="button" onclick="showOperatorWorkloadModal('Elena Vásquez', 'Seguridad &amp; Tráfico', 48, '#INC-4819', '8m')" class="px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">Ver carga</button>
-                            </div>
+                        <div class="col-span-full py-8 text-center text-gray-400 text-xs flex items-center justify-center gap-2">
+                            <span class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
+                            <span>Sincronizando operadores en turno con el NOC...</span>
                         </div>
                     </div>
                 </div>
@@ -1752,7 +1194,7 @@
                         <p class="font-mono font-bold text-amber-600 mt-0.5">-27.8 dBm (Alerta)</p>
                     </div>
                     <div>
-                        <span class="text-[10px] text-gray-500 uppercase font-semibold">SLA Restante</span>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Tiempo Restante</span>
                         <p class="font-mono font-bold text-rose-600 mt-0.5">38 minutos</p>
                     </div>
                     <div>
@@ -1836,18 +1278,20 @@
                     <div>
                         <label class="block text-gray-700 font-semibold mb-1">Área Técnica Destino</label>
                         <select id="new-area" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
-                            <option value="Cabecera OLT">Cabecera OLT</option>
-                            <option value="Soporte FTTH">Soporte FTTH</option>
-                            <option value="Telefonía VoIP">Telefonía VoIP</option>
-                            <option value="Redes WAN">Redes WAN</option>
+                            <option value="ACCESO_APROV">Redes de Acceso &amp; Aprov.</option>
+                            <option value="TRAFICO_INALAMBRICO">Tráfico e Inalámbricas</option>
+                            <option value="REDES_WAN">Redes WAN</option>
+                            <option value="SEGURIDAD">Seguridad de Red</option>
+                            <option value="TELEFONIA">Telefonía VoIP</option>
+                            <option value="GRANDES_CLIENTES">Grandes Clientes</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Prioridad (SLA)</label>
+                        <label class="block text-gray-700 font-semibold mb-1">Prioridad (Tiempo Objetivo)</label>
                         <select id="new-prio" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs font-bold text-rose-600">
-                            <option value="P1 - Crítico">P1 - Crítico (2h)</option>
-                            <option value="P2 - Alto">P2 - Alto (4h)</option>
-                            <option value="P3 - Estándar" selected>P3 - Estándar (8h)</option>
+                            <option value="P1 - Crítico">P1 - Crítico (Objetivo: 2h)</option>
+                            <option value="P2 - Alto">P2 - Alto (Objetivo: 4h)</option>
+                            <option value="P3 - Estándar" selected>P3 - Estándar (Objetivo: 8h)</option>
                         </select>
                     </div>
                 </div>
@@ -1864,6 +1308,214 @@
                     <button type="submit" class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white font-bold transition shadow-xs btn-press">Crear e Insertar en Cola</button>
                 </div>
             </form>
+        </div>
+    <!-- ============================================================== -->
+    <!-- MODAL: RESOLUCIÓN RÁPIDA DE TICKET (OPERADOR)                  -->
+    <!-- ============================================================== -->
+    <div id="modalQuickResolveTicket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+            <div class="px-5 py-3.5 bg-emerald-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <h3 class="text-sm font-bold">Resolver Tarea Técnica</h3>
+                </div>
+                <button type="button" onclick="closeQuickResolveModal()" class="text-white/80 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form onsubmit="handleQuickResolveSubmit(event)" class="p-5 space-y-3.5 text-xs">
+                <input type="hidden" id="quick-resolve-ticket-id">
+                
+                <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span id="quick-resolve-code" class="font-mono font-bold text-xs text-[#1C58A8]">#INC-</span>
+                        <span id="quick-resolve-ders" class="px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100">+2 pts</span>
+                    </div>
+                    <p id="quick-resolve-subject" class="font-semibold text-gray-900 text-xs truncate"></p>
+                    <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
+                        <span>Tarea: <strong id="quick-resolve-task" class="text-gray-700"></strong></span>
+                        <span>Tiempo: <strong id="quick-resolve-timer" class="font-mono text-emerald-700">00:00</strong></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Notas de Diagnóstico y Resolución <span class="text-rose-500">*</span></label>
+                    <textarea id="quick-resolve-notes" required rows="3" placeholder="Describe brevemente la solución técnica aplicada (ej: OLT sincronizada, potencia normalizada, prueba ok)..." class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 text-xs"></textarea>
+                </div>
+
+                <div class="p-2.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-[11px] flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4 shrink-0 text-purple-600"></i>
+                    <span>Al enviar, el ticket pasará a <strong>Por Verificar</strong> para que el Coordinador valide los puntos DERS.</span>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                    <button type="button" onclick="closeQuickResolveModal()" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit" id="btn-quick-resolve-submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                        <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                        <span>Confirmar y Resolver</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: APROBACIÓN Y VERIFICACIÓN DERS (COORDINADOR)             -->
+    <!-- ============================================================== -->
+    <div id="modalVerifyTicket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+            <div class="px-5 py-3.5 bg-purple-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-check" class="w-4 h-4"></i>
+                    <h3 class="text-sm font-bold">Verificación y Cierre Definitivo</h3>
+                </div>
+                <button type="button" onclick="closeVerifyModal()" class="text-white/80 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form onsubmit="submitCoordinatorVerification(event)" class="p-5 space-y-3.5 text-xs">
+                <input type="hidden" id="verify-ticket-id">
+                
+                <div class="p-3 rounded-lg bg-purple-50/50 border border-purple-200 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span id="verify-ticket-code" class="font-mono font-bold text-xs text-purple-900">#INC-</span>
+                        <span id="verify-duration" class="font-mono text-[11px] font-semibold text-purple-700">15 min netos</span>
+                    </div>
+                    <div class="text-[11px] text-gray-700">
+                        Especialista: <strong id="verify-operator-name" class="text-gray-900"></strong>
+                    </div>
+                    <div class="text-[11px] text-gray-700">
+                        Tarea: <strong id="verify-task-name" class="text-gray-900"></strong>
+                    </div>
+                    <div class="text-[11px] text-gray-600 bg-white p-2 rounded border border-purple-100 mt-1">
+                        <span class="font-semibold text-gray-700 block text-[10px] uppercase">Notas del Especialista:</span>
+                        <p id="verify-operator-notes" class="italic mt-0.5 text-gray-800"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Puntos a Acreditar</label>
+                        <input type="number" id="verify-points-input" min="1" max="10" value="2" required class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs font-bold text-purple-900">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Decisión</label>
+                        <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 font-bold rounded-lg border border-emerald-200 text-xs flex items-center gap-1">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            <span>Aprobar Cierre</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Notas de Auditoría / Coordinación</label>
+                    <textarea id="verify-coord-notes" rows="2" placeholder="Observaciones de calidad (opcional)..." class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                    <button type="button" onclick="closeVerifyModal()" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit" id="btn-submit-verification" class="px-4 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                        <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                        <span>Acreditar Puntos y Cerrar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: FICHA TÉCNICA Y WORKSPACE DE TICKET                     -->
+    <!-- ============================================================== -->
+    <div id="modalTicketWorkspace" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-2xl w-full overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-[#0B1326] text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-[#0056B3] flex items-center justify-center shadow-xs">
+                        <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-white font-mono tracking-wide" id="ws-ticket-code">#INC-</h3>
+                            <span id="ws-ticket-status-badge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200">En Atención</span>
+                            <span id="ws-ticket-source-badge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-gray-300">Correo</span>
+                        </div>
+                        <p class="text-[11px] text-gray-300 mt-0.5" id="ws-ticket-sender">cliente@inter.com.ve</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-white font-mono text-xs">
+                        <i data-lucide="timer" class="w-3.5 h-3.5 text-blue-300"></i>
+                        <span id="ws-live-timer">00:00:00</span>
+                    </div>
+                    <button type="button" onclick="closeWorkspaceModal()" class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Body -->
+            <div class="p-6 space-y-4 overflow-y-auto text-xs">
+                <!-- Subject -->
+                <div>
+                    <h4 class="font-bold text-gray-900 text-sm mb-1" id="ws-ticket-subject"></h4>
+                    <div id="ws-bridge-alert" class="hidden mb-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                        <span>Configuración de Modo Bridge requerida — IP Certificada</span>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto" id="ws-ticket-body"></div>
+                </div>
+
+                <!-- Telemetry Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Abonado</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-subscriber">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Serial PON</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-serial">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Nodo OLT</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-node">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Slot / Tarjeta</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-slotpon">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Dirección MAC</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-mac">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Puntos DERS</span>
+                        <p class="font-mono font-bold text-[#1C58A8] mt-0.5" id="ws-param-points-badge">+2 pts</p>
+                    </div>
+                </div>
+
+                <div class="text-[11px] text-gray-600 flex items-center justify-between p-2 rounded bg-blue-50 border border-blue-100">
+                    <span>Tarea sugerida: <strong id="ws-param-taskname" class="text-[#1C58A8]"></strong></span>
+                    <span>Meta: <strong class="text-gray-800">Resolución con Telemetría</strong></span>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between shrink-0">
+                <button type="button" onclick="closeWorkspaceModal()" class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
+                    Cerrar
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="togglePauseTicket()" class="px-3.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold transition flex items-center gap-1 btn-press">
+                        <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
+                        <span id="btn-pause-text">Pausar (En Espera)</span>
+                    </button>
+                    <button type="button" onclick="closeWorkspaceModal(); if(currentOpenTicket) openQuickResolveModal(currentOpenTicket.id);" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1 btn-press">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                        <span>Resolver Caso</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1882,987 +1534,13 @@
     <!-- JAVASCRIPT CONTROLLERS Y LÓGICA DE NEGOCIO                     -->
     <!-- ============================================================== -->
     <script src="/static/js/theme.js"></script>
-    <script>
-        // Inicializar Iconos Lucide
-        lucide.createIcons();
-
-        // Estado Global
-        let currentTab = 'operativa';
-
-        // Control de Cambio de Pestañas
-        function switchDashboardTab(tabName) {
-            currentTab = tabName;
-            const tabs = ['operativa', 'rendimiento', 'tickets', 'auditoria', 'inbox', 'configuracion'];
-            tabs.forEach(t => {
-                const el = document.getElementById('tab-' + t);
-                const btn = document.getElementById('nav-view-' + t);
-                if (el) el.classList.toggle('hidden', t !== tabName);
-                if (btn) {
-                    if (t === tabName) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
-                }
-            });
-
-            // Resaltar submenús
-            const subAsign = document.getElementById('nav-sub-asignacion');
-            const subGen = document.getElementById('nav-sub-generales');
-            if (subAsign) subAsign.classList.toggle('bg-white/10', tabName === 'tickets');
-            if (subGen) subGen.classList.toggle('bg-white/10', tabName === 'inbox');
-
-            // Actualizar Breadcrumb
-            const bc = document.getElementById('breadcrumb-view-name');
-            if (bc) {
-                const names = {
-                    operativa: 'Vista Operativa',
-                    rendimiento: 'Rendimiento del Turno',
-                    tickets: 'Tablero de Tickets y Operadores Activos',
-                    auditoria: 'Auditoría Forense',
-                    inbox: 'Consola de Tickets (M365)',
-                    configuracion: 'Configuración del NOC'
-                };
-                bc.innerText = names[tabName] || 'Dashboard';
-            }
-
-            // Inicializar controladores según pestaña
-            if (tabName === 'rendimiento') {
-                initCharts();
-            } else if (tabName === 'operativa') {
-                loadOperativaData();
-            } else if (tabName === 'tickets') {
-                fetchLiveTickets();
-                fetchLiveOperators();
-            } else if (tabName === 'auditoria') {
-                loadLiveAuditLogs();
-            }
-
-            if (window.lucide) lucide.createIcons();
-        }
-        window.__switchStitchTab = switchDashboardTab;
-
-        function toggleSubmenu() {
-            const sub = document.getElementById('tickets-submenu');
-            const chev = document.getElementById('tickets-chevron');
-            if (sub) sub.classList.toggle('hidden');
-            if (chev) chev.classList.toggle('rotate-180');
-        }
-        window.toggleSubmenu = toggleSubmenu;
-
-        function toggleTheme() {
-            const root = document.documentElement;
-            const current = root.getAttribute('data-theme') || 'light';
-            const next = current === 'dark' ? 'light' : 'dark';
-            root.setAttribute('data-theme', next);
-            document.getElementById('theme-mode-text').innerText = next === 'dark' ? 'Modo oscuro' : 'Modo claro';
-            const icon = document.getElementById('theme-icon');
-            if (icon) {
-                icon.setAttribute('data-lucide', next === 'dark' ? 'moon' : 'sun');
-                lucide.createIcons();
-            }
-            showToast(`Tema cambiado a: ${next === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}`);
-        }
-        window.toggleTheme = toggleTheme;
-
-        // Selección rápida de área desde el Sidebar
-        function selectSidebarArea(areaKey) {
-            if (currentTab !== 'operativa' && currentTab !== 'tickets') {
-                switchDashboardTab('operativa');
-            }
-            if (currentTab === 'operativa') {
-                const sel = document.getElementById('area-filter-select');
-                if (sel) {
-                    sel.value = areaKey;
-                    filterActiveCasesByArea(areaKey);
-                }
-            } else if (currentTab === 'tickets') {
-                const targetPill = document.querySelector(`[data-filter="${areaKey}"]`);
-                if (targetPill) filterOperatorsByPill(areaKey, targetPill);
-            }
-            showToast(`Filtrando área técnica: ${areaKey.toUpperCase()}`);
-        }
-        window.selectSidebarArea = selectSidebarArea;
-
-        // Filtro de Casos Activos en Vista Operativa
-        function filterActiveCasesByArea(area) {
-            const grid = document.getElementById('active-operators-grid');
-            if (!grid) return;
-            const cards = grid.children;
-            let visibleCount = 0;
-            for (let i = 0; i < cards.length; i++) {
-                const card = cards[i];
-                const cardArea = card.getAttribute('data-area');
-                if (area === 'all' || cardArea === area) {
-                    card.style.display = '';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            }
-            const badge = document.getElementById('active-cases-count-badge');
-            if (badge) {
-                badge.innerText = visibleCount + (visibleCount === 1 ? ' Visible' : ' Visibles');
-            }
-        }
-        window.filterActiveCasesByArea = filterActiveCasesByArea;
-
-        // Filtro de Operadores por Pastillas en Tablero de Tickets
-        function filterOperatorsByPill(area, btnElement) {
-            document.querySelectorAll('.filter-pill-btn').forEach(btn => btn.classList.remove('pill-active'));
-            if (btnElement) btnElement.classList.add('pill-active');
-
-            const cards = document.querySelectorAll('.operator-card');
-            cards.forEach(card => {
-                const cardArea = card.getAttribute('data-area');
-                if (area === 'all' || cardArea === area) {
-                    card.style.display = '';
-                    card.classList.add('animate-fade-in-up');
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            const topSelect = document.getElementById('filter-tablero-area');
-            if (topSelect) topSelect.value = area;
-        }
-        window.filterOperatorsByPill = filterOperatorsByPill;
-
-        // Filtro del Dropdown superior en Tablero
-        function filterAreaDropdown(area) {
-            const targetPill = document.querySelector(`[data-filter="${area}"]`) || document.querySelector('[data-filter="all"]');
-            filterOperatorsByPill(area, targetPill);
-
-            const rows = document.querySelectorAll('#ticket-table-rows tr');
-            rows.forEach(row => {
-                const rowArea = row.getAttribute('data-area');
-                if (area === 'all' || rowArea === area) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-        window.filterAreaDropdown = filterAreaDropdown;
-
-        // Búsqueda Global en tiempo real
-        function handleGlobalSearch(query) {
-            const term = query.toLowerCase().trim();
-            // Filtrar cards en vista operativa y tablero
-            document.querySelectorAll('.operator-card, #active-operators-grid > div').forEach(card => {
-                card.style.display = card.innerText.toLowerCase().includes(term) ? '' : 'none';
-            });
-            // Filtrar tabla de tickets
-            document.querySelectorAll('#ticket-table-rows tr').forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
-            });
-        }
-        window.handleGlobalSearch = handleGlobalSearch;
-
-        // Live Ticking Sync & Timers
-        let syncSeconds = 0;
-        setInterval(() => {
-            syncSeconds++;
-            const ind = document.getElementById('live-sync-indicator');
-            if (ind) ind.innerText = `Sync: ${syncSeconds}s`;
-
-            if (syncSeconds % 60 === 0) {
-                document.querySelectorAll('.op-timer').forEach(el => {
-                    let mins = parseInt(el.getAttribute('data-minutes') || '10');
-                    mins++;
-                    el.setAttribute('data-minutes', mins);
-                    el.innerText = `${mins}m`;
-                });
-            }
-        }, 1000);
-
-        // ==============================================================
-        // CONTROLADORES DE MODALES Y DESPACHO
-        // ==============================================================
-        let currentViewingTicket = '#INC-4830';
-        let currentViewingRawId = null;
-
-        function openTicketDetail(ticketId, assignedTo, client, subject, area, prio, serial, slot) {
-            currentViewingTicket = ticketId || '#INC-4830';
-            document.getElementById('modal-ticket-id').innerText = currentViewingTicket;
-            if (client) document.getElementById('modal-ticket-entity').innerText = `${client} · Área: ${area || 'Cabecera OLT'}`;
-            if (subject) document.getElementById('modal-ticket-subject').innerText = subject;
-            if (prio) document.getElementById('modal-ticket-prio').innerText = prio;
-
-            if (serial) document.getElementById('telemetry-serial').innerText = serial;
-            if (slot) document.getElementById('telemetry-slot').innerText = slot;
-
-            document.getElementById('modal-ticket-details').classList.remove('hidden');
-        }
-        window.openTicketDetail = openTicketDetail;
-
-        function closeModal(modalId) {
-            const el = document.getElementById(modalId);
-            if (el) el.classList.add('hidden');
-        }
-        window.closeModal = closeModal;
-
-        let ticketToAssign = '#INC-4830';
-        let rawIdToAssign = null;
-        function promptAssignTicket(ticketId, area, rawId) {
-            ticketToAssign = ticketId;
-            rawIdToAssign = rawId || null;
-            document.getElementById('assign-target-ticket-label').innerText = ticketId;
-            document.getElementById('modal-assign-picker').classList.remove('hidden');
-        }
-        window.promptAssignTicket = promptAssignTicket;
-
-        function assignPendingToOperator(opName, opArea) {
-            showToast(`Asignando ticket más antiguo a ${opName} (${opArea})...`);
-            setTimeout(() => {
-                showToast(`Ticket asignado con éxito a ${opName}`);
-                let countEl = document.getElementById('kpi-queue-count');
-                if (countEl) {
-                    let cur = parseInt(countEl.innerText) || 14;
-                    if (cur > 0) countEl.innerText = cur - 1;
-                }
-            }, 600);
-        }
-        window.assignPendingToOperator = assignPendingToOperator;
-
-        async function confirmAssignment(operatorName, operatorId) {
-            closeModal('modal-assign-picker');
-            showToast(`¡Ticket ${ticketToAssign} asignado exitosamente a ${operatorName}!`);
-            
-            try {
-                const cleanId = rawIdToAssign || parseInt(ticketToAssign.replace(/[^0-9]/g, ''));
-                if (cleanId) {
-                    const assignRes = await fetch(`/api/tickets/${cleanId}/assign`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            operador_id: operatorId || 2,
-                            coordinador_id: window.currentUser ? window.currentUser.id : null,
-                            status: 'ASIGNADO',
-                            notas: 'Asignado desde modal de despacho'
-                        })
-                    });
-                    if (!assignRes.ok) {
-                        const err = await assignRes.json().catch(() => ({}));
-                        showToast(err.error || 'No se pudo asignar el ticket', 'error');
-                        return;
-                    }
-                    if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
-                    if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
-                }
-            } catch (err) {
-                console.log('Error asignando en backend:', err);
-            }
-
-            const rows = document.querySelectorAll('#ticket-table-rows tr');
-            rows.forEach(r => {
-                if (r.getAttribute('data-ticket') === ticketToAssign) {
-                    r.remove();
-                }
-            });
-
-            const badge = document.getElementById('queue-badge-count');
-            const kpiQueue = document.getElementById('kpi-queue-count');
-            const sideBadge = document.getElementById('sidebar-inbox-badge');
-            const subBadge = document.getElementById('sub-badge-count');
-            let remaining = document.querySelectorAll('#ticket-table-rows tr').length;
-            if (badge) badge.innerText = `${remaining} Tickets`;
-            if (kpiQueue) kpiQueue.innerText = remaining;
-            if (sideBadge) sideBadge.innerText = remaining;
-            if (subBadge) subBadge.innerText = remaining;
-        }
-        window.confirmAssignment = confirmAssignment;
-
-        function quickAssignFromModal() {
-            closeModal('modal-ticket-details');
-            promptAssignTicket(currentViewingTicket);
-        }
-        window.quickAssignFromModal = quickAssignFromModal;
-
-        function takeTicketDirectly() {
-            closeModal('modal-ticket-details');
-            showToast(`Has tomado el ticket ${currentViewingTicket}. SLA de respuesta activado.`);
-        }
-        window.takeTicketDirectly = takeTicketDirectly;
-
-        function showOperatorWorkloadModal(name, area, pts, ticket, elapsed) {
-            showToast(`Carga de ${name}: ${pts} pts · Caso actual: ${ticket} (${elapsed})`);
-        }
-        window.showOperatorWorkloadModal = showOperatorWorkloadModal;
-
-        function openNewTicketModal() {
-            document.getElementById('modal-new-ticket').classList.remove('hidden');
-        }
-        window.openNewTicketModal = openNewTicketModal;
-
-        async function handleCreateTicket(e) {
-            e.preventDefault();
-            const client = document.getElementById('new-client').value;
-            const area = document.getElementById('new-area').value;
-            const prio = document.getElementById('new-prio').value;
-            const subject = document.getElementById('new-subject').value;
-            const desc = document.getElementById('new-desc').value;
-
-            let randomId = `#INC-${Math.floor(4833 + Math.random() * 50)}`;
-            let rawId = null;
-
-            try {
-                const res = await fetch('/api/tickets/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        subject: subject,
-                        body_text: desc || subject,
-                        area: area,
-                        subscriber_code: client,
-                        departamento_id: area.includes('FTTH') ? 1 : area.includes('Cabecera') ? 2 : 3
-                    })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.ticket_code) {
-                        randomId = '#' + data.ticket_code;
-                        rawId = data.ticket_id || data.id;
-                    }
-                }
-            } catch (err) {
-                console.log('Offline ticket fallback', err);
-            }
-
-            const tbody = document.getElementById('ticket-table-rows');
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-blue-50/40 transition-colors animate-fade-in-up';
-            tr.setAttribute('data-ticket', randomId);
-            tr.setAttribute('data-area', area.includes('FTTH') ? 'ftth' : area.includes('Cabecera') ? 'olt' : area.includes('VoIP') ? 'voip' : 'wan');
-            if (rawId) tr.setAttribute('data-rawid', rawId);
-
-            const isP1 = prio.includes('P1');
-            const badgeClass = isP1 
-                ? 'bg-rose-50 text-rose-700 border border-rose-500/30' 
-                : prio.includes('P2')
-                ? 'bg-amber-50 text-amber-700 border border-amber-300'
-                : 'bg-blue-50 text-[#1C58A8] border border-blue-200';
-
-            tr.innerHTML = `
-                <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">${randomId}</td>
-                <td class="py-2.5 px-3 font-medium text-gray-900">${client}</td>
-                <td class="py-2.5 px-3 text-gray-700">${subject}</td>
-                <td class="py-2.5 px-3 text-gray-600 font-medium">${area}</td>
-                <td class="py-2.5 px-3">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass} w-max">${prio}</span>
-                </td>
-                <td class="py-2.5 px-3">
-                    <button type="button" onclick="openTicketDetail('${randomId}', null, '${client}', '${subject}', '${area}', '${prio}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
-                        <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
-                    </button>
-                </td>
-                <td class="py-2.5 px-3 text-right">
-                    <button onclick="promptAssignTicket('${randomId}', '${area}', ${rawId || 'null'})" class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar Ahora</button>
-                </td>
-            `;
-
-            tbody.prepend(tr);
-            lucide.createIcons();
-            closeModal('modal-new-ticket');
-            e.target.reset();
-
-            const kpiQueue = document.getElementById('kpi-queue-count');
-            const badge = document.getElementById('queue-badge-count');
-            const sideBadge = document.getElementById('sidebar-inbox-badge');
-            let total = document.querySelectorAll('#ticket-table-rows tr').length;
-            if (badge) badge.innerText = `${total} Tickets`;
-            if (kpiQueue) kpiQueue.innerText = total;
-            if (sideBadge) sideBadge.innerText = total;
-
-            showToast(`¡Ticket ${randomId} insertado con éxito en la cola!`);
-        }
-        window.handleCreateTicket = handleCreateTicket;
-
-        async function refreshDispatchQueue() {
-            const icon = document.getElementById('refresh-spin-icon');
-            if (icon) icon.classList.add('animate-spin');
-            syncSeconds = 0;
-            try {
-                await fetchLiveTickets();
-                await fetchLiveOperators();
-            } catch(e) {}
-            setTimeout(() => {
-                if (icon) icon.classList.remove('animate-spin');
-                showToast('Cola de despacho sincronizada con OLT Core Inter');
-            }, 600);
-        }
-        window.refreshDispatchQueue = refreshDispatchQueue;
-
-        // Toast controller
-        let toastTimeout;
-        function showToast(message) {
-            const toast = document.getElementById('toast-notification');
-            const msg = document.getElementById('toast-message');
-            if (!toast || !msg) return;
-
-            msg.innerText = message;
-            toast.classList.remove('translate-y-24', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('translate-y-24', 'opacity-0');
-                toast.classList.remove('translate-y-0', 'opacity-100');
-            }, 3200);
-        }
-        window.__stitchShowToast = showToast;
-
-        // ==============================================================
-        // LÓGICA DE DATOS: VISTA OPERATIVA (KPIs REALES)
-        // ==============================================================
-        async function loadOperativaData() {
-            try {
-                const res = await fetch('/api/kpis');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data) {
-                        const colaEl = document.getElementById('op-kpi-cola');
-                        const activosEl = document.getElementById('op-kpi-activos');
-                        const esperaEl = document.getElementById('op-kpi-espera');
-                        const compEl = document.getElementById('op-kpi-completados');
-                        const critEl = document.getElementById('op-kpi-criticos');
-                        const slaTimeEl = document.getElementById('op-kpi-sla-time');
-                        const slaPctEl = document.getElementById('op-kpi-sla-pct');
-
-                        if (colaEl && data.total_active_queue) colaEl.innerText = data.total_active_queue;
-                        if (activosEl && data.in_progress_count) activosEl.innerText = `${data.in_progress_count} activos`;
-                        if (esperaEl && data.on_hold_count !== undefined) esperaEl.innerText = `${data.on_hold_count} en espera`;
-                        if (compEl && data.total_tasks) compEl.innerText = data.total_tasks;
-                        if (critEl && data.unassigned_critical_count !== undefined) critEl.innerText = data.unassigned_critical_count;
-                        if (slaTimeEl && data.avg_first_response) slaTimeEl.innerText = data.avg_first_response;
-                        if (slaPctEl && data.sla_compliance) slaPctEl.innerText = `${data.sla_compliance}%`;
-                    }
-                }
-            } catch(e) {
-                console.log('Carga inicial de KPIs en buffer local', e);
-            }
-        }
-
-        // ==============================================================
-        // LÓGICA DE DATOS: CHARTS DE RENDIMIENTO (CHART.JS)
-        // ==============================================================
-        let chartsInited = false;
-        async function initCharts() {
-            if (chartsInited) return;
-            chartsInited = true;
-
-            let hourlyLabels = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
-            let hourlyData = [35, 78, 142, 195, 230, 268, 295, 312];
-
-            try {
-                const resH = await fetch('/api/charts/hourly');
-                if (resH.ok) {
-                    const dataH = await resH.json();
-                    if (dataH.labels && dataH.data) {
-                        hourlyLabels = dataH.labels;
-                        hourlyData = dataH.data;
-                        const lastVal = hourlyData[hourlyData.length - 1];
-                        const totalEl = document.getElementById('metric-hourly-total');
-                        if (totalEl) totalEl.innerText = `${lastVal} pts Totales`;
-                    }
-                }
-            } catch(e) {
-                console.log('Usando curva horaria simulada', e);
-            }
-
-            const ctxLine = document.getElementById('chartHourlyDemo');
-            if (ctxLine) {
-                new Chart(ctxLine, {
-                    type: 'line',
-                    data: {
-                        labels: hourlyLabels,
-                        datasets: [{
-                            label: 'Puntos Acumulados',
-                            data: hourlyData,
-                            borderColor: '#1C58A8',
-                            backgroundColor: 'rgba(28, 88, 168, 0.12)',
-                            fill: true,
-                            tension: 0.35,
-                            borderWidth: 2.5,
-                            pointBackgroundColor: '#0056B3',
-                            pointRadius: 4
-                        }]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { grid: { color: 'rgba(228, 233, 243, 0.6)' } },
-                            x: { grid: { display: false } }
-                        }
-                    }
-                });
-            }
-
-            let weightCounts = [34, 27, 21, 13, 5];
-            try {
-                const resW = await fetch('/api/charts/task-weights');
-                if (resW.ok) {
-                    const dataW = await resW.json();
-                    if (Array.isArray(dataW) && dataW.length === 5) {
-                        weightCounts = dataW.map(x => x.count);
-                    }
-                }
-            } catch(e) {
-                console.log('Usando distribución de complejidad simulada', e);
-            }
-
-            const ctxDonut = document.getElementById('chartWeightsDemo');
-            if (ctxDonut) {
-                new Chart(ctxDonut, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['P1 Simple', 'P2 Moderado', 'P3 Estándar', 'P4 Complejo', 'P5 Crítico'],
-                        datasets: [{
-                            data: weightCounts,
-                            backgroundColor: ['#1C58A8', '#2E74C9', '#F4B400', '#0B3B78', '#DC2626'],
-                            borderWidth: 2,
-                            borderColor: '#FFFFFF'
-                        }]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        cutout: '70%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: { boxWidth: 10, font: { size: 10 } }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // ==============================================================
-        // LÓGICA DE CONTROL JERÁRQUICO DE CARGA DE TRABAJO
-        // ==============================================================
-        (function() {
-            const areasData = {
-                acceso: {
-                    name: 'Redes de Acceso y Aprovisionamiento',
-                    operators: [
-                        { name: 'José C.', pts: 1777, tasks: 504, mttr: '44.1m', status: 'Saturado', color: '#0B3B78', barW: '98.7%' },
-                        { name: 'Carlos M.', pts: 504, tasks: 132, mttr: '28.0m', status: 'Balanceado', color: '#1C58A8', barW: '28%' },
-                        { name: 'Mariana S.', pts: 396, tasks: 98, mttr: '24.5m', status: 'Balanceado', color: '#1C58A8', barW: '22%' },
-                        { name: 'Adelis M.', pts: 270, tasks: 62, mttr: '22.1m', status: 'Balanceado', color: '#2E74C9', barW: '15%' },
-                        { name: 'Roberto M.', pts: 263, tasks: 46, mttr: '19.8m', status: 'Balanceado', color: '#5B9BE0', barW: '14.6%' }
-                    ]
-                },
-                trafico: {
-                    name: 'Control de Tráfico e Inalámbricas',
-                    operators: [
-                        { name: 'Gabriel T.', pts: 1240, tasks: 310, mttr: '36.2m', status: 'Moderado', color: '#1C58A8', barW: '68.8%' },
-                        { name: 'Ricardo M.', pts: 680, tasks: 180, mttr: '27.4m', status: 'Balanceado', color: '#2E74C9', barW: '37.7%' },
-                        { name: 'Alejandro S.', pts: 490, tasks: 125, mttr: '25.0m', status: 'Balanceado', color: '#2E74C9', barW: '27.2%' },
-                        { name: 'Patricia L.', pts: 340, tasks: 88, mttr: '21.3m', status: 'Balanceado', color: '#5B9BE0', barW: '18.8%' },
-                        { name: 'Oscar D.', pts: 290, tasks: 72, mttr: '20.0m', status: 'Balanceado', color: '#5B9BE0', barW: '16.1%' }
-                    ]
-                },
-                seguridad: {
-                    name: 'Seguridad',
-                    operators: [
-                        { name: 'Elena V.', pts: 950, tasks: 215, mttr: '31.0m', status: 'Moderado', color: '#1C58A8', barW: '52.7%' },
-                        { name: 'Marcos P.', pts: 720, tasks: 160, mttr: '29.5m', status: 'Balanceado', color: '#2E74C9', barW: '40.0%' },
-                        { name: 'David B.', pts: 510, tasks: 110, mttr: '23.8m', status: 'Balanceado', color: '#2E74C9', barW: '28.3%' },
-                        { name: 'Lucía F.', pts: 380, tasks: 85, mttr: '18.4m', status: 'Balanceado', color: '#5B9BE0', barW: '21.1%' },
-                        { name: 'Víctor C.', pts: 310, tasks: 70, mttr: '17.2m', status: 'Balanceado', color: '#5B9BE0', barW: '17.2%' }
-                    ]
-                },
-                telefonia: {
-                    name: 'Telefonía',
-                    operators: [
-                        { name: 'Daniela C.', pts: 890, tasks: 195, mttr: '26.8m', status: 'Moderado', color: '#1C58A8', barW: '49.4%' },
-                        { name: 'Javier R.', pts: 640, tasks: 140, mttr: '24.1m', status: 'Balanceado', color: '#2E74C9', barW: '35.5%' },
-                        { name: 'Carmen A.', pts: 480, tasks: 105, mttr: '20.5m', status: 'Balanceado', color: '#2E74C9', barW: '26.6%' },
-                        { name: 'Simón T.', pts: 360, tasks: 80, mttr: '19.0m', status: 'Balanceado', color: '#5B9BE0', barW: '20.0%' },
-                        { name: 'Raquel N.', pts: 275, tasks: 60, mttr: '16.5m', status: 'Balanceado', color: '#5B9BE0', barW: '15.2%' }
-                    ]
-                },
-                wan: {
-                    name: 'Redes WAN',
-                    operators: [
-                        { name: 'Andrés H.', pts: 1120, tasks: 270, mttr: '35.0m', status: 'Moderado', color: '#1C58A8', barW: '62.2%' },
-                        { name: 'Manuel G.', pts: 780, tasks: 175, mttr: '28.2m', status: 'Balanceado', color: '#2E74C9', barW: '43.3%' },
-                        { name: 'Carolina B.', pts: 530, tasks: 120, mttr: '22.6m', status: 'Balanceado', color: '#2E74C9', barW: '29.4%' },
-                        { name: 'Felipe K.', pts: 390, tasks: 90, mttr: '19.5m', status: 'Balanceado', color: '#5B9BE0', barW: '21.6%' },
-                        { name: 'Sofía M.', pts: 280, tasks: 65, mttr: '16.8m', status: 'Balanceado', color: '#5B9BE0', barW: '15.5%' }
-                    ]
-                },
-                grandes: {
-                    name: 'Grandes Clientes',
-                    operators: [
-                        { name: 'Fernando S.', pts: 1350, tasks: 340, mttr: '39.4m', status: 'Moderado', color: '#1C58A8', barW: '75.0%' },
-                        { name: 'Beatriz L.', pts: 810, tasks: 190, mttr: '30.1m', status: 'Moderado', color: '#2E74C9', barW: '45.0%' },
-                        { name: 'Gonzalo M.', pts: 620, tasks: 145, mttr: '26.0m', status: 'Balanceado', color: '#2E74C9', barW: '34.4%' },
-                        { name: 'Verónica P.', pts: 410, tasks: 95, mttr: '21.0m', status: 'Balanceado', color: '#5B9BE0', barW: '22.7%' },
-                        { name: 'Héctor Z.', pts: 320, tasks: 75, mttr: '18.5m', status: 'Balanceado', color: '#5B9BE0', barW: '17.7%' }
-                    ]
-                }
-            };
-
-            function getAllOperators() {
-                let list = [];
-                for (const key in areasData) {
-                    areasData[key].operators.forEach(op => {
-                        list.push({ ...op, areaKey: key, areaName: areasData[key].name });
-                    });
-                }
-                return list.sort((a, b) => b.pts - a.pts);
-            }
-
-            function populateOperatorSelect(areaKey) {
-                const opSelect = document.getElementById('select-hierarchy-operator');
-                if (!opSelect) return;
-                opSelect.innerHTML = '';
-                if (areaKey === 'all') {
-                    const optAll = document.createElement('option');
-                    optAll.value = 'all';
-                    optAll.textContent = 'Todos los Operadores (IP General - Top)';
-                    opSelect.appendChild(optAll);
-                    const allOps = getAllOperators();
-                    allOps.forEach(op => {
-                        const opt = document.createElement('option');
-                        opt.value = op.name;
-                        opt.textContent = `${op.name} (${op.pts} pts · ${op.areaName.split(' ')[0]})`;
-                        opSelect.appendChild(opt);
-                    });
-                } else {
-                    const area = areasData[areaKey];
-                    const optAllArea = document.createElement('option');
-                    optAllArea.value = 'all';
-                    optAllArea.textContent = `Todos los de ${area.name}`;
-                    opSelect.appendChild(optAllArea);
-                    area.operators.forEach(op => {
-                        const opt = document.createElement('option');
-                        opt.value = op.name;
-                        opt.textContent = `${op.name} (${op.pts} pts)`;
-                        opSelect.appendChild(opt);
-                    });
-                }
-            }
-
-            function renderBars(items, highlightedName, areaName) {
-                const container = document.getElementById('workload-bars-container');
-                if (!container) return;
-                container.innerHTML = '';
-
-                const displayItems = highlightedName && highlightedName !== 'all'
-                    ? items.filter(i => i.name === highlightedName)
-                    : items.slice(0, 7);
-
-                displayItems.forEach((item, idx) => {
-                    const isSaturated = item.pts > 1400;
-                    const isModerate = item.pts >= 800 && item.pts <= 1400;
-                    const statusBadge = isSaturated
-                        ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30">Saturado</span>'
-                        : isModerate
-                        ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-500/30">Moderado</span>'
-                        : '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-500/30">Balanceado</span>';
-
-                    const row = document.createElement('div');
-                    row.className = 'flex items-center text-xs relative group';
-                    row.innerHTML = `
-                        <span class="w-28 text-right pr-4 font-medium text-gray-700 truncate ${highlightedName === item.name ? 'font-bold text-[#1C58A8]' : ''}">${item.name}</span>
-                        <div class="flex-1 relative flex items-center h-5 mr-6">
-                            <div class="h-4.5 rounded-r-md transition-all" style="width: ${item.barW}; height: 18px; background-color: ${item.color};"></div>
-                            <span class="ml-2 text-[10px] font-mono text-gray-500">${item.pts} pts</span>
-                            <div class="absolute right-0 top-6 z-20 w-72 bg-white rounded-xl shadow-md border border-[#BFDBFE] p-3.5 text-xs text-gray-700 space-y-1.5 ${idx === 0 || highlightedName === item.name ? 'block' : 'hidden group-hover:block'}">
-                                <div class="flex items-center justify-between pb-1 border-b border-gray-100">
-                                    <p class="font-bold text-gray-900 text-xs">${item.name}</p>
-                                    ${statusBadge}
-                                </div>
-                                <div class="space-y-1 text-[11px]">
-                                    <div class="flex items-center gap-1.5 font-semibold text-[#0B3B78]">
-                                        <span class="w-2 h-2 rounded-xs bg-[#0B3B78] inline-block"></span>
-                                        <span>Puntos de Carga: ${item.pts} pts</span>
-                                    </div>
-                                    <p class="text-gray-500 pl-3.5">Área: ${item.areaName || areaName || 'Operaciones IP'}</p>
-                                    <p class="text-gray-500 pl-3.5">Tareas activas: ${item.tasks} tickets</p>
-                                    <p class="text-gray-500 pl-3.5">MTTR Promedio: ${item.mttr}</p>
-                                    <p class="text-gray-600 font-medium pl-3.5">Semáforo: <span class="${isSaturated ? 'text-rose-600' : isModerate ? 'text-amber-600' : 'text-blue-600'} font-bold">${item.status}</span></p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-
-            function updateDeptUIActive(active) {
-                const btnDept = document.getElementById('btn-hierarchy-dept');
-                if (!btnDept) return;
-                if (active) {
-                    btnDept.className = 'px-3.5 py-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-2 bg-[#0056B3] text-white border border-[#0056B3] btn-press';
-                } else {
-                    btnDept.className = 'px-3.5 py-2 rounded-lg text-xs font-semibold transition-all shadow-2xs flex items-center gap-2 bg-white text-gray-700 border border-gray-200 hover:border-[#1C58A8]/50 btn-press';
-                }
-            }
-
-            window.handleDeptClick = function() {
-                updateDeptUIActive(true);
-                const areaSelect = document.getElementById('select-hierarchy-area');
-                if (areaSelect) areaSelect.value = 'all';
-                populateOperatorSelect('all');
-                const allOps = getAllOperators();
-
-                document.getElementById('hierarchy-active-badge').textContent = 'Departamento IP (General)';
-                document.getElementById('workload-current-filter-label').textContent = 'Consolidado General — Departamento IP (Todas las áreas y operadores)';
-                document.getElementById('workload-total-tasks').textContent = '842';
-                document.getElementById('workload-avg-mttr').textContent = '31.5m';
-                document.getElementById('workload-total-pts').textContent = '3.210 pts';
-
-                renderBars(allOps, null, 'Departamento IP');
-            };
-
-            window.handleAreaChange = function(areaKey) {
-                if (areaKey === 'all') {
-                    window.handleDeptClick();
-                    return;
-                }
-                updateDeptUIActive(false);
-                const area = areasData[areaKey];
-                populateOperatorSelect(areaKey);
-
-                let totalPts = 0;
-                let totalTasks = 0;
-                area.operators.forEach(op => { totalPts += op.pts; totalTasks += op.tasks; });
-                const avgMttr = (area.operators.reduce((acc, op) => acc + parseFloat(op.mttr), 0) / area.operators.length).toFixed(1) + 'm';
-
-                document.getElementById('hierarchy-active-badge').textContent = area.name;
-                document.getElementById('workload-current-filter-label').textContent = `Área Técnica: ${area.name} (5 especialistas)`;
-                document.getElementById('workload-total-tasks').textContent = totalTasks.toString();
-                document.getElementById('workload-avg-mttr').textContent = avgMttr;
-                document.getElementById('workload-total-pts').textContent = totalPts.toLocaleString() + ' pts';
-
-                renderBars(area.operators, null, area.name);
-            };
-
-            window.handleOperatorChange = function(opName) {
-                const areaKey = document.getElementById('select-hierarchy-area').value;
-                let sourceList = areaKey === 'all' ? getAllOperators() : areasData[areaKey].operators;
-                let areaName = areaKey === 'all' ? 'Departamento IP' : areasData[areaKey].name;
-
-                if (opName === 'all') {
-                    renderBars(sourceList, null, areaName);
-                    return;
-                }
-                const targetOp = sourceList.find(op => op.name === opName);
-                if (targetOp) {
-                    document.getElementById('hierarchy-active-badge').textContent = targetOp.name;
-                    document.getElementById('workload-current-filter-label').textContent = `Especialista: ${targetOp.name} · Carga Individual y SLA`;
-                    document.getElementById('workload-total-tasks').textContent = targetOp.tasks.toString();
-                    document.getElementById('workload-avg-mttr').textContent = targetOp.mttr;
-                    document.getElementById('workload-total-pts').textContent = targetOp.pts.toLocaleString() + ' pts';
-                    renderBars(sourceList, opName, targetOp.areaName || areaName);
-                }
-            };
-
-            populateOperatorSelect('all');
-            renderBars(getAllOperators(), null, 'Redes de Acceso y Aprovisionamiento');
-        })();
-
-        // ==============================================================
-        // BACKEND API INTEGRATION (LIVE DB & REAL-TIME DISPATCH)
-        // ==============================================================
-        async function fetchLiveOperators() {
-            try {
-                const res = await fetch('/api/operators/availability');
-                if (res.ok) {
-                    const ops = await res.json();
-                    if (Array.isArray(ops) && ops.length > 0) {
-                        updateOperatorsPicker(ops);
-                    }
-                }
-            } catch (err) {
-                console.log('Operando con operadores en caché local', err);
-            }
-        }
-
-        function updateOperatorsPicker(ops) {
-            const list = document.getElementById('assign-operators-list');
-            if (!list || !ops || ops.length === 0) return;
-            
-            list.innerHTML = ops.slice(0, 8).map(op => {
-                const isAvail = (op.active_tickets_count || 0) === 0;
-                const statusBadge = isAvail 
-                    ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">Libre</span>'
-                    : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8]">${op.active_tickets_count} caso(s)</span>`;
-                
-                const initials = op.avatar || (op.name ? op.name.split(' ').map(n=>n[0]).join('').substring(0,2) : 'OP');
-                
-                return `
-                <div class="p-2.5 rounded-lg border border-gray-200 hover:border-[#1C58A8] hover:bg-blue-50/40 cursor-pointer transition flex items-center justify-between" onclick="confirmAssignment('${op.name}', ${op.id})">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full bg-[#1C58A8] text-white text-[10px] font-bold flex items-center justify-center">${initials}</div>
-                        <div>
-                            <p class="font-bold text-gray-900">${op.name}</p>
-                            <p class="text-[10px] text-gray-500">${op.area || 'Operaciones IP'} · ${op.active_points || 0} pts</p>
-                        </div>
-                    </div>
-                    ${statusBadge}
-                </div>`;
-            }).join('');
-        }
-
-        async function fetchLiveTickets() {
-            if (typeof window.loadDispatchQueue === 'function') {
-                return window.loadDispatchQueue();
-            }
-            try {
-                const res = await fetch('/api/tickets/unassigned', { credentials: 'include' });
-                if (res.ok) {
-                    const tickets = await res.json();
-                    renderTicketsQueue(Array.isArray(tickets) ? tickets : []);
-                }
-            } catch (err) {
-                console.log('Operando con tickets en buffer local', err);
-            }
-        }
-
-        function renderTicketsQueue(tickets) {
-            if (typeof window.renderDispatchQueue === 'function') {
-                window.renderDispatchQueue(tickets || []);
-                return;
-            }
-            const tbody = document.getElementById('ticket-table-rows');
-            if (!tbody) return;
-            const emptyEl = document.getElementById('queue-empty-state');
-            if (!tickets || tickets.length === 0) {
-                tbody.innerHTML = '';
-                if (emptyEl) emptyEl.classList.remove('hidden');
-                return;
-            }
-            if (emptyEl) emptyEl.classList.add('hidden');
-
-            const rowsHtml = tickets.slice(0, 15).map(t => {
-                const code = t.ticket_code ? (t.ticket_code.startsWith('#') ? t.ticket_code : '#' + t.ticket_code) : '#INC-4830';
-                const client = t.subscriber_code || t.sender_email || 'Cliente Inter IP';
-                const subject = t.subject || 'Incidencia de Telecomunicaciones';
-                const area = t.area || 'Redes de Acceso';
-                const pts = t.suggested_points || 3;
-                const isP1 = pts >= 8 || (t.priority && t.priority.includes('P1')) || (t.priority && t.priority.includes('P5'));
-                const prioLabel = isP1 ? 'P1 - Crítico' : pts >= 5 ? 'P2 - Alto' : 'P3 - Estándar';
-                const prioBadge = isP1 
-                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30 flex items-center gap-1 w-max"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>${prioLabel}</span>`
-                    : prioLabel.includes('P2')
-                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 w-max">${prioLabel}</span>`
-                    : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200 w-max">${prioLabel}</span>`;
-
-                const areaTag = area.toLowerCase().includes('ftth') ? 'ftth' : area.toLowerCase().includes('cabecera') || area.toLowerCase().includes('olt') ? 'olt' : area.toLowerCase().includes('voip') || area.toLowerCase().includes('telef') ? 'voip' : 'wan';
-
-                const safeClient = client.replace(/'/g, "\\'");
-                const safeSubj = subject.replace(/'/g, "\\'");
-                const safeArea = area.replace(/'/g, "\\'");
-                const safeSerial = (t.serial_pon || 'ZTEGC' + Math.floor(1000000 + Math.random()*9000000)).replace(/'/g, "\\'");
-                const safeSlot = (t.slot_pon || 'SLOT-04 · PON-08').replace(/'/g, "\\'");
-
-                return `
-                <tr class="hover:bg-blue-50/40 transition-colors" data-area="${areaTag}" data-ticket="${code}" data-rawid="${t.id}">
-                    <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">${code}</td>
-                    <td class="py-2.5 px-3 font-medium text-gray-900">${client}</td>
-                    <td class="py-2.5 px-3 text-gray-700 max-w-xs truncate" title="${subject}">${subject}</td>
-                    <td class="py-2.5 px-3 text-gray-600 font-medium">${area}</td>
-                    <td class="py-2.5 px-3">${prioBadge}</td>
-                    <td class="py-2.5 px-3">
-                        <button type="button" onclick="openTicketDetail('${code}', null, '${safeClient}', '${safeSubj}', '${safeArea}', '${prioLabel}', '${safeSerial}', '${safeSlot}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
-                            <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
-                        </button>
-                    </td>
-                    <td class="py-2.5 px-3 text-right">
-                        <button onclick="promptAssignTicket('${code}', '${safeArea}', ${t.id})" class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar Ahora</button>
-                    </td>
-                </tr>`;
-            }).join('');
-
-            tbody.innerHTML = rowsHtml;
-            lucide.createIcons();
-
-            const total = tickets.length;
-            const badge = document.getElementById('queue-badge-count');
-            const kpiQueue = document.getElementById('kpi-queue-count');
-            const sideBadge = document.getElementById('sidebar-inbox-badge');
-            const subBadge = document.getElementById('sub-badge-count');
-            if (badge) badge.innerText = `${total} Tickets`;
-            if (kpiQueue) kpiQueue.innerText = total;
-            if (sideBadge) sideBadge.innerText = total;
-            if (subBadge) subBadge.innerText = total;
-        }
-
-        async function loadLiveAuditLogs() {
-            try {
-                const res = await fetch('/api/audit/logs');
-                if (res.ok) {
-                    const logs = await res.json();
-                    if (Array.isArray(logs) && logs.length > 0) {
-                        const tbody = document.getElementById('audit-logs-tbody');
-                        if (tbody) {
-                            tbody.innerHTML = logs.slice(0, 10).map(l => `
-                                <tr class="hover:bg-blue-50/30 transition-colors">
-                                    <td class="font-mono text-xs text-gray-500">${l.created_at || l.timestamp || '2026-03-30 12:00:00'}</td>
-                                    <td class="font-bold text-gray-900">${l.user_name || l.especialista || 'Sistema NOC'}</td>
-                                    <td><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">${l.action || 'EVENTO'}</span></td>
-                                    <td class="font-mono font-bold text-[#1C58A8]">${l.entity_id || l.ticket_code || '#INC-CORE'}</td>
-                                    <td class="text-xs text-gray-700">${l.details || l.detalle || 'Trazabilidad de evento registrada'}</td>
-                                    <td class="text-right font-mono text-xs text-gray-400">${l.ip_address || '10.20.4.10'}</td>
-                                </tr>
-                            `).join('');
-                        }
-                    }
-                }
-            } catch(e) {
-                console.log('Bitácora en caché local', e);
-            }
-        }
-
-        // Arranque Inicial
-        document.addEventListener('DOMContentLoaded', () => {
-            loadOperativaData();
-            fetchLiveOperators();
-            fetchLiveTickets();
-        });
-    </script>
     <script src="/static/js/dashboard.js"></script>
     <script>
-        (function stitchDashboardBridge() {
-            const coreSwitch = window.switchDashboardTab;
-            window.switchDashboardTab = function (tabName) {
-                const stitchOnly = ['tickets', 'inbox', 'configuracion'];
-                if (stitchOnly.includes(tabName) && typeof window.__switchStitchTab === 'function') {
-                    window.__switchStitchTab(tabName);
-                    if (tabName === 'tickets' && typeof window.loadDispatchQueue === 'function') {
-                        window.loadDispatchQueue();
-                    }
-                    if (tabName === 'tickets' && typeof window.loadTableroOperators === 'function') {
-                        window.loadTableroOperators();
-                    }
-                    return;
-                }
-                if (typeof coreSwitch === 'function') {
-                    coreSwitch(tabName);
-                } else if (typeof window.__switchStitchTab === 'function') {
-                    window.__switchStitchTab(tabName);
-                }
-            };
-            const coreToast = window.showToast;
-            window.showToast = function (message, type, duration) {
-                if (typeof coreToast === 'function') {
-                    coreToast(message, type, duration);
-                    return;
-                }
-                if (typeof window.__stitchShowToast === 'function') {
-                    window.__stitchShowToast(message);
-                }
-            };
-        })();
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                lucide.createIcons();
+            }
+        });
     </script>
 </body>
 </html>

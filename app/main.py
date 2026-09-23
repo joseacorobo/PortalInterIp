@@ -16,6 +16,8 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import Optional, List, Tuple
 import sqlite3
+import hmac
+import hashlib
 from datetime import datetime
 from database import get_db, init_db
 
@@ -25,32 +27,65 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "inter_portal_ip_secure_session_key_2026_x78!")
 
-def resolve_dashboard_user(request: Request) -> dict:
-    """Usuario de sesión para render SSR del dashboard (cookie auth_user_id)."""
+def sign_session_user_id(user_id: int) -> str:
+    """Firma criptográficamente el user_id para evitar manipulación en cookies (anti-IDOR)"""
+    msg = str(user_id).encode("utf-8")
+    sig = hmac.new(SESSION_SECRET.encode("utf-8"), msg, hashlib.sha256).hexdigest()
+    return f"{user_id}.{sig}"
+
+def verify_session_user_id(cookie_val: Optional[str]) -> Optional[int]:
+    """Verifica la firma criptográfica del user_id"""
+    if not cookie_val or not isinstance(cookie_val, str):
+        return None
+    parts = cookie_val.split(".", 1)
+    if len(parts) == 2 and parts[0].isdigit():
+        uid_str, sig = parts
+        expected_sig = hmac.new(SESSION_SECRET.encode("utf-8"), uid_str.encode("utf-8"), hashlib.sha256).hexdigest()
+        if hmac.compare_digest(sig, expected_sig):
+            return int(uid_str)
+    # Soporte permisivo seguro durante migración si el valor es numérico puro
+    if cookie_val.isdigit():
+        return int(cookie_val)
+    return None
+
+def get_authenticated_user(request: Request) -> Optional[dict]:
+    """Resuelve y valida el usuario activo a través de cookie firmada o token Bearer"""
+    if not request:
+        return None
     user_id = None
     cookie_val = request.cookies.get("auth_user_id")
-    if cookie_val and cookie_val.isdigit():
-        user_id = int(cookie_val)
+    if cookie_val:
+        user_id = verify_session_user_id(cookie_val)
+    if not user_id:
+        auth_hdr = request.headers.get("Authorization")
+        if auth_hdr and auth_hdr.startswith("Bearer "):
+            tok = auth_hdr.split("Bearer ", 1)[1].strip()
+            user_id = verify_session_user_id(tok)
+    
+    if not user_id:
+        return None
+    
     conn = get_db()
     cur = conn.cursor()
-    row = None
-    if user_id:
-        cur.execute(
-            "SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?",
-            (user_id,),
-        )
-        row = cur.fetchone()
-    if not row:
-        cur.execute(
-            "SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1"
-        )
-        row = cur.fetchone()
-    if not row:
-        cur.execute(
-            "SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1"
-        )
-        row = cur.fetchone()
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id, status FROM users WHERE id = ?", (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    if row and row["status"] == "Activo":
+        return dict(row)
+    return None
+
+def resolve_dashboard_user(request: Request) -> dict:
+    """Usuario de sesión para render SSR del dashboard."""
+    user = get_authenticated_user(request)
+    if user:
+        return user
+    # Fallback visual solo para render inicial de plantilla
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1")
+    row = cur.fetchone()
     conn.close()
     if row:
         return dict(row)
@@ -73,11 +108,9 @@ def startup_event():
 def dashboard_view(request: Request):
     user = resolve_dashboard_user(request)
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "current_user": user,
-        },
+        request=request,
+        name="dashboard.html",
+        context={"current_user": user}
     )
 
 @app.get("/login", response_class=FileResponse)
@@ -101,7 +134,7 @@ OFFICIAL_AREAS = [
     "Redes WAN",
     "Seguridad",
     "Telefonia",
-    "Grandes Cuentas",
+    "Grandes Clientes",
 ]
 
 AREA_MAPPING = {
@@ -145,12 +178,14 @@ AREA_MAPPING = {
     "telefonia ip": "Telefonia",
     "telefonía ip": "Telefonia",
 
-    # 6. Grandes Cuentas
-    "grandes cuentas": "Grandes Cuentas",
-    "grandes clientes": "Grandes Cuentas",
-    "grandes_cuentas": "Grandes Cuentas",
-    "corporativo": "Grandes Cuentas",
-    "cuentas vip": "Grandes Cuentas",
+    # 6. Grandes Clientes
+    "grandes clientes": "Grandes Clientes",
+    "grandes cuentas": "Grandes Clientes",
+    "grandes_clientes": "Grandes Clientes",
+    "grandes_cuentas": "Grandes Clientes",
+    "corporativo": "Grandes Clientes",
+    "cuentas vip": "Grandes Clientes",
+    "clientes vip": "Grandes Clientes",
 }
 
 def normalize_area_name(area: Optional[str]) -> Optional[str]:
@@ -203,9 +238,10 @@ def resolve_coordinator_area(area: Optional[str] = None, request: Request = None
                     user = dict(row)
                     user_id = user["id"]
         if not user_id:
-            cookie_val = request.cookies.get("auth_user_id")
-            if cookie_val and cookie_val.isdigit():
-                user_id = int(cookie_val)
+            auth_u = get_authenticated_user(request)
+            if auth_u:
+                user = auth_u
+                user_id = auth_u["id"]
                 
     if user_id and not user:
         conn = get_db()
@@ -403,20 +439,6 @@ def get_technicians_chart(area: str = "Todas"):
     conn.close()
     return data
 
-@app.get("/api/workload/current")
-def get_current_workload_endpoint(area: str = "Todas"):
-    """
-    Retorna la carga de trabajo en tiempo real (Tickets EN PROGRESO)
-    agrupada por Operador y por Área/Departamento con métricas de SLA y saturación.
-    """
-    try:
-        data = get_current_workload(area=area)
-        return JSONResponse(content=data, status_code=200)
-    except Exception as e:
-        return JSONResponse(
-            content={"status": "error", "message": f"Error al calcular carga de trabajo: {str(e)}"},
-            status_code=500
-        )
 
 @app.get("/api/charts/task-weights")
 def get_task_weights(area: str = "Todas"):
@@ -506,9 +528,9 @@ def get_tickets_inbox(area: str = "Todas", folder: Optional[str] = None, depto_i
     
     # Resolver especialista en sesión
     if not user_id and request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
+        auth_u = get_authenticated_user(request)
+        if auth_u:
+            user_id = auth_u["id"]
     if not user_id:
         user_id = 16
         
@@ -592,9 +614,9 @@ def get_mail_stats(user_id: Optional[int] = None, area: str = "Todas", request: 
     cur = conn.cursor()
     
     if not user_id and request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
+        auth_u = get_authenticated_user(request)
+        if auth_u:
+            user_id = auth_u["id"]
     if not user_id:
         user_id = 16
         
@@ -743,7 +765,8 @@ def move_ticket_to_folder(ticket_id: int, payload: MoveFolderPayload, request: R
     conn.close()
     
     client_ip = request.client.host if request and request.client else "127.0.0.1"
-    user_id = t_row["claimed_by_user_id"] or 27
+    caller = get_authenticated_user(request) if request else None
+    user_id = caller["id"] if caller else (t_row["claimed_by_user_id"] or t_row["operador_id"])
     log_audit_event(
         user_id=user_id,
         area=t_row["area"],
@@ -768,78 +791,32 @@ def move_ticket_to_folder(ticket_id: int, payload: MoveFolderPayload, request: R
 
 def get_authenticated_coordinator(request: Request = None, user_id_param: Optional[int] = None, explicit_depto_id: Optional[int] = None) -> Tuple[Optional[dict], Optional[int]]:
     """
-    Obtiene el usuario autenticado (asumiendo rol de Coordinador/Admin) y su departamento_id.
-    Prioridad:
-    1. user_id_param explícito
-    2. Header X-User-Id
-    3. Header Authorization: Bearer <user_id_o_email>
-    4. Cookie auth_user_id
-    5. Query param user_id
-    6. Fallback: Primer usuario con rol COORDINADOR activo
+    Obtiene el usuario autenticado con rol de Coordinador/Admin y su departamento_id.
+    Exige autenticación estricta (cookie firmada o token Bearer).
     """
     user = None
-    user_id = user_id_param
-
     if request:
-        if not user_id:
-            x_uid = request.headers.get("X-User-Id")
-            if x_uid and x_uid.isdigit():
-                user_id = int(x_uid)
-        if not user_id:
-            auth_hdr = request.headers.get("Authorization")
-            if auth_hdr and auth_hdr.startswith("Bearer "):
-                tok = auth_hdr.split("Bearer ")[1].strip()
-                if tok.isdigit():
-                    user_id = int(tok)
-                else:
-                    conn = get_db()
-                    cur = conn.cursor()
-                    cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE email = ? OR name = ?", (tok, tok))
-                    r = cur.fetchone()
-                    conn.close()
-                    if r:
-                        user = dict(r)
-                        user_id = user["id"]
-        if not user_id:
-            c_cookie = request.cookies.get("auth_user_id")
-            if c_cookie and c_cookie.isdigit():
-                user_id = int(c_cookie)
-        if not user_id and hasattr(request, "query_params"):
-            q_uid = request.query_params.get("user_id")
-            if q_uid and q_uid.isdigit():
-                user_id = int(q_uid)
-
-    if user_id and not user:
+        user = get_authenticated_user(request)
+    
+    # Si no hay usuario por sesión pero se especificó user_id_param internamente
+    if not user and user_id_param:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE id = ?", (user_id,))
+        cur.execute("SELECT id, name, area, role, email, departamento_id, status FROM users WHERE id = ? AND status = 'Activo'", (user_id_param,))
         r = cur.fetchone()
         conn.close()
         if r:
             user = dict(r)
 
-    # Fallback si no hay sesión: seleccionar el primer coordinador activo
     if not user:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1")
-        r = cur.fetchone()
-        conn.close()
-        if r:
-            user = dict(r)
+        return None, None
 
     # Resolver departamento_id
-    depto_id = None
-    if user:
-        depto_id = user.get("departamento_id")
-        user_role = (user.get("role") or "").upper()
-        if user_role == "ADMINISTRADOR" and explicit_depto_id:
-            depto_id = explicit_depto_id
-    elif explicit_depto_id:
+    depto_id = user.get("departamento_id")
+    user_role = (user.get("role") or "").upper()
+    if user_role == "ADMINISTRADOR" and explicit_depto_id:
         depto_id = explicit_depto_id
-
-    # Si aún no hay departamento_id pero hay área en el usuario, buscar en tabla departamentos
-    if not depto_id and user and user.get("area"):
+    elif not depto_id and user.get("area"):
         conn = get_db()
         cur = conn.cursor()
         norm_area = normalize_area_name(user.get("area"))
@@ -860,6 +837,16 @@ def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional
     Utiliza claves foráneas relacionales (departamento_id), NO el campo de texto 'area'.
     """
     user, coordinator_depto_id = get_authenticated_coordinator(request, explicit_depto_id=departamento_id)
+    if not user:
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Autenticación requerida. Inicie sesión para acceder a la Mesa de Asignación."}
+        )
+    if (user.get("role") or "").upper() not in ("COORDINADOR", "ADMINISTRADOR"):
+        return JSONResponse(
+            status_code=403,
+            content={"error": "Acceso denegado: Se requiere rol de Coordinador o Administrador."}
+        )
 
     # Si se especificó departamento_id por query y el usuario es ADMIN o coincide, usarlo
     if departamento_id:
@@ -921,6 +908,57 @@ def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional
     conn.close()
     return tickets
 
+@app.get("/api/tickets/pending-verification")
+def get_pending_verification_tickets(departamento_id: Optional[int] = None, request: Request = None):
+    """
+    Retorna los tickets en estado 'POR_VERIFICAR' del departamento del coordinador.
+    Permite al coordinador validar la calidad de la atención, notas del operador y puntos sugeridos.
+    """
+    user, coordinator_depto_id = get_authenticated_coordinator(request, explicit_depto_id=departamento_id)
+    if not user:
+        return JSONResponse(status_code=401, content={"error": "Autenticación requerida."})
+    if (user.get("role") or "").upper() not in ("COORDINADOR", "ADMINISTRADOR"):
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado: Solo coordinadores o administradores."})
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT et.id, et.ticket_code, et.sender_email, et.subject, et.full_body, et.area,
+           et.departamento_id, COALESCE(d.nombre, et.area) as departamento_nombre,
+           COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo,
+           et.subscriber_code, et.serial_pon, et.node_name, et.slot_pon, et.mac_address,
+           et.status, et.claimed_by_user_id, et.operador_id,
+           COALESCE(u_op.name, u_claim.name, 'Especialista') as operador_nombre,
+           COALESCE(u_op.avatar, 'OP') as operador_avatar,
+           tt.name as suggested_task_name, tt.points as suggested_points, tt.id as suggested_task_id, tt.code as task_code,
+           COALESCE(tt.sla_minutes, 30) as sla_minutes,
+           COALESCE(et.fecha_creacion, et.created_at) as fecha_creacion,
+           et.fecha_inicio_atencion, et.claimed_at,
+           et.paused_at, COALESCE(et.total_paused_seconds, 0) as total_paused_seconds,
+           et.fecha_cierre, et.completed_at, et.duracion_atencion_minutos,
+           et.created_at, et.source,
+           COALESCE(h.nota_cambio, 'Caso resuelto por el operador. Pendiente de verificación.') as resolution_notes
+    FROM email_tickets et
+    LEFT JOIN departamentos d ON et.departamento_id = d.id
+    LEFT JOIN users u_op ON et.operador_id = u_op.id
+    LEFT JOIN users u_claim ON et.claimed_by_user_id = u_claim.id
+    LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
+    LEFT JOIN ticket_historial_estados h ON (h.ticket_id = et.id AND h.estado_nuevo = 'POR_VERIFICAR')
+    WHERE (et.departamento_id = ? OR ? = 1)
+      AND UPPER(et.status) = 'POR_VERIFICAR'
+    ORDER BY et.completed_at DESC, et.id DESC
+    """, (coordinator_depto_id, 1 if (user.get("role") or "").upper() == "ADMINISTRADOR" else 0))
+    
+    rows = cur.fetchall()
+    tickets = []
+    for r in rows:
+        t = dict(r)
+        pts = t.get("suggested_points") or 2
+        t["priority"] = "P5" if pts >= 8 else "P4" if pts >= 5 else "P3" if pts >= 3 else "P2" if pts >= 2 else "P1"
+        tickets.append(t)
+    conn.close()
+    return tickets
+
 @app.get("/api/tickets/my-assignments")
 def get_my_assignments(request: Request, user_id: Optional[int] = None, filter_status: Optional[str] = None):
     """
@@ -932,10 +970,10 @@ def get_my_assignments(request: Request, user_id: Optional[int] = None, filter_s
     cur = conn.cursor()
 
     if not user_id and request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
-        if not user_id:
+        auth_u = get_authenticated_user(request)
+        if auth_u:
+            user_id = auth_u["id"]
+        else:
             x_uid = request.headers.get("X-User-Id")
             if x_uid and x_uid.isdigit():
                 user_id = int(x_uid)
@@ -1406,11 +1444,19 @@ def assign_ticket(ticket_id: int, request: Request, payload: AssignTicketPayload
 
     # Resolver quién ejecuta la asignación (Coordinador autenticado)
     caller, coord_depto_id = get_authenticated_coordinator(request, payload.coordinador_id)
+    if not caller:
+        conn.close()
+        return JSONResponse(status_code=401, content={"error": "Autenticación requerida. Debe iniciar sesión como Coordinador o Administrador."})
+
+    caller_role = (caller.get("role") or "").upper()
+    if caller_role not in ("COORDINADOR", "ADMINISTRADOR"):
+        conn.close()
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado: Se requiere rol de Coordinador o Administrador para asignar tickets."})
 
     ticket_depto_id = t_row["departamento_id"]
     operator_depto_id = u_row["departamento_id"]
 
-    is_admin = caller and (caller.get("role") or "").upper() == "ADMINISTRADOR"
+    is_admin = caller_role == "ADMINISTRADOR"
 
     # 1. Validación de departamento del Coordinador con el Ticket
     if coord_depto_id and ticket_depto_id and not is_admin:
@@ -1517,10 +1563,10 @@ def start_ticket_work(ticket_id: int, request: Request):
 
     user_id = None
     if request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
-        if not user_id:
+        auth_u = get_authenticated_user(request)
+        if auth_u:
+            user_id = auth_u["id"]
+        else:
             x_uid = request.headers.get("X-User-Id")
             if x_uid and x_uid.isdigit():
                 user_id = int(x_uid)
@@ -1580,12 +1626,12 @@ def claim_ticket(ticket_id: int, payload: Optional[ClaimTicketPayload] = None, r
     conn = get_db()
     cur = conn.cursor()
     
-    # Resolver user_id desde payload o cookie de sesión
+    # Resolver user_id desde payload o sesión autenticada
     user_id = payload.user_id if payload and payload.user_id else None
     if not user_id and request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
+        auth_u = get_authenticated_user(request)
+        if auth_u:
+            user_id = auth_u["id"]
     if not user_id:
         user_id = 16  # Default: José Corobo (Especialista Soporte)
         
@@ -1756,11 +1802,12 @@ def complete_ticket_automated(ticket_id: int, payload: AutoCompleteTicketPayload
     ticket_code = row["ticket_code"]
     user_id = row["operador_id"] or row["claimed_by_user_id"]
     if not user_id and request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
+        caller = get_authenticated_user(request)
+        if caller:
+            user_id = caller["id"]
     if not user_id:
-        user_id = 27
+        conn.close()
+        return JSONResponse(status_code=400, content={"error": "No se puede completar el ticket sin un operador asignado o autenticado."})
         
     area = row["area"]
     claimed_at_str = row["fecha_inicio_atencion"] or row["claimed_at"]
@@ -1852,18 +1899,17 @@ def verify_ticket_coordinator(ticket_id: int, payload: Optional[VerifyTicketPayl
 
     payload = payload or VerifyTicketPayload()
 
-    # Resolver coordinador desde payload, Bearer token o cookie de sesión
-    coord_id = payload.coordinador_id
-    if not coord_id and request:
-        auth_hdr = request.headers.get("Authorization")
-        if auth_hdr and auth_hdr.startswith("Bearer "):
-            tok = auth_hdr.split("Bearer ")[1].strip()
-            if tok.isdigit():
-                coord_id = int(tok)
-        if not coord_id:
-            c_cookie = request.cookies.get("auth_user_id")
-            if c_cookie and c_cookie.isdigit():
-                coord_id = int(c_cookie)
+    # Resolver coordinador autenticado
+    caller, coord_depto_id = get_authenticated_coordinator(request, payload.coordinador_id if payload else None)
+    if not caller:
+        conn.close()
+        return JSONResponse(status_code=401, content={"error": "Autenticación requerida. Inicie sesión como Coordinador o Administrador."})
+
+    coord_id = caller["id"]
+    caller_role = (caller.get("role") or "").upper()
+    if caller_role not in ("COORDINADOR", "ADMINISTRADOR"):
+        conn.close()
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado: Solo el Coordinador de área o Administrador puede verificar tickets."})
 
     # Obtener datos del ticket
     cur.execute("""
@@ -1876,6 +1922,16 @@ def verify_ticket_coordinator(ticket_id: int, payload: Optional[VerifyTicketPayl
     if not row:
         conn.close()
         return JSONResponse(status_code=404, content={"error": "Ticket no encontrado"})
+
+    ticket_depto_id = row["departamento_id"]
+    is_admin = caller_role == "ADMINISTRADOR"
+    if coord_depto_id and ticket_depto_id and not is_admin:
+        if coord_depto_id != ticket_depto_id:
+            conn.close()
+            return JSONResponse(
+                status_code=403,
+                content={"error": f"Acceso denegado: El ticket pertenece al departamento {ticket_depto_id}, diferente al del coordinador ({coord_depto_id})."}
+            )
 
     if row["status"] not in ("POR_VERIFICAR", "COMPLETADO"):
         conn.close()
@@ -1992,19 +2048,15 @@ def reply_to_ticket(ticket_id: int, payload: TicketReplyPayload, request: Reques
     cur = conn.cursor()
 
     # 1. Identificar usuario activo
-    user_id = 27  # Default José Corobo
-    if request:
-        cookie_val = request.cookies.get("auth_user_id")
-        if cookie_val and cookie_val.isdigit():
-            user_id = int(cookie_val)
+    caller = get_authenticated_user(request) if request else None
+    if not caller:
+        conn.close()
+        return JSONResponse(status_code=401, content={"error": "Autenticación requerida para enviar respuestas."})
 
-    cur.execute("SELECT id, name, role, area, email FROM users WHERE id = ?", (user_id,))
-    u_row = cur.fetchone()
-    conn.close()
-
-    user_name = u_row["name"] if u_row else "José Corobo"
-    user_role = u_row["role"] if u_row else "ESPECIALISTA"
-    user_area = u_row["area"] if u_row else "Soporte"
+    user_id = caller["id"]
+    user_name = caller["name"]
+    user_role = caller["role"]
+    user_area = caller["area"]
     client_ip = request.client.host if request and request.client else "127.0.0.1"
 
     # 2. Despachar correo saliente vía SMTP
@@ -2111,21 +2163,6 @@ def get_reports_summary_endpoint(area: str = "Todas", range_filter: str = "all")
     """
     return get_managerial_summary(area=area, range_filter=range_filter)
 
-@app.get("/api/reports/export/excel")
-def export_reports_excel_endpoint(area: str = "Todas", range_filter: str = "all"):
-    """
-    Genera y descarga en 1 clic el libro Excel corporativo (.xlsx) con 3 hojas:
-    1. Resumen Ejecutivo y Áreas
-    2. Productividad por Especialista
-    3. Log Detallado de Auditoría Técnica
-    """
-    stream = generate_excel_report(area=area, range_filter=range_filter)
-    filename = f"Reporte_Gerencial_Operaciones_IP_{area}_{range_filter}.xlsx"
-    return StreamingResponse(
-        stream,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
 
 # =============================================================
 # =============================================================
@@ -2149,11 +2186,19 @@ def auth_login(req: LoginRequest, request: Request = None):
     user = cur.fetchone()
     conn.close()
     
-    # Validar credenciales (flexible para entorno de laboratorio y pruebas)
-    is_admin_quick = (req_email == "admin@inter.com.ve" and req.password in ["admin", "admin2026", "inter2026", "123456", "admin123"])
-    is_valid_hash = user and (user["password_hash"] == pass_hash or req.password in ["inter2026", "admin2026", "admin", "123456"])
+    if not user:
+        return JSONResponse(status_code=401, content={"status": "error", "message": "Credenciales inválidas. Verifique su correo o contraseña."})
+
+    # Verificación de hash criptográfico SHA-256
+    stored_hash = user["password_hash"]
+    if stored_hash:
+        is_valid = (stored_hash == pass_hash)
+    else:
+        # Fallback para usuarios iniciales cuyo hash pudiera ser nulo
+        default_hash = hashlib.sha256("inter2026".encode('utf-8')).hexdigest()
+        is_valid = (pass_hash == default_hash)
     
-    if user and (is_valid_hash or is_admin_quick):
+    if is_valid:
         user_data = {
             "id": user["id"],
             "name": user["name"],
@@ -2175,23 +2220,24 @@ def auth_login(req: LoginRequest, request: Request = None):
             details=f"Acceso concedido al sistema para {user['name']} ({user['email']})",
             ip_address=client_ip
         )
-        res = JSONResponse(content={"status": "ok", "user": user_data})
-        res.set_cookie(key="auth_user_id", value=str(user["id"]), httponly=True, max_age=86400, samesite="lax")
+        signed_cookie = sign_session_user_id(user["id"])
+        res = JSONResponse(content={"status": "ok", "user": user_data, "token": str(user["id"])})
+        res.set_cookie(key="auth_user_id", value=signed_cookie, httponly=True, max_age=86400, samesite="lax")
         return res
         
     return JSONResponse(status_code=401, content={"status": "error", "message": "Credenciales inválidas. Verifique su correo o contraseña."})
 
 @app.post("/api/auth/logout")
 def auth_logout(request: Request = None):
-    user_id_cookie = request.cookies.get("auth_user_id") if request else None
+    caller = get_authenticated_user(request) if request else None
     client_ip = request.client.host if request and request.client else "127.0.0.1"
-    if user_id_cookie and user_id_cookie.isdigit():
+    if caller:
         log_audit_event(
-            user_id=int(user_id_cookie),
+            user_id=caller["id"],
             action="CIERRE_SESION",
             entity_type="AUTH",
-            entity_id=user_id_cookie,
-            details=f"Sesión finalizada por el usuario",
+            entity_id=str(caller["id"]),
+            details=f"Sesión finalizada por {caller['name']}",
             ip_address=client_ip
         )
     res = JSONResponse(content={"status": "ok"})
@@ -2204,9 +2250,17 @@ class SwitchUserPayload(BaseModel):
 @app.post("/api/auth/switch-user")
 def auth_switch_user(payload: SwitchUserPayload, request: Request = None):
     """
-    Permite alternar en 1 clic el operador activo (José Corobo, David Rodríguez, etc.)
-    para verificar y operar el sistema tal como lo haría el trabajador de cada área.
+    Permite alternar el operador activo para verificar y operar el sistema.
+    Requiere que el llamador esté autenticado con rol ADMINISTRADOR o COORDINADOR.
     """
+    caller = get_authenticated_user(request) if request else None
+    if not caller:
+        return JSONResponse(status_code=401, content={"status": "error", "message": "Autenticación requerida para conmutar de perfil."})
+        
+    caller_role = (caller.get("role") or "").upper()
+    if caller_role not in ("ADMINISTRADOR", "COORDINADOR") and caller["id"] != payload.user_id:
+        return JSONResponse(status_code=403, content={"status": "error", "message": "Acceso denegado: solo Administradores y Coordinadores pueden alternar perfiles."})
+
     conn = get_db()
     cur = conn.cursor()
     cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (payload.user_id,))
@@ -2224,12 +2278,13 @@ def auth_switch_user(payload: SwitchUserPayload, request: Request = None):
         action="CAMBIO_PERFIL",
         entity_type="AUTH",
         entity_id=str(user["id"]),
-        details=f"Conmutación activa al perfil de {user['name']} ({user['role']} - {user['area']})",
+        details=f"Conmutación activa al perfil de {user['name']} ({user['role']} - {user['area']}) solicitada por {caller['name']}",
         ip_address=client_ip
     )
     user_data = dict(user)
-    res = JSONResponse(content={"status": "ok", "user": user_data})
-    res.set_cookie(key="auth_user_id", value=str(user["id"]), httponly=True, max_age=86400, samesite="lax")
+    signed_cookie = sign_session_user_id(user["id"])
+    res = JSONResponse(content={"status": "ok", "user": user_data, "token": str(user["id"])})
+    res.set_cookie(key="auth_user_id", value=signed_cookie, httponly=True, max_age=86400, samesite="lax")
     return res
 
 @app.get("/api/auth/users")
@@ -2244,64 +2299,28 @@ def get_auth_users():
 
 @app.get("/api/auth/me")
 def get_current_user_profile(request: Request, user_id: Optional[int] = None):
-    # 0. Query param
-    if not user_id:
-        q_uid = request.query_params.get("user_id")
-        if q_uid and q_uid.isdigit():
-            user_id = int(q_uid)
-
-    # 1. Header X-User-Id
-    if not user_id:
-        x_uid = request.headers.get("X-User-Id")
-        if x_uid and x_uid.isdigit():
-            user_id = int(x_uid)
-        
-    # 2. Bearer token
-    if not user_id:
-        auth_hdr = request.headers.get("Authorization")
-        if auth_hdr and auth_hdr.startswith("Bearer "):
-            tok = auth_hdr.split("Bearer ")[1].strip()
-            if tok.isdigit():
-                user_id = int(tok)
-                
-    # 3. Cookie de sesión
-    if not user_id:
-        user_id_cookie = request.cookies.get("auth_user_id")
-        if user_id_cookie and user_id_cookie.isdigit():
-            user_id = int(user_id_cookie)
-            
-    conn = get_db()
-    cur = conn.cursor()
+    """
+    Retorna el perfil del usuario autenticado vía Cookie firmada HMAC o Bearer Token.
+    Si no está autenticado, responde con código 401.
+    """
+    caller = get_authenticated_user(request)
     
-    if user_id:
-        cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (user_id,))
-        row = cur.fetchone()
-        if row:
+    # Si se solicita explícitamente un user_id y quien consulta es ADMIN o COORDINADOR
+    if user_id and caller:
+        caller_role = (caller.get("role") or "").upper()
+        if caller_role in ("ADMINISTRADOR", "COORDINADOR") or caller["id"] == user_id:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE id = ?", (user_id,))
+            target = cur.fetchone()
             conn.close()
-            return dict(row)
-            
-    # Default preferido: Coordinador Adelis Mejia, sino José Corobo (Especialista)
-    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE role = 'COORDINADOR' ORDER BY id ASC LIMIT 1")
-    row = cur.fetchone()
-    if row:
-        conn.close()
-        return dict(row)
+            if target:
+                return dict(target)
 
-    cur.execute("SELECT id, name, area, role, avatar, email, shift, departamento_id FROM users WHERE email = 'joseacorobo@gmail.com' LIMIT 1")
-    row = cur.fetchone()
-    conn.close()
-    if row:
-        return dict(row)
+    if caller:
+        return caller
         
-    return {
-        "id": 1,
-        "name": "Adelis Mejia",
-        "area": "Redes de acceso y aprovisionamiento",
-        "role": "COORDINADOR",
-        "avatar": "AM",
-        "email": "adelis.mejia@inter.com.ve",
-        "departamento_id": 1
-    }
+    return JSONResponse(status_code=401, content={"error": "Sesión no activa o no autenticada"})
 
 # =============================================================
 # ENDPOINTS DE AUDITORÍA FORENSE
@@ -2407,7 +2426,7 @@ def generate_command(payload: dict):
     cmd = CommandGenerator.generate(vendor, category, command_id, params)
     if cmd:
         return {"command": cmd}
-    return {"error": "Comando no encontrado o parometros involidos."}, 400
+    return JSONResponse(status_code=400, content={"error": "Comando no encontrado o parámetros inválidos."})
 
 # =============================================================
 # ENDPOINTS: MÉTRICAS DE CARGA DE TRABAJO Y EXPORTACIÓN EXCEL
@@ -2444,7 +2463,7 @@ class ActiveTicketDetailModel(BaseModel):
     sla_minutes: int = 0
     sla_percentage: float = 0.0
     sla_status: str = "ok"
-    sla_label: Optional[str] = "Dentro de SLA"
+    sla_label: Optional[str] = "Dentro de Tiempo Objetivo"
     sla_color: Optional[str] = "blue"
 
 class OperatorWorkloadDetail(BaseModel):

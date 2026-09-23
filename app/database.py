@@ -35,15 +35,16 @@ def init_db():
         ('REDES_WAN', 'Redes WAN', 'Enrutamiento troncal, BGP, MPLS y conectividad interurbana', 1),
         ('SEGURIDAD', 'Seguridad', 'Políticas perimetrales, firewalls, mitigación de ataques y accesos IP', 1),
         ('TELEFONIA', 'Telefonia', 'Servidores SIP, gateways de voz, troncales IP y numeración', 1),
-        ('GRANDES_CUENTAS', 'Grandes Cuentas', 'Atención técnica especializada a clientes corporativos, enlaces dedicados y cuentas VIP', 1)
+        ('GRANDES_CLIENTES', 'Grandes Clientes', 'Atención técnica especializada a clientes corporativos, enlaces dedicados y cuentas VIP', 1)
     ]
+    cursor.execute("UPDATE departamentos SET codigo = 'GRANDES_CLIENTES', nombre = 'Grandes Clientes' WHERE codigo = 'GRANDES_CUENTAS'")
     cursor.executemany("""
     INSERT OR IGNORE INTO departamentos (codigo, nombre, descripcion, activo)
     VALUES (?, ?, ?, ?)
     """, deptos_oficiales)
     for code, nom, desc, act in deptos_oficiales:
         cursor.execute("UPDATE departamentos SET nombre = ?, descripcion = ?, activo = ? WHERE codigo = ?", (nom, desc, act, code))
-    cursor.execute("DELETE FROM departamentos WHERE codigo NOT IN ('ACCESO_APROV', 'TRAFICO_INALAMBRICO', 'REDES_WAN', 'SEGURIDAD', 'TELEFONIA', 'GRANDES_CUENTAS')")
+    cursor.execute("DELETE FROM departamentos WHERE codigo NOT IN ('ACCESO_APROV', 'TRAFICO_INALAMBRICO', 'REDES_WAN', 'SEGURIDAD', 'TELEFONIA', 'GRANDES_CLIENTES')")
 
     # 2. Usuarios y Roles (Soporta Autenticación RBAC y Operadores por Departamento)
     cursor.execute("""
@@ -84,10 +85,10 @@ def init_db():
             WHEN area IN ('Telefonía', 'Telefonia') THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
             WHEN area LIKE '%Seguridad%' THEN (SELECT id FROM departamentos WHERE codigo = 'SEGURIDAD')
             WHEN area LIKE '%Tráfico%' OR area LIKE '%Trafico%' THEN (SELECT id FROM departamentos WHERE codigo = 'TRAFICO_INALAMBRICO')
-            WHEN area LIKE '%Grandes%' OR area LIKE '%Corporativo%' THEN (SELECT id FROM departamentos WHERE codigo = 'GRANDES_CUENTAS')
+            WHEN area LIKE '%Grandes%' OR area LIKE '%Corporativo%' THEN (SELECT id FROM departamentos WHERE codigo = 'GRANDES_CLIENTES')
             ELSE (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
         END
-    ) WHERE departamento_id IS NULL
+    ) WHERE departamento_id IS NULL OR departamento_id NOT IN (SELECT id FROM departamentos)
     """)
     
     # Catálogo de Tareas P1 a P5
@@ -103,7 +104,7 @@ def init_db():
     )
     """)
 
-    # Catálogo Oficial de Tareas P1 a P5 para las 5 Áreas Técnicas
+    # Catálogo Oficial de Tareas P1 a P5 para las 6 Áreas Técnicas
     catalogo_tareas = [
         # Redes de acceso y aprovisionamiento
         ("P1-SOP-01", "Verificación Estado ONT (Discovery/Whitelist)", "Redes de acceso y aprovisionamiento", 1, 10, "Consulta de señal y estado L2"),
@@ -143,13 +144,21 @@ def init_db():
         ("P2-TRAF-01", "Diagnóstico de Pérdida de Paquetes Wireless", "Control de Trafico y Redes inalambricas", 2, 25, "Análisis de interferencia RF"),
         ("P3-TRAF-01", "Ajuste QoS y Balanceo de Tráfico RF", "Control de Trafico y Redes inalambricas", 3, 45, "Reconfiguración de colas de tráfico"),
         ("P4-TRAF-01", "Reconfiguración Shaping y Ancho de Banda Microondas", "Control de Trafico y Redes inalambricas", 5, 60, "Optimización de tasa de transmisión"),
-        ("P5-TRAF-01", "Recuperación de Caída de Enlace Troncal Microondas", "Control de Trafico y Redes inalambricas", 8, 120, "Restablecimiento de enlace PTP")
+        ("P5-TRAF-01", "Recuperación de Caída de Enlace Troncal Microondas", "Control de Trafico y Redes inalambricas", 8, 120, "Restablecimiento de enlace PTP"),
+
+        # Grandes Clientes
+        ("P1-GC-01", "Monitoreo y Diagnóstico Enlace Corporativo Dedicado", "Grandes Clientes", 1, 15, "Consulta de disponibilidad de enlace corporativo"),
+        ("P2-GC-01", "Verificación Rendimiento y Latencia de Enlace VIP", "Grandes Clientes", 2, 25, "Validación de parámetros y estabilidad corporativa"),
+        ("P3-GC-01", "Reconfiguración BGP / Prefijos IP Grandes Clientes", "Grandes Clientes", 3, 40, "Ajuste de enrutamiento y filtros de prefijos"),
+        ("P4-GC-01", "Atención VIP Enlace Corporativo Simétrico", "Grandes Clientes", 5, 60, "Soporte de alta prioridad a circuito privado"),
+        ("P5-GC-01", "Restauración Crítica Red WAN / Failover Corporativo", "Grandes Clientes", 8, 120, "Recuperación de contingencia en enlace dedicado")
     ]
-    cursor.execute("DELETE FROM task_types WHERE code LIKE 'P%-GC-%'")
     cursor.executemany("""
     INSERT OR IGNORE INTO task_types (code, name, area, points, sla_minutes, description)
     VALUES (?, ?, ?, ?, ?, ?)
     """, catalogo_tareas)
+    for code, nom, area_t, pts, sla_m, desc in catalogo_tareas:
+        cursor.execute("UPDATE task_types SET name = ?, area = ?, points = ?, sla_minutes = ?, description = ? WHERE code = ?", (nom, area_t, pts, sla_m, desc, code))
     
     # Tickets de Correo con Parámetros Técnicos Extraídos y Tiempos de Cronómetro
     cursor.execute("""
@@ -278,6 +287,7 @@ def init_db():
                 WHEN area IN ('Telefonía', 'Telefonia') THEN (SELECT id FROM departamentos WHERE codigo = 'TELEFONIA')
                 WHEN area LIKE '%Seguridad%' THEN (SELECT id FROM departamentos WHERE codigo = 'SEGURIDAD')
                 WHEN area LIKE '%Tráfico%' OR area LIKE '%Trafico%' THEN (SELECT id FROM departamentos WHERE codigo = 'TRAFICO_INALAMBRICO')
+                WHEN area LIKE '%Grandes%' OR area LIKE '%Corporativo%' THEN (SELECT id FROM departamentos WHERE codigo = 'GRANDES_CLIENTES')
                 ELSE (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV')
             END
         )),
@@ -350,6 +360,25 @@ def init_db():
         VALUES ('José Corobo', 'joseacorobo@gmail.com', ?, 'Redes de acceso y aprovisionamiento', 'ESPECIALISTA', 'JC', 'Mañana', 'Activo',
                 (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV'))
         """, (pass_hash,))
+
+    # Perfiles de prueba dedicados: Coordinador y Operador (Especialista)
+    import hashlib
+    test_hash = hashlib.sha256("inter2026".encode("utf-8")).hexdigest()
+    cursor.execute("SELECT id FROM users WHERE email = 'coordinador.pruebas@inter.com.ve'")
+    if not cursor.fetchone():
+        cursor.execute("""
+        INSERT INTO users (name, email, password_hash, area, role, avatar, shift, status, departamento_id)
+        VALUES ('Coordinador de Pruebas', 'coordinador.pruebas@inter.com.ve', ?, 'Redes de acceso y aprovisionamiento', 'COORDINADOR', 'CP', 'Mañana', 'Activo',
+                (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV'))
+        """, (test_hash,))
+
+    cursor.execute("SELECT id FROM users WHERE email = 'operador.pruebas@inter.com.ve'")
+    if not cursor.fetchone():
+        cursor.execute("""
+        INSERT INTO users (name, email, password_hash, area, role, avatar, shift, status, departamento_id)
+        VALUES ('Operador de Pruebas', 'operador.pruebas@inter.com.ve', ?, 'Redes de acceso y aprovisionamiento', 'ESPECIALISTA', 'OP', 'Mañana', 'Activo',
+                (SELECT id FROM departamentos WHERE codigo = 'ACCESO_APROV'))
+        """, (test_hash,))
 
     conn.commit()
     conn.close()

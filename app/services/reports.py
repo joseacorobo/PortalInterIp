@@ -24,22 +24,22 @@ def get_managerial_summary(area: str = "Todas", range_filter: str = "all") -> di
     cur = conn.cursor()
     
     range_sql = _get_range_condition(range_filter)
-    if area == "Todas":
+    if area in ["Todas", "Todas las Áreas", "Todas las Células"]:
         area_sql = "1=1"
         user_area_sql = "1=1"
         params = []
     elif area in ["Acceso", "Redes de Acceso"]:
-        area_sql = "tl.area IN ('Soporte', 'Cabecera')"
-        user_area_sql = "u.area IN ('Soporte', 'Cabecera')"
+        area_sql = "tl.area IN ('Soporte', 'Cabecera', 'Redes de acceso y aprovisionamiento')"
+        user_area_sql = "u.area IN ('Soporte', 'Cabecera', 'Redes de acceso y aprovisionamiento')"
         params = []
     elif area in ["Servicios", "Servicios y Clientes"]:
-        area_sql = "tl.area IN ('Telefonía')"
-        user_area_sql = "u.area IN ('Telefonía')"
+        area_sql = "tl.area IN ('Telefonía', 'Telefonia')"
+        user_area_sql = "u.area IN ('Telefonía', 'Telefonia')"
         params = []
     else:
-        area_sql = "tl.area = ?"
-        user_area_sql = "u.area = ?"
-        params = [area]
+        area_sql = "(tl.area = ? OR tl.area LIKE ?)"
+        user_area_sql = "(u.area = ? OR u.area LIKE ?)"
+        params = [area, f"%{area}%"]
     
     # 1. KPIs Globales
     cur.execute(f"""
@@ -58,7 +58,7 @@ def get_managerial_summary(area: str = "Todas", range_filter: str = "all") -> di
     total_net_hours = round((kpi_row[3] or 0) / 60, 1)
     total_wait_hours = round((kpi_row[4] or 0) / 60, 1)
     
-    # Cumplimiento SLA
+    # Cumplimiento del Tiempo Objetivo (SLA)
     cur.execute(f"""
     SELECT COUNT(tl.id)
     FROM task_logs tl
@@ -68,21 +68,31 @@ def get_managerial_summary(area: str = "Todas", range_filter: str = "all") -> di
     within_sla = cur.fetchone()[0] or 0
     sla_compliance = round((within_sla / total_tasks * 100), 1) if total_tasks > 0 else 100.0
 
-    # 2. Desglose por Células / Áreas Funcionales
-    areas_list = ["Soporte", "Cabecera", "Telefonía"]
+    # 2. Desglose por Células / Áreas Funcionales (6 Departamentos Oficiales)
+    cur.execute("SELECT id, codigo, nombre FROM departamentos WHERE activo = 1 ORDER BY id ASC")
+    dept_rows = cur.fetchall()
+    areas_list = [(r["id"], r["codigo"], r["nombre"]) for r in dept_rows] if dept_rows else [
+        (1, "ACCESO_APROV", "Redes de acceso y aprovisionamiento"),
+        (2, "TRAFICO_INALAMBRICO", "Control de Trafico y Redes inalambricas"),
+        (3, "REDES_WAN", "Redes WAN"),
+        (4, "SEGURIDAD", "Seguridad"),
+        (5, "TELEFONIA", "Telefonia"),
+        (6, "GRANDES_CLIENTES", "Grandes Clientes")
+    ]
+    
     area_breakdown = []
-    for a in areas_list:
+    for d_id, d_code, a_name in areas_list:
         cur.execute(f"""
         SELECT COUNT(tl.id), COALESCE(SUM(tl.points), 0), COALESCE(AVG(tl.net_duration), 0)
         FROM task_logs tl
-        WHERE {range_sql} AND tl.area = ?
-        """, [a])
+        WHERE {range_sql} AND (tl.area = ? OR tl.area LIKE ?)
+        """, [a_name, f"%{a_name}%"])
         r = cur.fetchone()
         a_tasks, a_points, a_mttr = r[0] or 0, r[1] or 0, round(r[2] or 0, 1)
         
         # Cantidad de especialistas
-        cur.execute("SELECT COUNT(*) FROM users WHERE area = ?", [a])
-        techs_count = cur.fetchone()[0] or 4
+        cur.execute("SELECT COUNT(*) FROM users WHERE departamento_id = ? OR area = ? OR area LIKE ?", [d_id, a_name, f"%{a_name}%"])
+        techs_count = cur.fetchone()[0] or 2
         pts_per_tech = round(a_points / techs_count, 1) if techs_count else 0
         
         if pts_per_tech <= 25:
@@ -96,9 +106,12 @@ def get_managerial_summary(area: str = "Todas", range_filter: str = "all") -> di
             badge = "danger"
             
         area_breakdown.append({
-            "area": a,
+            "departamento_id": d_id,
+            "departamento_codigo": d_code,
+            "area": a_name,
             "total_tasks": a_tasks,
             "total_points": a_points,
+            "tiempo_promedio_solucion": a_mttr,
             "avg_mttr": a_mttr,
             "techs_count": techs_count,
             "pts_per_tech": pts_per_tech,
@@ -202,9 +215,11 @@ def get_managerial_summary(area: str = "Todas", range_filter: str = "all") -> di
         "kpis": {
             "total_points": total_points,
             "total_tasks": total_tasks,
+            "tiempo_promedio_solucion": avg_mttr,
             "avg_mttr": avg_mttr,
             "total_net_hours": total_net_hours,
             "total_wait_hours": total_wait_hours,
+            "cumplimiento_tiempo_objetivo": sla_compliance,
             "sla_compliance": sla_compliance
         },
         "area_breakdown": area_breakdown,
@@ -265,7 +280,7 @@ def generate_excel_report(area: str = "Todas", range_filter: str = "all") -> io.
     ws1["A1"].alignment = align_left
     
     ws1.merge_cells("A2:G2")
-    ws1["A2"] = f"División: Redes de Acceso y Aprovisionamiento | Filtro Área: {area} | Temporal: {range_filter.upper()} | Generado: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    ws1["A2"] = f"División: Operaciones IP FTTH | Filtro Área: {area} | Temporal: {range_filter.upper()} | Generado: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
     ws1["A2"].font = f_subtitle
     ws1["A2"].alignment = align_left
     
@@ -274,8 +289,8 @@ def generate_excel_report(area: str = "Todas", range_filter: str = "all") -> io.
     kpi_cards = [
         ("PUNTOS TOTALES", f"{kpis['total_points']} pts", "A4:B5"),
         ("TICKETS RESUELTOS", f"{kpis['total_tasks']}", "C4:D5"),
-        ("MTTR PROMEDIO NETO", f"{kpis['avg_mttr']} min", "E4:E5"),
-        ("CUMPLIMIENTO SLA", f"{kpis['sla_compliance']}%", "F4:G5")
+        ("TIEMPO PROM. DE SOLUCIÓN", f"{kpis['avg_mttr']} min", "E4:E5"),
+        ("CUMPLIMIENTO TIEMPO OBJETIVO", f"{kpis['sla_compliance']}%", "F4:G5")
     ]
     for lbl, val, range_str in kpi_cards:
         cells = list(ws1[range_str])
@@ -293,7 +308,7 @@ def generate_excel_report(area: str = "Todas", range_filter: str = "all") -> io.
     ws1["A7"] = "BALANCE DE CARGA POR CÉLULA FUNCIONAL"
     ws1["A7"].font = f_bold
     
-    headers_ws1 = ["Célula / Área", "Especialistas", "Tickets Resueltos", "Puntos Totales", "% Participación", "MTTR Promedio (min)", "Estado de Carga"]
+    headers_ws1 = ["Célula / Departamento", "Especialistas", "Tickets Resueltos", "Puntos Totales", "% Participación", "Tiempo Prom. Solución (min)", "Estado de Carga"]
     for col_idx, h in enumerate(headers_ws1, 1):
         cell = ws1.cell(row=8, column=col_idx, value=h)
         cell.font = f_header
@@ -334,9 +349,9 @@ def generate_excel_report(area: str = "Todas", range_filter: str = "all") -> io.
     ws2["A1"].font = f_title
     
     headers_ws2 = [
-        "Especialista", "Célula / Área", "Rol Funcional", "Tickets", "Puntos Totales", 
+        "Especialista", "Célula / Departamento", "Rol Funcional", "Tickets", "Puntos Totales", 
         "Pts/Ticket", "P1 (1pt)", "P2 (2pts)", "P3 (3pts)", "P4 (5pts)", "P5 (8pts)", 
-        "MTTR Prom (min)", "Estado de Carga"
+        "Tiempo Prom. Solución (min)", "Estado de Carga"
     ]
     for col_idx, h in enumerate(headers_ws2, 1):
         cell = ws2.cell(row=3, column=col_idx, value=h)
@@ -395,7 +410,7 @@ def generate_excel_report(area: str = "Todas", range_filter: str = "all") -> io.
     headers_ws3 = [
         "Ticket", "Fecha y Hora", "Duración Bruta (m)", "Pausa Terreno (m)", "Duración Neta (m)", 
         "Puntos", "Especialista", "Célula", "Abonado (10d)", "Permisor", "Serial PON (12c)", 
-        "Nodo OLT", "Slot / PON", "MAC Abonado", "Tarea DERS", "Código Tarea", "SLA (min)", "Notas de Resolución"
+        "Nodo OLT", "Slot / PON", "MAC Abonado", "Tarea DERS", "Código Tarea", "Tiempo Objetivo (min)", "Notas de Resolución"
     ]
     for col_idx, h in enumerate(headers_ws3, 1):
         cell = ws3.cell(row=3, column=col_idx, value=h)
@@ -559,15 +574,15 @@ def get_current_workload(area: str = "Todas") -> dict:
             
             if sla_pct >= 100:
                 sla_status = "breached"
-                sla_label = "SLA Excedido"
+                sla_label = "Tiempo Objetivo Excedido"
                 sla_color = "red"
             elif sla_pct >= 75:
                 sla_status = "warning"
-                sla_label = "SLA Crítico"
+                sla_label = "Tiempo Límite Próximo"
                 sla_color = "amber"
             else:
                 sla_status = "normal"
-                sla_label = "En Tiempo"
+                sla_label = "En Tiempo Objetivo"
                 sla_color = "emerald"
                 
             processed_tickets.append({
@@ -703,14 +718,16 @@ def get_current_workload(area: str = "Todas") -> dict:
                 areas_dict[a_name]["operators_set"].add(t["operator_id"])
             areas_dict[a_name]["tickets"].append(t)
             
-        canonical_areas = ["Soporte", "Cabecera", "Telefonía"]
-        for ca in canonical_areas:
-            if ca not in areas_dict and (area == "Todas" or area == ca or (area in ["Acceso", "Redes de Acceso"] and ca in ["Soporte", "Cabecera"])):
-                areas_dict[ca] = {
-                    "area": ca,
-                    "department_id": 1 if ca in ["Soporte", "Cabecera"] else 4,
-                    "department_name": "Redes de Acceso y Aprovisionamiento" if ca in ["Soporte", "Cabecera"] else "Telefonía VoIP",
-                    "department_code": "ACCESO_APROV" if ca in ["Soporte", "Cabecera"] else "TELEFONIA",
+        cur.execute("SELECT id, codigo, nombre FROM departamentos WHERE activo = 1 ORDER BY id ASC")
+        all_official_deptos = cur.fetchall()
+        for dept in all_official_deptos:
+            ca_name = dept["nombre"]
+            if ca_name not in areas_dict and (area in ["Todas", "Todas las Áreas", "Todas las Células"] or area == ca_name or area == dept["codigo"]):
+                areas_dict[ca_name] = {
+                    "area": ca_name,
+                    "department_id": dept["id"],
+                    "department_name": dept["nombre"],
+                    "department_code": dept["codigo"],
                     "active_tickets_count": 0,
                     "active_points": 0,
                     "operators_set": set(),

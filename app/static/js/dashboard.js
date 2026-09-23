@@ -465,7 +465,7 @@ function renderTechniciansChart(techData) {
                     callbacks: {
                         afterLabel: (ctx) => {
                             const t = techData[ctx.dataIndex];
-                            return `Area: ${t.area}\nTareas: ${t.tasks}\nMTTR: ${t.avg_mttr}m\nEstado: ${t.status}`;
+                            return `Area: ${t.area}\nTareas: ${t.tasks}\nTiempo Promedio: ${t.avg_mttr}m\nEstado: ${t.status}`;
                         }
                     }
                 }
@@ -495,7 +495,7 @@ function renderTechniciansChart(techData) {
 }
 
 function renderTechRankingTable(techData) {
-    const tbody = document.getElementById("tech-ranking-tbody");
+    const tbody = document.getElementById("tech-ranking-tbody") || document.getElementById("tbody-ranking-specialists");
     if (!tbody) return;
     tbody.innerHTML = "";
     
@@ -682,15 +682,26 @@ function renderCurrentWorkload(data) {
     }
 
     // 3. Matriz de Operadores (vista rendimiento y vista operativa / tablero)
-    const opsContainer = document.getElementById("workload-operators-grid")
-        || document.getElementById("active-operators-grid")
-        || document.getElementById("operators-grid-cards");
-    if (opsContainer) {
-        opsContainer.innerHTML = "";
+    const opsContainers = [
+        document.getElementById("active-operators-grid"),
+        document.getElementById("operators-grid-cards"),
+        document.getElementById("workload-operators-grid")
+    ].filter(Boolean);
+
+    if (opsContainers.length > 0) {
         const ops = data.by_operator || [];
-        if (ops.length === 0) {
-            opsContainer.innerHTML = '<div class="col-span-full text-center text-snow-muted text-xs py-4">No hay operadores registrados para esta célula.</div>';
-        } else {
+        const countBadge = document.getElementById("active-cases-count-badge");
+        if (countBadge) {
+            countBadge.innerText = `${ops.length} Visibles`;
+        }
+
+        opsContainers.forEach(opsContainer => {
+            opsContainer.innerHTML = "";
+            if (ops.length === 0) {
+                opsContainer.innerHTML = '<div class="col-span-full text-center text-snow-muted text-xs py-4">No hay operadores registrados para esta célula.</div>';
+                return;
+            }
+
             ops.forEach(op => {
                 const parts = (op.name || "").split(" ");
                 const initials = op.avatar || (((parts[0] ? parts[0][0] : "") + (parts[1] ? parts[1][0] : "")).toUpperCase() || "OP");
@@ -740,7 +751,7 @@ function renderCurrentWorkload(data) {
                                 </div>
                                 <div class="space-y-1 pt-0.5">
                                     <div class="flex justify-between items-center text-[10px]">
-                                        <span class="text-snow-muted">SLA: ${t.elapsed_minutes}/${t.sla_minutes}m</span>
+                                        <span class="text-snow-muted">Objetivo: ${t.elapsed_minutes}/${t.sla_minutes}m</span>
                                         <span class="font-bold text-${t.sla_color}-600 dark:text-${t.sla_color}-400">${t.sla_label} (${t.sla_percentage}%)</span>
                                     </div>
                                     <div class="w-full bg-gray-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -766,7 +777,7 @@ function renderCurrentWorkload(data) {
                 }
 
                 const opCard = `
-                    <div class="p-3.5 rounded-xl border ${borderHighlight} bg-white dark:bg-slate-900 transition flex flex-col justify-between space-y-3">
+                    <div class="operator-card p-3.5 rounded-xl border ${borderHighlight} bg-white dark:bg-slate-900 transition flex flex-col justify-between space-y-3" data-area="${op.department_code || op.area || ''}" data-op="${op.name}">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 overflow-hidden">
                                 <div class="w-8 h-8 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
@@ -789,7 +800,7 @@ function renderCurrentWorkload(data) {
                 `;
                 opsContainer.insertAdjacentHTML("beforeend", opCard);
             });
-        }
+        });
     }
 
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -1489,7 +1500,7 @@ function applyInboxFilters() {
             }
         }
 
-        // 3. Filtro por Diagnóstico / SLA
+        // 3. Filtro por Diagnóstico / Tiempo Objetivo
         const slaMin = t.sla_minutes || 30;
         let elapsedMin = 0;
         let isOverSla = false;
@@ -1572,7 +1583,7 @@ function renderOutlookMessageList(tickets) {
             .replace(/\r?\n/g, ' ')
             .substring(0, 110) + '...';
 
-        // SLA tag / diagnóstico
+        // Tiempo objetivo tag / diagnóstico
         const slaMin = t.sla_minutes || 30;
         let elapsedMin = 0;
         let isOverSla = false;
@@ -1589,9 +1600,9 @@ function renderOutlookMessageList(tickets) {
             }
             isOverSla = elapsedMin > slaMin;
             if (isOverSla) {
-                slaPill = `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-red-50 text-red-600 border border-red-100 dark:bg-red-950/40 dark:text-red-400">+${elapsedMin - slaMin}m Fuera SLA</span>`;
+                slaPill = `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-red-50 text-red-600 border border-red-100 dark:bg-red-950/40 dark:text-red-400">+${elapsedMin - slaMin}m Excedido</span>`;
             } else {
-                slaPill = `<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400">En SLA (${elapsedMin}m)</span>`;
+                slaPill = `<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400">A Tiempo (${elapsedMin}m)</span>`;
             }
         } else if (t.status === 'EN ESPERA') {
             slaPill = `<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-100 dark:bg-amber-950/40 dark:text-amber-400">Pausa Terreno</span>`;
@@ -1987,7 +1998,7 @@ function loadTicketIntoReadingPane(t) {
                         <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#0078D4] border border-blue-100 dark:bg-blue-950/40 dark:text-blue-300">${deptoName}</span>
                         <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100 dark:bg-purple-950/40 dark:text-purple-300">${t.suggested_task_name || 'Operación IP'}</span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300">+${t.suggested_points || 2} pts (P${t.suggested_points || 2})</span>
-                        <span class="text-[10px] font-mono text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">SLA: ${t.sla_minutes || 30}m</span>
+                        <span class="text-[10px] font-mono text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Tiempo objetivo: ${t.sla_minutes || 30}m</span>
                         ${isDirect ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300">Directo a mi Buzón</span>` : ''}
                     </div>
                 </div>
@@ -3532,7 +3543,7 @@ function renderTriageRow(t) {
                     <span class="font-medium text-slate-800 text-xs truncate max-w-[160px]" title="${taskName}">${taskName}</span>
                     <span class="px-1.5 py-0.2 rounded-md bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100/80">+${points} pts</span>
                 </div>
-                <span class="text-[10px] text-slate-400 mt-0.5">SLA: <strong>${sla}m</strong></span>
+                <span class="text-[10px] text-slate-400 mt-0.5">Objetivo: <strong>${sla}m</strong></span>
             </div>
         </td>
         <td class="py-3.5 px-3 align-middle whitespace-nowrap">
@@ -3572,6 +3583,9 @@ function checkCoordinatorRoleAndInitTriage(user) {
             areaBadge.textContent = "Área: " + user.area;
         }
         loadCoordinatorTriage();
+        if (typeof loadCoordinatorVerifications === 'function') {
+            loadCoordinatorVerifications();
+        }
     } else {
         if (triagePanel) triagePanel.classList.add("hidden");
         if (tabBtnCoordinacion) tabBtnCoordinacion.classList.add("hidden");
@@ -3816,6 +3830,216 @@ function checkTriageTableEmpty() {
         if (emptyState) emptyState.classList.add("hidden");
     }
 }
+
+// =============================================================
+// VERIFICACIÓN DE CALIDAD Y PUNTOS DERS (COORDINADOR)
+// =============================================================
+
+window.currentPendingVerifications = [];
+
+function switchTriageSubTab(tab) {
+    const tabAssign = document.getElementById("btn-triage-subtab-assign");
+    const tabVerify = document.getElementById("btn-triage-subtab-verify");
+    const viewAssign = document.getElementById("triage-assign-view");
+    const viewVerify = document.getElementById("triage-verify-view");
+
+    if (tab === 'verify') {
+        if (tabAssign) tabAssign.className = "px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer";
+        if (tabVerify) tabVerify.className = "px-3 py-1 rounded-md bg-white font-bold text-purple-700 shadow-2xs border border-purple-200 text-xs transition cursor-pointer flex items-center gap-1.5";
+        if (viewAssign) viewAssign.classList.add("hidden");
+        if (viewVerify) viewVerify.classList.remove("hidden");
+        loadCoordinatorVerifications();
+    } else {
+        if (tabAssign) tabAssign.className = "px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs border border-slate-200/60 text-xs transition cursor-pointer flex items-center gap-1.5";
+        if (tabVerify) tabVerify.className = "px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer";
+        if (viewAssign) viewAssign.classList.remove("hidden");
+        if (viewVerify) viewVerify.classList.add("hidden");
+        loadCoordinatorTriage();
+    }
+}
+
+function refreshCoordinatorPanel() {
+    loadCoordinatorTriage();
+    loadCoordinatorVerifications();
+}
+
+async function loadCoordinatorVerifications() {
+    const tbody = document.getElementById("verify-tickets-tbody");
+    const container = document.getElementById("verify-table-container");
+    const emptyState = document.getElementById("verify-empty-state");
+    const countLabel = document.getElementById("verify-count-label");
+
+    if (!tbody) return;
+
+    try {
+        const res = await fetch('/api/tickets/pending-verification', { credentials: 'include' });
+        if (!res.ok) return;
+        const tickets = await res.json();
+        window.currentPendingVerifications = tickets || [];
+
+        if (countLabel) {
+            countLabel.textContent = `${tickets.length}`;
+        }
+
+        if (tickets.length === 0) {
+            tbody.innerHTML = '';
+            if (container) container.classList.add("hidden");
+            if (emptyState) emptyState.classList.remove("hidden");
+        } else {
+            if (container) container.classList.remove("hidden");
+            if (emptyState) emptyState.classList.add("hidden");
+            tbody.innerHTML = tickets.map(t => renderVerifyRow(t)).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+    } catch (e) {
+        console.error("Error loading pending verifications:", e);
+    }
+}
+
+function renderVerifyRow(t) {
+    const code = escapeHtml(t.ticket_code || 'INC-' + t.id);
+    const subject = escapeHtml(t.subject || 'Sin asunto');
+    const opName = escapeHtml(t.operador_nombre || 'Especialista');
+    const taskName = escapeHtml(t.suggested_task_name || 'Operación Estándar');
+    const pts = t.suggested_points || 2;
+    const duration = t.duracion_atencion_minutos || 15;
+    const notes = escapeHtml(t.resolution_notes || 'Caso resuelto.');
+
+    return `
+    <tr id="verify-row-${t.id}" class="hover:bg-purple-50/30 transition border-b border-gray-100">
+        <td class="py-3 px-3">
+            <span class="font-mono font-bold text-xs text-[#1C58A8]">#${code}</span>
+        </td>
+        <td class="py-3 px-3 max-w-[260px]">
+            <div class="font-semibold text-slate-800 text-xs truncate" title="${subject}">${subject}</div>
+            <div class="text-[11px] text-slate-500 line-clamp-1 italic mt-0.5" title="${notes}">"${notes}"</div>
+        </td>
+        <td class="py-3 px-3 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+                <div class="w-6 h-6 rounded bg-[#1C58A8] text-white text-[10px] font-bold flex items-center justify-center">${t.operador_avatar || 'OP'}</div>
+                <span class="text-xs font-medium text-slate-800">${opName}</span>
+            </div>
+        </td>
+        <td class="py-3 px-3 whitespace-nowrap">
+            <span class="text-xs text-slate-700">${taskName}</span>
+        </td>
+        <td class="py-3 px-3 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded bg-purple-50 text-purple-800 font-mono text-xs font-bold border border-purple-200">+${pts} pts</span>
+        </td>
+        <td class="py-3 px-3 whitespace-nowrap">
+            <span class="font-mono text-xs text-slate-600">${duration} min</span>
+        </td>
+        <td class="py-3 px-3 whitespace-nowrap text-right">
+            <button onclick="openVerifyModal(${t.id})" class="px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer inline-flex btn-press">
+                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                <span>Aprobar DERS</span>
+            </button>
+        </td>
+    </tr>
+    `;
+}
+
+function openVerifyModal(ticketId) {
+    const t = (window.currentPendingVerifications || []).find(item => item.id === ticketId);
+    if (!t) return;
+
+    const modal = document.getElementById("modalVerifyTicket");
+    const idInput = document.getElementById("verify-ticket-id");
+    const codeEl = document.getElementById("verify-ticket-code");
+    const opEl = document.getElementById("verify-operator-name");
+    const taskEl = document.getElementById("verify-task-name");
+    const durEl = document.getElementById("verify-duration");
+    const notesEl = document.getElementById("verify-operator-notes");
+    const ptsInput = document.getElementById("verify-points-input");
+
+    if (idInput) idInput.value = t.id;
+    if (codeEl) codeEl.textContent = t.ticket_code || `#INC-${t.id}`;
+    if (opEl) opEl.textContent = t.operador_nombre || 'Especialista';
+    if (taskEl) taskEl.textContent = t.suggested_task_name || 'Operación Estándar';
+    if (durEl) durEl.textContent = `${t.duracion_atencion_minutos || 15} min netos`;
+    if (notesEl) notesEl.textContent = t.resolution_notes || 'Sin notas del operador';
+    if (ptsInput) ptsInput.value = t.suggested_points || 2;
+
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeVerifyModal() {
+    const modal = document.getElementById("modalVerifyTicket");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+async function submitCoordinatorVerification(event) {
+    if (event) event.preventDefault();
+    const idInput = document.getElementById("verify-ticket-id");
+    const ptsInput = document.getElementById("verify-points-input");
+    const notesInput = document.getElementById("verify-coord-notes");
+    const btn = document.getElementById("btn-submit-verification");
+
+    const ticketId = idInput ? idInput.value : null;
+    if (!ticketId) return;
+
+    const points = ptsInput ? parseInt(ptsInput.value, 10) : 2;
+    const notes = notesInput ? notesInput.value.trim() : "";
+
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Aprobando...`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/verify`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                confirmed_points: points,
+                verification_notes: notes || "Aprobado por Coordinación",
+                coordinador_id: window.currentUser ? window.currentUser.id : null
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            closeVerifyModal();
+            showStitchSuccessToast(
+                "¡Puntos Acreditados!",
+                `Ticket #${data.ticket || ticketId} verificado y cerrado. Se acreditaron ${points} pts DERS.`
+            );
+            await loadCoordinatorVerifications();
+            await loadCoordinatorTriage();
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+        } else {
+            showToast(data.error || "No se pudo verificar el ticket", "error");
+        }
+    } catch (e) {
+        console.error("Error verifying ticket:", e);
+        showToast("Error de conexión al verificar el ticket", "error");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+}
+
+// Exportar al objeto global window
+window.switchTriageSubTab = switchTriageSubTab;
+window.refreshCoordinatorPanel = refreshCoordinatorPanel;
+window.loadCoordinatorVerifications = loadCoordinatorVerifications;
+window.openVerifyModal = openVerifyModal;
+window.closeVerifyModal = closeVerifyModal;
+window.submitCoordinatorVerification = submitCoordinatorVerification;
 
 // =============================================================
 // MÓDULO DE ASIGNACIÓN RÁPIDA (STITCH CORPORATE MINIMALISTA)
@@ -4314,7 +4538,7 @@ function renderOperatorAssignmentCard(t) {
                     ${area}
                 </span>
                 <span class="text-slate-300">•</span>
-                <span>SLA: <strong class="text-slate-700">${t.sla_minutes || 30}m</strong></span>
+                <span>Tiempo límite: <strong class="text-slate-700">${t.sla_minutes || 30}m</strong></span>
                 <span class="text-slate-300">•</span>
                 <span class="text-slate-400 font-mono text-[11px]">${t.sender_email || 'NOC'}</span>
             </div>
@@ -4774,7 +4998,7 @@ async function onNewTicketDeptoChange(deptoId) {
             });
             const tasksToUse = relevantTasks.length > 0 ? relevantTasks : _allTaskTypesCache;
             taskSelect.innerHTML = '<option value="">-- Tarea Técnica Sugerida por Defecto --</option>' +
-                tasksToUse.map(tt => `<option value="${tt.id}">${tt.code}: ${escapeHtml(tt.name)} [${tt.points} pts - SLA ${tt.sla_minutes || 30}m]</option>`).join('');
+                tasksToUse.map(tt => `<option value="${tt.id}">${tt.code}: ${escapeHtml(tt.name)} [${tt.points} pts - Objetivo: ${tt.sla_minutes || 30}m]</option>`).join('');
         } catch (e) {
             taskSelect.innerHTML = '<option value="">-- Tarea por defecto (+5 pts) --</option>';
         }
@@ -5435,3 +5659,304 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+// =============================================================
+// CONTROLADORES DE MODALES, SIDEBAR Y FILTROS UI (STITCH DESIGN)
+// =============================================================
+
+let currentViewingTicket = '#INC-4830';
+let currentViewingRawId = null;
+
+function openTicketDetail(ticketId, assignedTo, client, subject, area, prio, serial, slot) {
+    currentViewingTicket = ticketId || '#INC-4830';
+    const tId = document.getElementById('modal-ticket-id');
+    if (tId) tId.innerText = currentViewingTicket;
+    const tEntity = document.getElementById('modal-ticket-entity');
+    if (tEntity && client) tEntity.innerText = `${client} · Área: ${area || 'Redes de Acceso'}`;
+    const tSubj = document.getElementById('modal-ticket-subject');
+    if (tSubj && subject) tSubj.innerText = subject;
+    const tPrio = document.getElementById('modal-ticket-prio');
+    if (tPrio && prio) tPrio.innerText = prio;
+
+    const tSerial = document.getElementById('telemetry-serial');
+    if (tSerial && serial) tSerial.innerText = serial;
+    const tSlot = document.getElementById('telemetry-slot');
+    if (tSlot && slot) tSlot.innerText = slot;
+
+    const modal = document.getElementById('modal-ticket-details');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeModal(modalId) {
+    const el = document.getElementById(modalId);
+    if (el) el.classList.add('hidden');
+}
+
+let ticketToAssign = '#INC-4830';
+let rawIdToAssign = null;
+function promptAssignTicket(ticketId, area, rawId) {
+    ticketToAssign = ticketId;
+    rawIdToAssign = rawId || null;
+    const lbl = document.getElementById('assign-target-ticket-label');
+    if (lbl) lbl.innerText = ticketId;
+    const modal = document.getElementById('modal-assign-picker');
+    if (modal) modal.classList.remove('hidden');
+
+    // Cargar especialistas en modal si está vacío
+    fetch('/api/operators/availability', { credentials: 'include' })
+        .then(res => res.json())
+        .then(ops => {
+            if (Array.isArray(ops)) {
+                const list = document.getElementById('assign-operators-list');
+                if (list) {
+                    list.innerHTML = ops.map(op => {
+                        const isAvail = (op.active_tickets_count || 0) === 0;
+                        const statusBadge = isAvail 
+                            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">Libre</span>'
+                            : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8]">${op.active_tickets_count} caso(s)</span>`;
+                        const parts = (op.name || "").split(" ");
+                        const initials = op.avatar || (((parts[0] ? parts[0][0] : "") + (parts[1] ? parts[1][0] : "")).toUpperCase() || "OP");
+                        return `
+                        <div class="p-2.5 rounded-lg border border-gray-200 hover:border-[#1C58A8] hover:bg-blue-50/40 cursor-pointer transition flex items-center justify-between" onclick="confirmAssignment('${op.name}', ${op.id || op.operator_id})">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-[#1C58A8] text-white text-[10px] font-bold flex items-center justify-center">${initials}</div>
+                                <div>
+                                    <p class="font-bold text-gray-900">${op.name}</p>
+                                    <p class="text-[10px] text-gray-500">${op.area || 'Operaciones IP'} · ${op.active_points || 0} pts</p>
+                                </div>
+                            </div>
+                            ${statusBadge}
+                        </div>`;
+                    }).join('');
+                }
+            }
+        })
+        .catch(() => {});
+}
+
+async function confirmAssignment(operatorName, operatorId) {
+    closeModal('modal-assign-picker');
+    showToast(`¡Ticket ${ticketToAssign} asignado exitosamente a ${operatorName}!`, 'success');
+    
+    try {
+        const cleanId = rawIdToAssign || parseInt(ticketToAssign.replace(/[^0-9]/g, ''));
+        if (cleanId) {
+            const assignRes = await fetch(`/api/tickets/${cleanId}/assign`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    operador_id: operatorId || 2,
+                    coordinador_id: window.currentUser ? window.currentUser.id : null,
+                    status: 'ASIGNADO',
+                    notas: 'Asignado desde mesa de despacho'
+                })
+            });
+            if (!assignRes.ok) {
+                const err = await assignRes.json().catch(() => ({}));
+                showToast(err.error || 'No se pudo asignar el ticket', 'error');
+                return;
+            }
+            if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
+            if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+        }
+    } catch (err) {
+        console.error('Error asignando en backend:', err);
+    }
+}
+
+function toggleSubmenu() {
+    const sub = document.getElementById('tickets-submenu');
+    const chev = document.getElementById('tickets-chevron');
+    if (sub) sub.classList.toggle('hidden');
+    if (chev) chev.classList.toggle('rotate-180');
+}
+
+function selectSidebarArea(areaKey) {
+    if (window.currentDashboardTab !== 'operativa' && window.currentDashboardTab !== 'tickets') {
+        switchDashboardTab('operativa');
+    }
+    if (window.currentDashboardTab === 'operativa') {
+        const sel = document.getElementById('area-filter-select');
+        if (sel) {
+            sel.value = areaKey;
+            filterActiveCasesByArea(areaKey);
+        }
+    } else if (window.currentDashboardTab === 'tickets') {
+        const targetPill = document.querySelector(`[data-filter="${areaKey}"]`);
+        if (targetPill) filterOperatorsByPill(areaKey, targetPill);
+    }
+    showToast(`Filtrando área técnica: ${areaKey.replace(/_/g, ' ').toUpperCase()}`, 'info');
+}
+
+function filterActiveCasesByArea(areaKey) {
+    const grid = document.getElementById('active-operators-grid');
+    if (!grid) return;
+    const cards = grid.children;
+    let visibleCount = 0;
+    const normKey = (areaKey || 'all').toLowerCase();
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (card.classList.contains('col-span-full')) continue;
+        const cardArea = (card.getAttribute('data-area') || '').toLowerCase();
+        const matches = (normKey === 'all') ||
+            (cardArea === normKey) ||
+            (cardArea.includes(normKey)) ||
+            (normKey.includes('acceso') && cardArea.includes('acceso')) ||
+            (normKey.includes('trafico') && (cardArea.includes('trafico') || cardArea.includes('tráfico'))) ||
+            (normKey.includes('wan') && cardArea.includes('wan')) ||
+            (normKey.includes('seguridad') && cardArea.includes('seguridad')) ||
+            (normKey.includes('telefonia') && (cardArea.includes('telef') || cardArea.includes('voip'))) ||
+            (normKey.includes('grandes') && (cardArea.includes('grandes') || cardArea.includes('cliente')));
+        
+        if (matches) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    }
+    const badge = document.getElementById('active-cases-count-badge');
+    if (badge) {
+        badge.innerText = `${visibleCount} ${visibleCount === 1 ? 'Visible' : 'Visibles'}`;
+    }
+}
+
+function filterOperatorsByPill(area, btnElement) {
+    document.querySelectorAll('.filter-pill-btn').forEach(btn => btn.classList.remove('pill-active'));
+    if (btnElement) btnElement.classList.add('pill-active');
+
+    const cards = document.querySelectorAll('.operator-card');
+    const normKey = (area || 'all').toLowerCase();
+    cards.forEach(card => {
+        const cardArea = (card.getAttribute('data-area') || '').toLowerCase();
+        const matches = (normKey === 'all') ||
+            (cardArea === normKey) ||
+            (cardArea.includes(normKey)) ||
+            (normKey.includes('acceso') && cardArea.includes('acceso')) ||
+            (normKey.includes('trafico') && (cardArea.includes('trafico') || cardArea.includes('tráfico'))) ||
+            (normKey.includes('wan') && cardArea.includes('wan')) ||
+            (normKey.includes('seguridad') && cardArea.includes('seguridad')) ||
+            (normKey.includes('telefonia') && (cardArea.includes('telef') || cardArea.includes('voip'))) ||
+            (normKey.includes('grandes') && (cardArea.includes('grandes') || cardArea.includes('cliente')));
+        if (matches) {
+            card.style.display = '';
+            card.classList.add('animate-fade-in-up');
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const topSelect = document.getElementById('filter-tablero-area');
+    if (topSelect) topSelect.value = area;
+}
+
+function filterAreaDropdown(area) {
+    const targetPill = document.querySelector(`[data-filter="${area}"]`) || document.querySelector('[data-filter="all"]');
+    filterOperatorsByPill(area, targetPill);
+
+    const rows = document.querySelectorAll('#ticket-table-rows tr');
+    const normKey = (area || 'all').toLowerCase();
+    rows.forEach(row => {
+        const rowArea = (row.getAttribute('data-area') || '').toLowerCase();
+        const matches = (normKey === 'all') || (rowArea === normKey) || (rowArea.includes(normKey));
+        row.style.display = matches ? '' : 'none';
+    });
+}
+
+function handleGlobalSearch(query) {
+    const term = (query || '').toLowerCase().trim();
+    document.querySelectorAll('.operator-card, #active-operators-grid > div').forEach(card => {
+        if (card.classList.contains('col-span-full')) return;
+        card.style.display = card.innerText.toLowerCase().includes(term) ? '' : 'none';
+    });
+    document.querySelectorAll('#ticket-table-rows tr').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+    });
+}
+
+function openNewTicketModal() {
+    const el = document.getElementById('modal-new-ticket');
+    if (el) el.classList.remove('hidden');
+}
+
+async function handleCreateTicket(e) {
+    e.preventDefault();
+    const client = document.getElementById('new-client').value;
+    const area = document.getElementById('new-area').value;
+    const prio = document.getElementById('new-prio').value;
+    const subject = document.getElementById('new-subject').value;
+    const desc = document.getElementById('new-desc').value;
+
+    try {
+        const res = await fetch('/api/tickets/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subject: subject,
+                body_text: desc || subject,
+                area: area,
+                subscriber_code: client
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            showToast(`¡Ticket ${data.ticket_code || ''} creado con éxito!`, 'success');
+            closeModal('modal-new-ticket');
+            e.target.reset();
+            if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+        } else {
+            showToast('Error al crear el ticket', 'error');
+        }
+    } catch (err) {
+        showToast('Error de conexión al crear ticket', 'error');
+    }
+}
+
+async function refreshDispatchQueue() {
+    const icon = document.getElementById('refresh-spin-icon');
+    if (icon) icon.classList.add('animate-spin');
+    try {
+        if (typeof loadDispatchQueue === 'function') await loadDispatchQueue();
+        if (typeof loadTableroOperators === 'function') await loadTableroOperators();
+        showToast('Cola de tickets y especialistas sincronizados', 'success');
+    } catch(e) {
+        showToast('Error sincronizando cola', 'error');
+    } finally {
+        if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 400);
+    }
+}
+
+function quickAssignFromModal() {
+    closeModal('modal-ticket-details');
+    promptAssignTicket(currentViewingTicket);
+}
+
+function takeTicketDirectly() {
+    closeModal('modal-ticket-details');
+    showToast(`Has tomado el ticket ${currentViewingTicket}. Tiempo objetivo activado.`, 'success');
+}
+
+function showOperatorWorkloadModal(name, area, pts, ticket, elapsed) {
+    showToast(`Carga de ${name}: ${pts} pts · Caso actual: ${ticket || 'Sin caso'} (${elapsed || '0m'})`, 'info');
+}
+
+window.toggleSubmenu = toggleSubmenu;
+window.selectSidebarArea = selectSidebarArea;
+window.filterActiveCasesByArea = filterActiveCasesByArea;
+window.filterOperatorsByPill = filterOperatorsByPill;
+window.filterAreaDropdown = filterAreaDropdown;
+window.handleGlobalSearch = handleGlobalSearch;
+window.openTicketDetail = openTicketDetail;
+window.closeModal = closeModal;
+window.promptAssignTicket = promptAssignTicket;
+window.confirmAssignment = confirmAssignment;
+window.openNewTicketModal = openNewTicketModal;
+window.handleCreateTicket = handleCreateTicket;
+window.refreshDispatchQueue = refreshDispatchQueue;
+window.quickAssignFromModal = quickAssignFromModal;
+window.takeTicketDirectly = takeTicketDirectly;
+window.showOperatorWorkloadModal = showOperatorWorkloadModal;
+
