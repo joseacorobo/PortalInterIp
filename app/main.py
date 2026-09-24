@@ -11,7 +11,7 @@ from services.email_parser import TelcoEmailParser
 from services.audit import log_audit_event, get_audit_logs
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import Optional, List, Tuple
@@ -104,17 +104,22 @@ def startup_event():
     init_db()
     mail_worker_instance.start()
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def dashboard_view(request: Request):
-    user = resolve_dashboard_user(request)
+    user = get_authenticated_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
         context={"current_user": user}
     )
 
-@app.get("/login", response_class=FileResponse)
-def login_view():
+@app.get("/login")
+def login_view(request: Request):
+    user = get_authenticated_user(request)
+    if user:
+        return RedirectResponse(url="/", status_code=303)
     return FileResponse(os.path.join(BASE_DIR, "templates", "login.html"))
 
 @app.get("/mail", response_class=FileResponse)
@@ -2240,8 +2245,9 @@ def auth_logout(request: Request = None):
             details=f"Sesión finalizada por {caller['name']}",
             ip_address=client_ip
         )
-    res = JSONResponse(content={"status": "ok"})
-    res.delete_cookie(key="auth_user_id")
+    res = JSONResponse(content={"status": "ok", "message": "Sesión cerrada exitosamente", "redirect": "/login"})
+    res.delete_cookie(key="auth_user_id", path="/")
+    res.delete_cookie(key="access_token", path="/")
     return res
 
 class SwitchUserPayload(BaseModel):

@@ -726,42 +726,73 @@ function renderCurrentWorkload(data) {
                 let ticketsHtml = '';
                 if (op.active_tickets_count > 0 && op.active_tickets && op.active_tickets.length > 0) {
                     ticketsHtml = op.active_tickets.map(t => {
+                        const tPrio = t.task ? t.task.code : 'P2';
+                        const tPoints = t.points || (t.task ? t.task.points : 2);
+                        const elapsedMins = t.elapsed_minutes || 0;
+                        const elapsedStr = elapsedMins >= 60 
+                            ? `${Math.floor(elapsedMins / 60)}h ${elapsedMins % 60}m` 
+                            : `${elapsedMins} min`;
+
                         let slaProgressBg = 'bg-emerald-500';
                         if (t.sla_status === 'breached') slaProgressBg = 'bg-rose-500';
                         else if (t.sla_status === 'warning') slaProgressBg = 'bg-amber-500';
 
+                        // Sanitizar textos para el onclick de abrir detalle
+                        const safeSubj = (t.subject || '').replace(/'/g, "\\'");
+                        const safeOp = (op.name || '').replace(/'/g, "\\'");
+                        const safeArea = (op.area || '').replace(/'/g, "\\'");
+                        const safeSubscriber = (t.subscriber_code || 'Cliente Corporativo').replace(/'/g, "\\'");
+                        const safeSerial = (t.serial_pon || '').replace(/'/g, "\\'");
+                        const safeSlot = (t.slot_pon || '').replace(/'/g, "\\'");
+
                         return `
-                            <div class="p-2.5 rounded-lg bg-gray-50/80 dark:bg-slate-800/60 border border-gray-200/80 dark:border-slate-700 space-y-2 transition hover:border-blue-300">
+                            <div class="p-3 rounded-xl bg-gray-50/90 dark:bg-slate-800/80 border border-gray-200/90 dark:border-slate-700/80 space-y-2.5 transition hover:border-[#1C58A8] hover:shadow-xs">
+                                <!-- Cabecera Ticket: ID, Prioridad y Tiempo en Atencion -->
                                 <div class="flex items-center justify-between gap-1 text-[11px]">
                                     <div class="flex items-center gap-1.5 overflow-hidden">
-                                        <span class="font-mono font-bold text-blue-600 dark:text-blue-400">${t.ticket_code}</span>
-                                        <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">${t.task ? t.task.code : 'P2'} · ${t.points} pts</span>
+                                        <span class="font-mono font-bold text-[#1C58A8] dark:text-[#5B9BE0] text-xs">${t.ticket_code}</span>
+                                        <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 border border-amber-200/60">${tPrio} · ${tPoints} pts</span>
                                     </div>
-                                    <span class="text-[10px] font-mono text-snow-muted flex items-center gap-1 shrink-0">
-                                        <i data-lucide="clock" class="w-3 h-3 text-blue-500"></i>
-                                        ${t.elapsed_minutes}m activo
+                                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 flex items-center gap-1 shrink-0" title="Tiempo que lleva el ticket en atención activa">
+                                        <i data-lucide="clock" class="w-3 h-3 text-[#1C58A8]"></i>
+                                        <span>${elapsedStr} en atención</span>
                                     </span>
                                 </div>
-                                <p class="text-xs font-semibold text-gray-900 dark:text-gray-100 line-clamp-1 leading-snug" title="${t.subject}">
-                                    ${t.subject}
-                                </p>
-                                <div class="flex items-center justify-between text-[10px] text-snow-muted font-mono">
-                                    <span class="truncate max-w-[140px]">Ab: ${t.subscriber_code}</span>
-                                    <span class="truncate max-w-[130px]">Nodo: ${t.node_name}</span>
+                                
+                                <!-- Breve descripcion del caso -->
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug" title="${t.subject}">
+                                        ${t.subject}
+                                    </p>
                                 </div>
-                                <div class="space-y-1 pt-0.5">
-                                    <div class="flex justify-between items-center text-[10px]">
-                                        <span class="text-snow-muted">Objetivo: ${t.elapsed_minutes}/${t.sla_minutes}m</span>
-                                        <span class="font-bold text-${t.sla_color}-600 dark:text-${t.sla_color}-400">${t.sla_label} (${t.sla_percentage}%)</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                                        <div class="${slaProgressBg} h-1.5 rounded-full transition-all duration-500" style="width: ${t.sla_percentage}%"></div>
-                                    </div>
+
+                                <!-- Parametros: Area y Abonado/Nodo -->
+                                <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 font-mono pt-1 border-t border-gray-200/60 dark:border-slate-700/60">
+                                    <span class="truncate max-w-[130px] flex items-center gap-1">
+                                        <i data-lucide="map-pin" class="w-3 h-3 text-[#1C58A8] shrink-0"></i>
+                                        <span class="truncate">${op.area}</span>
+                                    </span>
+                                    <span class="truncate max-w-[130px] flex items-center gap-1">
+                                        <i data-lucide="server" class="w-3 h-3 text-gray-400 shrink-0"></i>
+                                        <span class="truncate">${t.node_name || t.subscriber_code || 'Nodo Core'}</span>
+                                    </span>
                                 </div>
-                                <div class="pt-1 flex justify-end">
-                                    <button onclick="openTicketFromWorkload(${t.id})" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 cursor-pointer transition">
-                                        <span>Ver en Consola</span>
-                                        <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+
+                                <!-- Barra Tiempo Objetivo y Opcion para ver mas detalles -->
+                                <div class="flex items-center justify-between pt-1 gap-2 border-t border-gray-100 dark:border-slate-700/40">
+                                    <div class="flex-1 space-y-1">
+                                        <div class="flex justify-between items-center text-[9px] text-gray-500">
+                                            <span>Objetivo: ${t.elapsed_minutes || 0}/${t.sla_minutes || 45}m</span>
+                                            <span class="font-bold text-${t.sla_color || 'blue'}-600">${t.sla_label || 'En curso'}</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div class="${slaProgressBg} h-1.5 rounded-full transition-all duration-500" style="width: ${Math.min(t.sla_percentage || 50, 100)}%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Boton Ver Mas Detalles que abre Modal Tecnico -->
+                                    <button type="button" onclick="openTicketDetail('${t.ticket_code}', '${safeOp}', '${safeSubscriber}', '${safeSubj}', '${safeArea}', '${tPrio}', '${safeSerial}', '${safeSlot}')" class="px-2.5 py-1.5 rounded-lg bg-[#EAF2FC] hover:bg-[#1C58A8] text-[#1C58A8] hover:text-white dark:bg-blue-950/80 dark:text-[#7CB2EA] dark:hover:bg-[#1C58A8] dark:hover:text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow-2xs btn-press cursor-pointer shrink-0" title="Ver diagnostico y telemetria completa del ticket">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                        <span>Ver detalles</span>
                                     </button>
                                 </div>
                             </div>
@@ -3209,12 +3240,18 @@ async function switchUserProfile(userId) {
 
 async function logoutSession() {
     try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
+        if (typeof showToast === 'function') {
+            showToast('Cerrando sesión del NOC...', 'info', 1500);
+        }
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 200);
     } catch (e) {
         window.location.href = '/login';
     }
 }
+window.logoutSession = logoutSession;
 
 // =============================================================
 // TOAST NOTIFICATIONS (TELECOM PRECISION ANALYTICS)
@@ -5960,3 +5997,22 @@ window.quickAssignFromModal = quickAssignFromModal;
 window.takeTicketDirectly = takeTicketDirectly;
 window.showOperatorWorkloadModal = showOperatorWorkloadModal;
 
+
+function filterActiveCasesLocal(query) {
+    const q = (query || '').toLowerCase().trim();
+    const grid = document.getElementById('active-operators-grid');
+    if (!grid) return;
+    const cards = grid.querySelectorAll('.operator-card');
+    let visibleCount = 0;
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const matches = !q || text.includes(q);
+        card.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+    });
+    const badge = document.getElementById('active-cases-count-badge');
+    if (badge) {
+        badge.innerText = `${visibleCount} Visibles`;
+    }
+}
+window.filterActiveCasesLocal = filterActiveCasesLocal;

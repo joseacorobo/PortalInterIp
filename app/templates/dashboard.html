@@ -263,7 +263,10 @@
                 <div class="overflow-hidden">
                     <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">{{ current_user.name if current_user else 'Usuario NOC' }}</p>
                     <p id="sidebar-user-role" class="text-[11px] text-[#94A3B8] truncate">{% if current_user %}{{ current_user.role }} · {{ current_user.area }}{% else %}Operaciones IP{% endif %}</p>
-                </div>
+                                </div>
+                <button type="button" onclick="logoutSession()" class="p-1.5 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer shrink-0" title="Cerrar sesión">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
             </div>
 
             <!-- Grupo PANEL -->
@@ -363,6 +366,10 @@
                 <i data-lucide="sun" id="theme-icon" class="w-4 h-4 text-amber-400"></i>
                 <span id="theme-mode-text">Modo claro</span>
             </button>
+            <button type="button" onclick="logoutSession()" class="w-full flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 transition btn-press cursor-pointer">
+                <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
+                <span>Cerrar sesión</span>
+            </button>
         </div>
     </aside>
 
@@ -388,8 +395,14 @@
                     <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-white/50 pointer-events-none"></i>
                     <input type="text" id="global-search-input" onkeyup="handleGlobalSearch(this.value)" placeholder="Buscar ticket o serial..." class="w-48 pl-8 pr-3 py-1 text-xs bg-white/5 rounded-lg text-white placeholder-white/50 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] focus:w-60 transition-all">
                 </div>
-                <div class="relative">
-                    <button type="button" onclick="toggleUserDropdown()" class="w-7 h-7 rounded-md text-white flex items-center justify-center font-bold text-[11px] bg-[#1C58A8] border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition" id="header-user-avatar" title="Perfil y conmutador de usuario">{{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</button>
+                <div class="flex items-center gap-2">
+                    <!-- Logo / Boton Responsive Cerrar Sesion -->
+                    <button type="button" onclick="logoutSession()" id="header-btn-logout" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 hover:text-white border border-rose-500/40 text-xs font-semibold transition btn-press cursor-pointer shadow-2xs" title="Cerrar sesión de usuario">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-300"></i>
+                        <span class="hidden sm:inline text-[11px]">Cerrar sesión</span>
+                    </button>
+                    <div class="relative">
+                        <button type="button" onclick="toggleUserDropdown()" class="w-7 h-7 rounded-md text-white flex items-center justify-center font-bold text-[11px] bg-[#1C58A8] border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition" id="header-user-avatar" title="Perfil y conmutador de usuario">{{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</button>
                     <div id="user-profile-dropdown" class="hidden absolute right-0 top-9 w-72 bg-white rounded-xl border border-gray-200 shadow-xl z-50 text-gray-900 p-3">
                         <div class="pb-2 mb-2 border-b border-gray-100">
                             <p id="header-user-name" class="text-xs font-bold text-gray-900">{{ current_user.name if current_user else 'Usuario NOC' }}</p>
@@ -601,10 +614,16 @@
                                 <p class="text-[11px] text-gray-500">Monitoreo de operadores y tickets en atención inmediata</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2.5 text-xs font-sans">
+                        <div class="flex flex-wrap items-center gap-2 text-xs font-sans">
+                            <!-- Buscador en tiempo real de operador o ticket -->
+                            <div class="relative flex items-center">
+                                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-gray-400 pointer-events-none"></i>
+                                <input type="text" id="filter-active-cases-search" oninput="filterActiveCasesLocal(this.value)" placeholder="Buscar operador o ticket..." class="w-36 sm:w-44 pl-8 pr-2.5 py-1 text-xs bg-white rounded-lg text-gray-800 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1C58A8] focus:w-52 transition-all shadow-2xs">
+                            </div>
+                            <!-- Filtro de Area -->
                             <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg border border-gray-200 text-gray-700 shadow-2xs hover:border-[#1C58A8]/40 transition">
                                 <i data-lucide="filter" class="w-3.5 h-3.5 text-[#1C58A8] shrink-0"></i>
-                                <label for="area-filter-select" class="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Filtrar por Área:</label>
+                                <label for="area-filter-select" class="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Área:</label>
                                 <select id="area-filter-select" onchange="filterActiveCasesByArea(this.value)" class="bg-transparent text-[11px] font-bold text-[#1C58A8] focus:outline-none cursor-pointer pr-1 border-0 p-0">
                                     <option value="all">Todas las Áreas (General)</option>
                                     <option value="ACCESO_APROV">Redes de Acceso</option>
