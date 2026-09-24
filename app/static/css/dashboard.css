@@ -40,28 +40,19 @@
    -------------------------------------------------------------------------- */
 .dashboard-kpi-card {
     background-color: var(--panel);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid var(--border);
-    border-radius: 0.375rem; /* rounded-md */
-    padding: 1rem; /* space-md */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 0.875rem 1rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     position: relative;
     overflow: hidden;
-    animation: stitch-fade-in-up 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
-    opacity: 0;
 }
 
-.dashboard-kpi-card:nth-child(1) { animation-delay: 0.05s; }
-.dashboard-kpi-card:nth-child(2) { animation-delay: 0.10s; }
-.dashboard-kpi-card:nth-child(3) { animation-delay: 0.15s; }
-.dashboard-kpi-card:nth-child(4) { animation-delay: 0.20s; }
-
 .dashboard-kpi-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(28, 88, 168, 0.3);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(28, 88, 168, 0.08);
+    transform: translateY(-1px);
+    border-color: #93C5FD;
+    box-shadow: 0 4px 12px rgba(28, 88, 168, 0.06);
 }
 
 /* Tarjeta Hero KPI (Meta Ponderada de Produccion) */
@@ -421,4 +412,81 @@ html[data-theme="dark"] .card-audit-kpi-amber {
     color: #DC2626;
     border: 1px solid #FECACA;
 }
+
+/* --------------------------------------------------------------------------
+   11. ESTÁNDAR TELCO INDUSTRIAL (DATADOG/CLOUDFLARE STYLE DENSITY)
+   -------------------------------------------------------------------------- */
+
+/* Tablas de Alta Densidad (py-1.5 a py-2) */
+.table-corporate-metrics {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.table-corporate-metrics th {
+    padding: 0.4rem 0.65rem !important;
+    font-size: 0.6875rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--muted) !important;
+    background-color: #F8FAFC !important;
+    border-bottom: 1px solid var(--border) !important;
+    white-space: nowrap;
+}
+.table-corporate-metrics td {
+    padding: 0.45rem 0.65rem !important;
+    font-size: 0.75rem !important;
+    border-bottom: 1px solid var(--border-2) !important;
+    vertical-align: middle;
+}
+html[data-theme="dark"] .table-corporate-metrics th {
+    background-color: #0E1728 !important;
+    color: var(--muted) !important;
+}
+
+/* Badges DERS Oficiales (P1 a P5) */
+.badge-ders-p1, .badge-ders-p2, [data-ders="P1"], [data-ders="P2"] {
+    background-color: #F1F5F9 !important;
+    color: #334155 !important;
+    border: 1px solid #CBD5E1 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 10px !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+}
+.badge-ders-p3, [data-ders="P3"] {
+    background-color: #FFFBEB !important;
+    color: #92400E !important;
+    border: 1px solid #FCD34D !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 10px !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+}
+.badge-ders-p4, .badge-ders-p5, [data-ders="P4"], [data-ders="P5"] {
+    background-color: #FFF1F2 !important;
+    color: #BE123C !important;
+    border: 1px solid #FDA4AF !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 10px !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Telemetría industrial monoespaciada */
+.telemetry-mono, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-feature-settings: "tnum" 1, "zero" 1;
+}
+
 

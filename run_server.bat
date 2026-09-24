@@ -1,16 +1,37 @@
 @echo off
-echo ========================================================
-echo     Iniciando Portal Operaciones IP (FastAPI)
-echo ========================================================
+:: Cambiar al directorio exacto donde reside este archivo .bat
+cd /d "C:\Users\josea\Desktop\PortalInterIp-main"
+
+chcp 65001 > nul
+color 09
+cls
+
+echo.
+echo   ████   ███    ██  ██████  ██████  █████ 
+echo    ██    ████   ██    ██    ██      ██   ██
+echo    ██    ██ ██  ██    ██    █████   ██████
+echo    ██    ██  ██ ██    ██    ██      ██   ██
+echo    ██    ██   ████    ██    ██      ██   ██
+echo   ████   ██    ███    ██    ██████  ██   ██
+echo.
+echo =======================================================
+echo     PORTAL OPERACIONES IP - CORE NOC (FastAPI)
+echo =======================================================
 echo.
 echo Presiona CTRL+C para detener el servidor.
 echo.
 
-:: Usar uv local o de sistema para manejar dependencias y version de Python automaticamente
 if exist "uv.exe" (
-    uv.exe run --python 3.12 --with "fastapi[standard]" --with uvicorn --with jinja2 --with python-multipart --with openpyxl fastapi dev app/main.py --host 0.0.0.0 --port 8000
+    uv.exe run --python 3.12 --with "fastapi[standard]" --with uvicorn --with jinja2 --with openpyxl --with python-multipart uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ) else (
-    uv run --python 3.12 --with "fastapi[standard]" --with uvicorn --with jinja2 --with python-multipart --with openpyxl fastapi dev app/main.py --host 0.0.0.0 --port 8000
+    where uv >nul 2>nul
+    if %errorlevel% equ 0 (
+        uv run --python 3.12 --with "fastapi[standard]" --with uvicorn --with jinja2 --with openpyxl --with python-multipart uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+    ) else if exist ".venv\Scripts\python.exe" (
+        .venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+    ) else (
+        python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+    )
 )
 
 pause

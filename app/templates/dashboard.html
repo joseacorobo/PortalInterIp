@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,15 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Estilos Oficiales del NOC -->
+    <link rel="stylesheet" href="/static/css/snow_ui.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
     <style>
         /* Tokens del diseño corporativo Telecom Precision Analytics (Inter NOC) */
         :root {
@@ -72,6 +82,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -79,10 +90,13 @@
         }
 
         @keyframes pulseGlow {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: 1;
             }
+
             50% {
                 transform: scale(1.35);
                 opacity: 0.6;
@@ -100,6 +114,7 @@
         .interactive-card {
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
         }
+
         .interactive-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px -5px rgba(28, 88, 168, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
@@ -109,6 +124,7 @@
         .btn-press {
             transition: all 0.15s ease;
         }
+
         .btn-press:active {
             transform: scale(0.96);
         }
@@ -143,10 +159,12 @@
             border: none;
             background: transparent;
         }
+
         .sidebar-nav-pill:hover {
             background-color: rgba(255, 255, 255, 0.08);
             color: #ffffff;
         }
+
         .sidebar-nav-pill.active {
             background-color: rgba(28, 88, 168, 0.35) !important;
             border: 1px solid rgba(91, 155, 224, 0.35) !important;
@@ -162,6 +180,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease;
         }
+
         .dashboard-kpi-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px -2px rgba(16, 24, 40, 0.08);
@@ -181,6 +200,7 @@
             border-collapse: separate;
             border-spacing: 0;
         }
+
         .table-corporate-metrics thead th {
             font-size: 0.72rem;
             font-weight: 700;
@@ -191,6 +211,7 @@
             padding: 0.75rem 0.85rem;
             border-bottom: 1px solid var(--border);
         }
+
         .table-corporate-metrics tbody td {
             padding: 0.75rem 0.85rem;
             font-size: 0.8125rem;
@@ -201,6 +222,7 @@
         .filter-pill-btn {
             transition: all 0.18s ease;
         }
+
         .filter-pill-btn.pill-active {
             background-color: #0056B3 !important;
             color: #ffffff !important;
@@ -224,161 +246,124 @@
             width: 6px;
             height: 6px;
         }
+
         ::-webkit-scrollbar-track {
             background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #CBD5E1;
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #94A3B8;
         }
     </style>
 </head>
+
 <body class="flex h-screen overflow-hidden bg-[#F3F6FC]">
 
     <!-- ============================================================== -->
     <!-- 1. LEFT SIDEBAR                                               -->
     <!-- ============================================================== -->
-    <aside id="main-sidebar" class="sidebar-container select-none z-30" style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%); border-right: 1px solid rgba(255, 255, 255, 0.1);">
+    <aside id="main-sidebar" class="sidebar-container select-none z-30"
+        style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%); border-right: 1px solid rgba(255, 255, 255, 0.1);">
         <!-- Top Brand & Collapse -->
-        <div class="flex items-center justify-between pb-3 mb-2 border-b border-white/10">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-[#0056B3] flex items-center justify-center font-black text-white text-base shadow-sm ring-2 ring-white/10">evvI</div>
-                <div>
-                    <h2 class="text-xs font-black tracking-wider uppercase text-white leading-tight">Inter</h2>
-                    <span class="text-[10px] font-semibold text-[#5B9BE0]">Operaciones IP</span>
-                </div>
+        <div class="flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/10">
+            <div
+                class="flex-1 max-w-[172px] h-[58px] flex items-center justify-center px-4 py-2 shadow-md ring-1 ring-white/15 shrink-0 overflow-hidden rounded-lg bg-[#1C58A8]">
+                <img src="/static/img/inter_logo.png" alt="Inter"
+                    class="w-full h-full object-contain brightness-0 invert drop-shadow-xs">
             </div>
-            <button class="w-7 h-7 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition btn-press" title="Colapsar menú">
+            <button
+                class="w-7 h-7 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0"
+                title="Colapsar menú">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
         </div>
+        <!-- Grupo PANEL -->
+        <div class="flex-1 flex flex-col gap-2 overflow-y-auto">
+            <p class="text-[14px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1.5">Dashboard</p>
+            <div class="space-y-1">
+                <button onclick="switchDashboardTab('operativa')" id="nav-view-operativa"
+                    class="sidebar-nav-pill active btn-press">
+                    <i data-lucide="columns-3" class="w-4 h-4 shrink-0 text-[#7CB2EA]"></i>
+                    <span>General</span>
+                </button>
+                <button onclick="switchDashboardTab('rendimiento')" id="nav-view-rendimiento"
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
+                    <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
+                    <span>Métricas</span>
+                </button>
+                <button onclick="switchDashboardTab('auditoria')" id="nav-view-auditoria"
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
+                    <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
+                    <span>Reportes y     Auditoría</span>
+                </button>
 
-        <!-- Perfil Usuario -->
-        <div class="flex-1 flex flex-col overflow-y-auto space-y-4 pr-1">
-            <div class="flex items-center gap-2.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
-                <div id="sidebar-user-avatar" class="w-8 h-8 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-sm">{{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</div>
-                <div class="overflow-hidden">
-                    <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">{{ current_user.name if current_user else 'Usuario NOC' }}</p>
-                    <p id="sidebar-user-role" class="text-[11px] text-[#94A3B8] truncate">{% if current_user %}{{ current_user.role }} · {{ current_user.area }}{% else %}Operaciones IP{% endif %}</p>
-                                </div>
-                <button type="button" onclick="logoutSession()" class="p-1.5 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer shrink-0" title="Cerrar sesión">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                <!-- Tickets Tablero Accordion -->
+                <div class="space-y-1" id="tickets-accordion-group">
+                    <button type="button" onclick="switchDashboardTab('tickets'); toggleSubmenu();"
+                        id="nav-view-tickets"
+                        class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press">
+                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                            <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
+                            <span class="truncate">Tablero de Tickets</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0 ml-1">
+                            <span id="sidebar-inbox-badge"
+                                class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60 shrink-0">14</span>
+                            <i data-lucide="chevron-down" id="tickets-chevron"
+                                class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0"></i>
+                        </div>
+                    </button>
+                    <div id="tickets-submenu" class="pl-6 space-y-1 text-xs transition-all">
+                        <button type="button" onclick="switchDashboardTab('tickets')" id="nav-sub-asignacion"
+                            class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white transition text-[11px] text-left">
+                            <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#5B9BE0] shrink-0"></span><span
+                                    class="truncate">Asignación de Tickets</span>
+                            </span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] shrink-0 ml-1"
+                                id="sub-badge-count">14</span>
+                        </button>
+                        <button type="button" onclick="switchDashboardTab('inbox')" id="nav-sub-generales"
+                            class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/75 hover:text-white transition text-[11px] text-left">
+                            <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span><span
+                                    class="truncate">Consola M365</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>     
+        </div>
+                <button onclick="switchDashboardTab('configuracion')" id="nav-view-configuracion"
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
+                    <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
+                    <span>Configuración</span>
                 </button>
             </div>
-
-            <!-- Grupo PANEL -->
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1.5">Panel</p>
-                <div class="space-y-1">
-                    <button onclick="switchDashboardTab('operativa')" id="nav-view-operativa" class="sidebar-nav-pill active btn-press">
-                        <i data-lucide="columns-3" class="w-4 h-4 shrink-0 text-[#7CB2EA]"></i>
-                        <span>Vista operativa</span>
-                    </button>
-                    <button onclick="switchDashboardTab('rendimiento')" id="nav-view-rendimiento" class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
-                        <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
-                        <span>Métricas</span>
-                    </button>
-                    <button onclick="switchDashboardTab('auditoria')" id="nav-view-auditoria" class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
-                        <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
-                        <span>Reportes &amp; Auditoría</span>
-                    </button>
-
-                    <!-- Tickets Tablero Accordion -->
-                    <div class="space-y-1" id="tickets-accordion-group">
-                        <button type="button" onclick="switchDashboardTab('tickets'); toggleSubmenu();" id="nav-view-tickets" class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press">
-                            <div class="flex items-center gap-2 min-w-0 flex-1">
-                                <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
-                                <span class="truncate">Tablero de Tickets</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 shrink-0 ml-1">
-                                <span id="sidebar-inbox-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60 shrink-0">14</span>
-                                <i data-lucide="chevron-down" id="tickets-chevron" class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0"></i>
-                            </div>
-                        </button>
-                        <div id="tickets-submenu" class="pl-6 space-y-1 text-xs transition-all">
-                            <button type="button" onclick="switchDashboardTab('tickets')" id="nav-sub-asignacion" class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white transition text-[11px] text-left">
-                                <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#5B9BE0] shrink-0"></span><span class="truncate">Asignación de Tickets</span>
-                                </span>
-                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] shrink-0 ml-1" id="sub-badge-count">14</span>
-                            </button>
-                            <button type="button" onclick="switchDashboardTab('inbox')" id="nav-sub-generales" class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/75 hover:text-white transition text-[11px] text-left">
-                                <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span><span class="truncate">Consola M365</span>
-                                </span>
-                                <span class="text-[10px] text-gray-400 font-mono shrink-0 ml-1">Buzón</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button onclick="switchDashboardTab('configuracion')" id="nav-view-configuracion" class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
-                        <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
-                        <span>Configuración</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Grupo ÁREAS IP (6 Departamentos Oficiales) -->
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1.5">Áreas IP</p>
-                <div class="space-y-1 text-xs">
-                    <div onclick="selectSidebarArea('ACCESO_APROV')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span class="truncate">Redes de Acceso</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-[#1C58A8]/40 text-[#7CB2EA] text-[10px] border border-[#1C58A8]/50 shrink-0 ml-1">Acceso</span>
-                    </div>
-                    <div onclick="selectSidebarArea('TRAFICO_INALAMBRICO')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span class="truncate">Control de Tráfico</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300 text-[10px] border border-blue-500/30 shrink-0 ml-1">Tráfico</span>
-                    </div>
-                    <div onclick="selectSidebarArea('REDES_WAN')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span class="truncate">Redes WAN</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] border border-indigo-500/30 shrink-0 ml-1">WAN</span>
-                    </div>
-                    <div onclick="selectSidebarArea('SEGURIDAD')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span class="truncate">Seguridad IP</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 text-[10px] border border-purple-500/30 shrink-0 ml-1">Seguridad</span>
-                    </div>
-                    <div onclick="selectSidebarArea('TELEFONIA')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span class="truncate">Telefonía VoIP</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] border border-cyan-500/30 shrink-0 ml-1">VoIP</span>
-                    </div>
-                    <div onclick="selectSidebarArea('GRANDES_CLIENTES')" class="flex justify-between items-center p-2 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white font-medium cursor-pointer border border-transparent hover:border-white/5 transition">
-                        <span class="truncate">Grandes Clientes</span>
-                        <span class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] border border-amber-500/30 shrink-0 ml-1">VIP</span>
-                    </div>
-                </div>
-            </div>
         </div>
-
         <!-- Footer: Switch Tema & Live Ping -->
         <div class="pt-3 border-t border-white/10 space-y-2">
             <div class="flex items-center justify-between px-2 text-[10px] text-gray-400 font-mono">
                 <span class="flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    NOC Caracas
+                    Servidor: <span id="server-status-text">Conectado</span>
                 </span>
                 <span id="live-sync-indicator">Sync: 0s</span>
             </div>
-            <button onclick="toggleTheme()" class="w-full flex items-center gap-2 p-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/10 hover:text-white transition btn-press">
-                <i data-lucide="sun" id="theme-icon" class="w-4 h-4 text-amber-400"></i>
-                <span id="theme-mode-text">Modo claro</span>
-            </button>
-            <button type="button" onclick="logoutSession()" class="w-full flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 transition btn-press cursor-pointer">
-                <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
-                <span>Cerrar sesión</span>
-            </button>
         </div>
     </aside>
-
     <!-- ============================================================== -->
     <!-- 2. MAIN CONTENT AREA                                          -->
     <!-- ============================================================== -->
-    <main class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FC]">
+    <main class="flex-1 flex flex-col overflow-hidden bg-[white] dark:bg-[fbfbfb]">
         <!-- Top Header Bar -->
-        <header class="h-12 px-6 flex items-center justify-between select-none z-20 border-b border-white/10" style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%);">
+        <header class="h-12 px-6 flex items-center justify-between select-none z-20 border-b border-white/10"
+            style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%);">
             <div class="flex items-center gap-2">
                 <div class="flex items-center gap-2 shrink-0">
                     <span class="text-xs font-semibold text-white tracking-wide">Operaciones IP — Inter</span>
@@ -387,35 +372,34 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1C58A8]/40 text-[#7CB2EA] border border-[#1C58A8]/50 shadow-sm">
+                <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1C58A8]/40 text-[#7CB2EA] border border-[#1C58A8]/50 shadow-sm">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-indicator"></span>
                     Turno Activo
                 </span>
                 <div class="relative flex items-center">
                     <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-white/50 pointer-events-none"></i>
-                    <input type="text" id="global-search-input" onkeyup="handleGlobalSearch(this.value)" placeholder="Buscar ticket o serial..." class="w-48 pl-8 pr-3 py-1 text-xs bg-white/5 rounded-lg text-white placeholder-white/50 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] focus:w-60 transition-all">
+                    <input type="text" id="global-search-input" onkeyup="handleGlobalSearch(this.value)"
+                        placeholder="Buscar ticket o serial..."
+                        class="w-48 pl-8 pr-3 py-1 text-xs bg-white/5 rounded-lg text-white placeholder-white/50 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] focus:w-60 transition-all">
                 </div>
                 <div class="flex items-center gap-2">
-                    <!-- Logo / Boton Responsive Cerrar Sesion -->
-                    <button type="button" onclick="logoutSession()" id="header-btn-logout" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 hover:text-white border border-rose-500/40 text-xs font-semibold transition btn-press cursor-pointer shadow-2xs" title="Cerrar sesión de usuario">
-                        <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-300"></i>
-                        <span class="hidden sm:inline text-[11px]">Cerrar sesión</span>
-                    </button>
-                    <div class="relative">
-                        <button type="button" onclick="toggleUserDropdown()" class="w-7 h-7 rounded-md text-white flex items-center justify-center font-bold text-[11px] bg-[#1C58A8] border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition" id="header-user-avatar" title="Perfil y conmutador de usuario">{{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</button>
-                    <div id="user-profile-dropdown" class="hidden absolute right-0 top-9 w-72 bg-white rounded-xl border border-gray-200 shadow-xl z-50 text-gray-900 p-3">
-                        <div class="pb-2 mb-2 border-b border-gray-100">
-                            <p id="header-user-name" class="text-xs font-bold text-gray-900">{{ current_user.name if current_user else 'Usuario NOC' }}</p>
-                            <p id="header-user-role" class="text-[10px] text-gray-500">{% if current_user %}{{ current_user.role }} ({{ current_user.area }}){% endif %}</p>
-                            <p id="dropdown-user-fullname" class="hidden">{{ current_user.name if current_user else '' }}</p>
-                            <p id="dropdown-user-email" class="text-[10px] text-gray-400 truncate">{{ current_user.email if current_user else '' }}</p>
-                            <span id="dropdown-user-badge" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#1C58A8] mt-1 inline-block">{% if current_user %}{{ current_user.role }} - {{ current_user.area }}{% endif %}</span>
-                        </div>
-                        <p class="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Conmutador de perfil</p>
-                        <div id="dropdown-users-list" class="max-h-48 overflow-y-auto space-y-1"></div>
-                        <button type="button" onclick="logoutSession()" class="mt-3 w-full py-1.5 rounded-lg text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition">Cerrar sesión</button>
-                    </div>
+                    <!-- Perfil Usuario -->
+        <div class="flex-1 flex flex-col overflow-y-auto space-y-4 pr-1">
+            <div
+                class="flex items-center gap-2.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
+                <div id="sidebar-user-avatar"
+                    class="w-10 h-10 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                    {{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</div>
+                <div class="overflow-hidden">
+                    <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">{{ current_user.name if
+                        current_user else 'Usuario NOC' }}</p>
                 </div>
+                <button type="button" onclick="logoutSession()"
+                    class="p-1.5 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer shrink-0"
+                    title="Cerrar sesión">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
             </div>
         </header>
 
@@ -426,89 +410,124 @@
             <!-- PESTAÑA 1: VISTA OPERATIVA (DISEÑO OFICIAL CON CASOS ACTIVOS)  -->
             <!-- ============================================================== -->
             <section id="tab-operativa" class="space-y-6">
-                <!-- Scorecards Principales (Macro) -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="background: linear-gradient(180deg, #F0F6FF 0%, #EBF3FE 100%); border: 1px solid #BFDBFE; box-shadow: 0 2px 6px rgba(28, 88, 168, 0.05); animation-delay: 50ms;">
-                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89] mb-1">
-                            <span>TICKETS EN COLA</span>
-                            <i data-lucide="ticket" class="w-4 h-4 text-[#1C58A8]"></i>
+                <!-- Scorecards Principales (Macro - Estándar Telco Industrial) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <div
+                        class="bg-yellow-50 rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Tickets en Proceso</span>
+                            <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-700">
+                                <i data-lucide="ticket" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
+                            </div>
                         </div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-gray-900" id="op-kpi-cola">38</span>
-                            <span class="text-xs text-gray-500">en cola</span>
-                        </div>
-                        <div class="mt-2 flex items-center gap-2 text-[11px]">
-                            <span class="px-1.5 py-0.5 rounded bg-blue-50 text-[#1C58A8] font-bold" id="op-kpi-activos">18 activos</span>
-                            <span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-bold" id="op-kpi-espera">6 en espera</span>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="background: linear-gradient(180deg, #F0FDF4 0%, #ECFDF5 100%); border: 1px solid #BBF7D0; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.05); animation-delay: 100ms;">
-                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89] mb-1">
-                            <span>TICKETS REALIZADOS</span>
-                            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
-                        </div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-gray-900" id="op-kpi-completados">142</span>
-                            <span class="text-xs text-gray-500">Totales</span>
-                        </div>
-                        <div class="mt-2 text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
-                            <i data-lucide="trending-up" class="w-3 h-3 text-emerald-600"></i>
-                            <span>+14 vs turno previo</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="flex-1 flex flex-col gap-2 overflow-y-auto">
+                                <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-proceso">25</span>
+                                <span class="text-[14px] text-slate-500 font-medium">en curso</span>
+                            </span>
                         </div>
                     </div>
 
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid #FDE68A; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.05); animation-delay: 150ms;">
-                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89] mb-1">
-                            <span>CRÍTICOS SIN ASIGNAR</span>
-                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                    <div
+                        class="bg-white rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Tickets Realizados</span>
+                            <div
+                                class="w-6 h-6 rounded bg-emerald-50 flex items-center justify-center text-emerald-700">
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            </div>
                         </div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-emerald-600" id="op-kpi-criticos">0</span>
-                            <span class="text-xs text-gray-500">sin tomar</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-black font-mono text-slate-900"
+                                id="op-kpi-completados">35</span>
+                            <span class="text-[14px] text-slate-500 font-medium">cerrados hoy</span>
                         </div>
-                        <div class="mt-2 text-[11px]">
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full badge-kpi-normal">Cola Normal</span>
+                        <div
+                            class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[14px] text-emerald-700 font-medium">
+                            <span class="flex items-center gap-1 font-mono"><i data-lucide="trending-up"
+                                    class="w-3 h-3 text-emerald-600"></i> +14 vs turno previo</span>
                         </div>
                     </div>
 
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="background: linear-gradient(180deg, #F5F3FF 0%, #EEF2FF 100%); border: 1px solid #DDD6FE; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.05); animation-delay: 200ms;">
-                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89] mb-1">
-                            <span>TIEMPO DE PRIMERA ATENCIÓN</span>
-                            <i data-lucide="timer" class="w-4 h-4 text-[#2E74C9]"></i>
+                    <div
+                        class="bg-white rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Críticos sin Asignar</span>
+                            <div class="w-6 h-6 rounded bg-rose-50 flex items-center justify-center text-rose-700">
+                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600"></i>
+                            </div>
                         </div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-gray-900" id="op-kpi-sla-time">8.4</span>
-                            <span class="text-xs text-gray-500">minutos</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-criticos">0</span>
+                            <span class="text-[14px] text-slate-500 font-medium">sin tomar</span>
                         </div>
-                        <div class="mt-2 text-[11px] text-gray-600">
-                            <strong class="text-[#1C58A8] font-bold" id="op-kpi-sla-pct">99.4%</strong> a tiempo (dentro del objetivo)
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2 text-[14px] text-rose-700 font-medium     ">
+                            <span
+                                class="px-5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[12px] font-bold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Cola Normal
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Tiempo Primera Atención</span>
+                            <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-700">
+                                <i data-lucide="timer" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-sla-time">8.4</span>
+                            <span class="text-[14px] text-slate-500 font-medium">minutos prom.</span>
+                        </div>
+                        <div
+                            class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[14px] text-slate-600">
+                            <span>Objetivo SLA:</span>
+                            <span class="font-mono font-bold text-[#1C58A8]" id="op-kpi-sla-pct">99.4% a tiempo</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Mesa de Asignación y Control — Coordinador / Administrador -->
-                <div id="coordinator-triage-panel" class="hidden dashboard-chart-card space-y-4 animate-fade-in-up border border-[#BFDBFE] bg-gradient-to-b from-[#F8FBFF] to-white" style="animation-delay: 200ms;">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div id="coordinator-triage-panel"
+                    class="{% if not current_user or current_user.role not in ['COORDINADOR', 'ADMINISTRADOR'] %}hidden {% endif %}dashboard-chart-card space-y-4 bg-white border border-slate-200 rounded-lg p-4 shadow-2xs">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h2 class="text-sm font-bold text-gray-900">Control Operativo de Coordinación</h2>
-                                <span id="triage-area-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área: —</span>
+                                <h2 class="text-sm font-bold text-gray-900">CASOS ACTIVOS</h2>
+                                <span id="triage-area-badge"
+                                    class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área:
+                                    —</span>
                             </div>
-                            <p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y puntos DERS de tu departamento</p>
+                             <!--<p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y
+                                puntos DERS de tu departamento</p>-->
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <div class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs">
-                                <button type="button" id="btn-triage-subtab-assign" onclick="switchTriageSubTab('assign')" class="px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60">
-                                    <span>Por Asignar</span>
-                                    <span id="triage-count-label" class="text-[10px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">0</span>
+                            <div
+                                class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs">
+                                <button type="button" id="btn-triage-subtab-assign"
+                                    onclick="switchTriageSubTab('assign')"
+                                    class="px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60">
+                                    <span>Actividad Actual</span>
+                                    <span id="triage-count-label"
+                                        class="text-[12px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">0</span>
                                 </button>
-                                <button type="button" id="btn-triage-subtab-verify" onclick="switchTriageSubTab('verify')" class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer flex items-center gap-1.5">
-                                    <span>Por Aprobar DERS</span>
-                                    <span id="verify-count-label" class="text-[10px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">0</span>
+                                <button type="button" id="btn-triage-subtab-verify"
+                                    onclick="switchTriageSubTab('verify')"
+                                    class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer flex items-center gap-1.5">
+                                    <span>Confirmar Ticket</span>
+                                    <span id="verify-count-label"
+                                        class="text-[12px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">0</span>
                                 </button>
                             </div>
-                            <button type="button" onclick="refreshCoordinatorPanel()" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                            <button type="button" onclick="refreshCoordinatorPanel()"
+                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
                                 <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
                                 <span>Actualizar</span>
                             </button>
@@ -517,9 +536,12 @@
 
                     <!-- VISTA 1: POR ASIGNAR (TRIAGE) -->
                     <div id="triage-assign-view" class="space-y-3">
-                        <div id="triage-empty-state" class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
-                            <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área. ¡Excelente trabajo!</p>
-                            <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos aparecerán aquí automáticamente.</p>
+                        <div id="triage-empty-state"
+                            class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
+                            <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área.
+                                ¡Excelente trabajo!</p>
+                            <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos
+                                aparecerán aquí automáticamente.</p>
                         </div>
                         <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
                             <table class="table-corporate-metrics min-w-full text-left">
@@ -540,9 +562,11 @@
 
                     <!-- VISTA 2: POR APROBAR DERS (VERIFICACIÓN DE CALIDAD) -->
                     <div id="triage-verify-view" class="hidden space-y-3">
-                        <div id="verify-empty-state" class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-purple-200 bg-purple-50/30">
+                        <div id="verify-empty-state"
+                            class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-purple-200 bg-purple-50/30">
                             <p class="text-sm font-bold text-purple-900">No hay casos pendientes de aprobación.</p>
-                            <p class="text-xs text-purple-700/80 mt-1">Cuando los operadores completen tareas técnicas, aparecerán aquí para tu validación y acreditación de puntos.</p>
+                            <p class="text-xs text-purple-700/80 mt-1">Cuando los operadores completen tareas técnicas,
+                                aparecerán aquí para tu validación y acreditación de puntos.</p>
                         </div>
                         <div id="verify-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
                             <table class="table-corporate-metrics min-w-full text-left">
@@ -564,67 +588,104 @@
                 </div>
 
                 <!-- Torre de Ejecución — Operador (Especialista) -->
-                <div id="operator-assignments-panel" class="dashboard-chart-card space-y-4 animate-fade-in-up" style="animation-delay: 220ms;">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div id="operator-assignments-panel" class="dashboard-chart-card space-y-4 animate-fade-in-up"
+                    style="animation-delay: 220ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h2 class="text-sm font-bold text-gray-900">Mis Tareas Asignadas</h2>
-                                <span id="operator-assignments-count" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] border border-blue-100">0 tickets</span>
-                                <span id="operator-active-points-badge" class="text-[10px] font-semibold text-gray-600">Carga Activa: 0 pts</span>
-                                <span id="sidebar-operator-badge" class="hidden px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white">0</span>
+                                <span id="operator-assignments-count"
+                                    class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] border border-blue-100">0
+                                    tickets</span>
+                                <span id="operator-active-points-badge"
+                                    class="text-[10px] font-semibold text-gray-600">Carga Activa: 0 pts</span>
+                                <span id="sidebar-operator-badge"
+                                    class="hidden px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white">0</span>
                             </div>
-                            <p class="text-[11px] text-gray-500 mt-0.5">Casos asignados a ti — poner en proceso, pausar o resolver</p>
+                            <p class="text-[11px] text-gray-500 mt-0.5">Casos asignados a ti — poner en proceso, pausar
+                                o resolver</p>
                         </div>
-                        <button type="button" onclick="loadOperatorAssignments(true)" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                        <button type="button" onclick="loadOperatorAssignments(true)"
+                            class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
                             <i data-lucide="rotate-cw" id="icon-refresh-operator" class="w-3.5 h-3.5"></i>
                             <span>Sincronizar</span>
                         </button>
                     </div>
                     <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-                        <button type="button" id="optab-all" onclick="setOperatorTaskFilter('all')" class="px-3 py-1.5 rounded-lg bg-white font-bold text-slate-900 shadow-2xs border border-slate-200/60">Todos (<span id="count-optab-all">0</span>)</button>
-                        <button type="button" id="optab-pending" onclick="setOperatorTaskFilter('pending_start')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Por iniciar (<span id="count-optab-pending">0</span>)</button>
-                        <button type="button" id="optab-progress" onclick="setOperatorTaskFilter('in_progress')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En proceso (<span id="count-optab-progress">0</span>)</button>
-                        <button type="button" id="optab-hold" onclick="setOperatorTaskFilter('on_hold')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En espera (<span id="count-optab-hold">0</span>)</button>
-                        <button type="button" id="optab-completed" onclick="setOperatorTaskFilter('completed')" class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Cerrados (<span id="count-optab-completed">0</span>)</button>
-                        <input type="search" id="operator-task-search" oninput="filterOperatorAssignmentsLocal()" placeholder="Buscar ticket..." class="ml-auto text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 w-40 focus:ring-1 focus:ring-[#1C58A8]">
+                        <button type="button" id="optab-all" onclick="setOperatorTaskFilter('all')"
+                            class="px-3 py-1.5 rounded-lg bg-white font-bold text-slate-900 shadow-2xs border border-slate-200/60">Todos
+                            (<span id="count-optab-all">0</span>)</button>
+                        <button type="button" id="optab-pending" onclick="setOperatorTaskFilter('pending_start')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Por iniciar (<span
+                                id="count-optab-pending">0</span>)</button>
+                        <button type="button" id="optab-progress" onclick="setOperatorTaskFilter('in_progress')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En proceso (<span
+                                id="count-optab-progress">0</span>)</button>
+                        <button type="button" id="optab-hold" onclick="setOperatorTaskFilter('on_hold')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En espera (<span
+                                id="count-optab-hold">0</span>)</button>
+                        <button type="button" id="optab-completed" onclick="setOperatorTaskFilter('completed')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Cerrados (<span
+                                id="count-optab-completed">0</span>)</button>
+                        <input type="search" id="operator-task-search" oninput="filterOperatorAssignmentsLocal()"
+                            placeholder="Buscar ticket..."
+                            class="ml-auto text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 w-40 focus:ring-1 focus:ring-[#1C58A8]">
                     </div>
-                    <div id="operator-empty-assignments" class="hidden py-10 px-4 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80">
-                        <p id="operator-empty-title" class="text-sm font-bold text-gray-800">¡Bandeja de Tareas al Día!</p>
-                        <p id="operator-empty-desc" class="text-xs text-gray-500 mt-1">No tienes tareas en esta categoría en este momento.</p>
+                    <div id="operator-empty-assignments"
+                        class="hidden py-10 px-4 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80">
+                        <p id="operator-empty-title" class="text-sm font-bold text-gray-800">¡Bandeja de Tareas al Día!
+                        </p>
+                        <p id="operator-empty-desc" class="text-xs text-gray-500 mt-1">No tienes tareas en esta
+                            categoría en este momento.</p>
                     </div>
                     <div id="operator-assignments-list" class="space-y-3"></div>
                 </div>
 
                 <!-- Carga de Trabajo Actual (Operadores en Vivo - Casos Activos) -->
-                <div class="dashboard-chart-card space-y-4 animate-fade-in-up" id="realtime-workload-section" style="animation-delay: 250ms;">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 border-gray-200 gap-3">
+                <div class="dashboard-chart-card space-y-4 animate-fade-in-up" id="realtime-workload-section"
+                    style="animation-delay: 250ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 border-gray-200 gap-3">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs shrink-0">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs shrink-0">
                                 <i data-lucide="activity" class="w-4 h-4"></i>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2 flex-nowrap">
-                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight whitespace-nowrap">Casos Activos</h2>
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-500/30 whitespace-nowrap shrink-0">
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight whitespace-nowrap">Casos
+                                        Activos</h2>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-500/30 whitespace-nowrap shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span>
                                         En Vivo
                                     </span>
-                                    <span id="active-cases-count-badge" class="text-[10px] text-gray-500 font-mono whitespace-nowrap shrink-0">Cargando...</span>
+                                    <span id="active-cases-count-badge"
+                                        class="text-[10px] text-gray-500 font-mono whitespace-nowrap shrink-0">Cargando...</span>
                                 </div>
-                                <p class="text-[11px] text-gray-500">Monitoreo de operadores y tickets en atención inmediata</p>
+                                <p class="text-[11px] text-gray-500">Monitoreo de operadores y tickets en atención
+                                    inmediata</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 text-xs font-sans">
                             <!-- Buscador en tiempo real de operador o ticket -->
                             <div class="relative flex items-center">
-                                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-gray-400 pointer-events-none"></i>
-                                <input type="text" id="filter-active-cases-search" oninput="filterActiveCasesLocal(this.value)" placeholder="Buscar operador o ticket..." class="w-36 sm:w-44 pl-8 pr-2.5 py-1 text-xs bg-white rounded-lg text-gray-800 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1C58A8] focus:w-52 transition-all shadow-2xs">
+                                <i data-lucide="search"
+                                    class="w-3.5 h-3.5 absolute left-2.5 text-gray-400 pointer-events-none"></i>
+                                <input type="text" id="filter-active-cases-search"
+                                    oninput="filterActiveCasesLocal(this.value)"
+                                    placeholder="Buscar operador o ticket..."
+                                    class="w-36 sm:w-44 pl-8 pr-2.5 py-1 text-xs bg-white rounded-lg text-gray-800 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1C58A8] focus:w-52 transition-all shadow-2xs">
                             </div>
                             <!-- Filtro de Area -->
-                            <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg border border-gray-200 text-gray-700 shadow-2xs hover:border-[#1C58A8]/40 transition">
+                            <div
+                                class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg border border-gray-200 text-gray-700 shadow-2xs hover:border-[#1C58A8]/40 transition">
                                 <i data-lucide="filter" class="w-3.5 h-3.5 text-[#1C58A8] shrink-0"></i>
-                                <label for="area-filter-select" class="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Área:</label>
-                                <select id="area-filter-select" onchange="filterActiveCasesByArea(this.value)" class="bg-transparent text-[11px] font-bold text-[#1C58A8] focus:outline-none cursor-pointer pr-1 border-0 p-0">
+                                <label for="area-filter-select"
+                                    class="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Área:</label>
+                                <select id="area-filter-select" onchange="filterActiveCasesByArea(this.value)"
+                                    class="bg-transparent text-[11px] font-bold text-[#1C58A8] focus:outline-none cursor-pointer pr-1 border-0 p-0">
                                     <option value="all">Todas las Áreas (General)</option>
                                     <option value="ACCESO_APROV">Redes de Acceso</option>
                                     <option value="TRAFICO_INALAMBRICO">Control de Tráfico y Wireless</option>
@@ -645,7 +706,6 @@
                         </div>
                     </div>
                 </div>
-                </div>
             </section>
 
             <!-- ============================================================== -->
@@ -655,22 +715,28 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     <!-- Curva de Puntos por Hora -->
                     <div class="lg:col-span-2 dashboard-chart-card interactive-card">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-1 border-b border-gray-100">
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-1 border-b border-gray-100">
                             <div class="space-y-0.5">
                                 <div class="flex items-center gap-2">
-                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Curva de Puntos por Hora (Rendimiento)</h2>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">En Vivo</span>
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Curva de Puntos por Hora
+                                        (Rendimiento)</h2>
+                                    <span
+                                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">En
+                                        Vivo</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Evolución del esfuerzo acumulado en la jornada</p>
                             </div>
                             <div class="flex items-center gap-3 self-end sm:self-auto">
-                                <div class="flex items-center px-2.5 py-1 rounded-lg bg-blue-50/60 border border-blue-200/60 text-xs font-mono text-[#1C58A8] font-bold">
+                                <div
+                                    class="flex items-center px-2.5 py-1 rounded-lg bg-blue-50/60 border border-blue-200/60 text-xs font-mono text-[#1C58A8] font-bold">
                                     <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8] mr-1.5 pulse-indicator"></span>
                                     <span id="metric-hourly-total">312 pts Totales</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="h-64 flex items-center justify-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200 p-2">
+                        <div
+                            class="h-64 flex items-center justify-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200 p-2">
                             <canvas id="chartHourlyDemo"></canvas>
                         </div>
                     </div>
@@ -686,23 +752,33 @@
                 </div>
 
                 <!-- Leaderboard Especialistas (Ranking de Carga de Trabajo Actual) -->
-                <div class="dashboard-chart-card space-y-4 bg-white border border-[#E4E9F3] rounded-xl p-5 shadow-sm interactive-card">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                <div
+                    class="dashboard-chart-card space-y-4 bg-white border border-[#E4E9F3] rounded-xl p-5 shadow-sm interactive-card">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-md bg-amber-50 text-amber-500 border border-amber-200 shadow-2xs">
+                                <span
+                                    class="flex items-center justify-center w-6 h-6 rounded-md bg-amber-50 text-amber-500 border border-amber-200 shadow-2xs">
                                     <i data-lucide="award" class="w-4 h-4"></i>
                                 </span>
-                                <h3 class="text-sm font-bold text-gray-900 tracking-tight">Ranking de Carga de Trabajo Actual (Top Especialistas)</h3>
+                                <h3 class="text-sm font-bold text-gray-900 tracking-tight">Ranking de Carga de Trabajo
+                                    Actual (Top Especialistas)</h3>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1 pl-8">Escala de saturación operativa, puntos de jornada acumulados y balance de cuadrillas</p>
+                            <p class="text-xs text-gray-500 mt-1 pl-8">Escala de saturación operativa, puntos de jornada
+                                acumulados y balance de cuadrillas</p>
                         </div>
                         <div class="flex items-center gap-2.5 text-xs select-none self-end sm:self-auto">
-                            <span class="text-[11px] font-medium text-gray-500 px-2 py-0.5 rounded bg-gray-50 border border-gray-200">&lt; 60 pts Balanceado</span>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-500/30">
+                            <span
+                                class="text-[11px] font-medium text-gray-500 px-2 py-0.5 rounded bg-gray-50 border border-gray-200">&lt;
+                                60 pts Balanceado</span>
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-500/30">
                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>60-80 pts Moderado
                             </span>
-                            <span class="text-[11px] font-medium text-rose-700 px-2 py-0.5 rounded bg-rose-50 border border-rose-500/30">&gt; 80 pts Sobrecarga</span>
+                            <span
+                                class="text-[11px] font-medium text-rose-700 px-2 py-0.5 rounded bg-rose-50 border border-rose-500/30">&gt;
+                                80 pts Sobrecarga</span>
                         </div>
                     </div>
 
@@ -710,21 +786,38 @@
                         <table class="table-corporate-metrics min-w-full text-left" id="table-ranking-specialists">
                             <thead class="bg-[#F8FAFC] border-b border-[#E4E9F3]">
                                 <tr>
-                                    <th class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-12">POS.</th>
-                                    <th class="py-2.5 px-3 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Especialista</th>
-                                    <th class="py-2.5 px-3 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Área Técnica</th>
-                                    <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Tickets</th>
-                                    <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Puntos Acum.</th>
-                                    <th class="py-2.5 px-4 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-56">Escala de Carga</th>
-                                    <th class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Tiempo Promedio de Solución</th>
-                                    <th class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">Estado Operativo</th>
+                                    <th
+                                        class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-12">
+                                        POS.</th>
+                                    <th
+                                        class="py-2.5 px-3 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Especialista</th>
+                                    <th
+                                        class="py-2.5 px-3 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Área Técnica</th>
+                                    <th
+                                        class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Tickets</th>
+                                    <th
+                                        class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Puntos Acum.</th>
+                                    <th
+                                        class="py-2.5 px-4 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-56">
+                                        Escala de Carga</th>
+                                    <th
+                                        class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Tiempo Promedio de Solución</th>
+                                    <th
+                                        class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Estado Operativo</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white text-xs" id="tbody-ranking-specialists">
                                 <tr>
                                     <td colspan="8" class="py-8 text-center text-gray-400 text-xs">
                                         <div class="inline-flex items-center gap-2">
-                                            <span class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
+                                            <span
+                                                class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
                                             <span>Sincronizando escalafón técnico y métricas de desempeño...</span>
                                         </div>
                                     </td>
@@ -735,32 +828,47 @@
                 </div>
 
                 <!-- Distribución y Control Jerárquico de Carga de Trabajo -->
-                <div class="dashboard-chart-card bg-white border border-[#E4E9F3] rounded-xl p-6 shadow-sm relative overflow-hidden space-y-5" id="workload-hierarchy-section">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-3">
+                <div class="dashboard-chart-card bg-white border border-[#E4E9F3] rounded-xl p-6 shadow-sm relative overflow-hidden space-y-5"
+                    id="workload-hierarchy-section">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-3">
                         <div>
                             <div class="flex items-center gap-2">
-                                <h2 class="text-sm font-bold text-gray-900 tracking-tight">Distribución y Control de Carga de Trabajo</h2>
-                                <span id="hierarchy-active-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Departamento IP (General)</span>
+                                <h2 class="text-sm font-bold text-gray-900 tracking-tight">Distribución y Control de
+                                    Carga de Trabajo</h2>
+                                <span id="hierarchy-active-badge"
+                                    class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Departamento
+                                    IP (General)</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-0.5">Métricas de puntos acumulados, volumen de tareas y saturación operativa por niveles jerárquicos</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Métricas de puntos acumulados, volumen de tareas y
+                                saturación operativa por niveles jerárquicos</p>
                         </div>
                         <div class="flex items-center gap-4 text-xs font-medium text-gray-600">
-                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#0B3B78]"></span>Balanceado (&lt;800 pts)</span>
-                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Moderado (800-1400 pts)</span>
-                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>Saturado (&gt;1400 pts)</span>
+                            <span class="inline-flex items-center gap-1.5"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-[#0B3B78]"></span>Balanceado (&lt;800 pts)</span>
+                            <span class="inline-flex items-center gap-1.5"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Moderado (800-1400 pts)</span>
+                            <span class="inline-flex items-center gap-1.5"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>Saturado (&gt;1400 pts)</span>
                         </div>
                     </div>
 
                     <!-- Controles Jerárquicos Interactivos -->
-                    <div id="metrics-hierarchy-controls" class="flex flex-wrap items-center justify-between gap-3 p-3 bg-gray-50/80 rounded-xl border border-[#E4E9F3]">
+                    <div id="metrics-hierarchy-controls"
+                        class="flex flex-wrap items-center justify-between gap-3 p-3 bg-gray-50/80 rounded-xl border border-[#E4E9F3]">
                         <div class="flex flex-wrap items-center gap-2.5">
-                            <button type="button" id="btn-hierarchy-dept" onclick="if(window.handleDeptClick) window.handleDeptClick();" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-2 bg-[#0056B3] text-white border border-[#0056B3] btn-press">
+                            <button type="button" id="btn-hierarchy-dept"
+                                onclick="if(window.handleDeptClick) window.handleDeptClick();"
+                                class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-2 bg-[#0056B3] text-white border border-[#0056B3] btn-press">
                                 <i data-lucide="activity" class="w-3.5 h-3.5"></i>
                                 <span>Departamento IP</span>
                             </button>
                             <div class="relative flex items-center">
-                                <label for="select-hierarchy-area" class="text-[11px] font-semibold text-gray-500 mr-2">Área:</label>
-                                <select id="select-hierarchy-area" onchange="if(window.handleAreaChange) window.handleAreaChange(this.value);" class="appearance-none bg-white text-gray-800 text-xs font-semibold pl-2.5 pr-7 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] cursor-pointer shadow-2xs">
+                                <label for="select-hierarchy-area"
+                                    class="text-[11px] font-semibold text-gray-500 mr-2">Área:</label>
+                                <select id="select-hierarchy-area"
+                                    onchange="if(window.handleAreaChange) window.handleAreaChange(this.value);"
+                                    class="appearance-none bg-white text-gray-800 text-xs font-semibold pl-2.5 pr-7 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] cursor-pointer shadow-2xs">
                                     <option value="all">Todas las Áreas</option>
                                     <option value="acceso">Redes de Acceso</option>
                                     <option value="wan">Redes WAN</option>
@@ -769,33 +877,44 @@
                                     <option value="seguridad">Seguridad</option>
                                     <option value="telefonia">Telefonía</option>
                                 </select>
-                                <i data-lucide="chevron-down" class="w-3 h-3 absolute right-2 pointer-events-none text-gray-400"></i>
+                                <i data-lucide="chevron-down"
+                                    class="w-3 h-3 absolute right-2 pointer-events-none text-gray-400"></i>
                             </div>
                             <div class="relative flex items-center">
-                                <label for="select-hierarchy-operator" class="text-[11px] font-semibold text-gray-500 mr-2">Operador:</label>
-                                <select id="select-hierarchy-operator" onchange="if(window.handleOperatorChange) window.handleOperatorChange(this.value);" class="appearance-none bg-white text-gray-800 text-xs font-semibold pl-2.5 pr-7 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] cursor-pointer shadow-2xs max-w-[220px] truncate">
+                                <label for="select-hierarchy-operator"
+                                    class="text-[11px] font-semibold text-gray-500 mr-2">Operador:</label>
+                                <select id="select-hierarchy-operator"
+                                    onchange="if(window.handleOperatorChange) window.handleOperatorChange(this.value);"
+                                    class="appearance-none bg-white text-gray-800 text-xs font-semibold pl-2.5 pr-7 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] cursor-pointer shadow-2xs max-w-[220px] truncate">
                                     <option value="all">Todos los Operadores (IP General - Top)</option>
                                 </select>
-                                <i data-lucide="chevron-down" class="w-3 h-3 absolute right-2 pointer-events-none text-gray-400"></i>
+                                <i data-lucide="chevron-down"
+                                    class="w-3 h-3 absolute right-2 pointer-events-none text-gray-400"></i>
                             </div>
                         </div>
-                        <div class="text-[11px] text-[#1C58A8] font-medium bg-[#EAF2FC] px-2.5 py-1 rounded-md border border-[#BFDBFE]">
+                        <div
+                            class="text-[11px] text-[#1C58A8] font-medium bg-[#EAF2FC] px-2.5 py-1 rounded-md border border-[#BFDBFE]">
                             Filtro de Rendimiento activo
                         </div>
                     </div>
 
                     <!-- Resumen de Contexto Dinámico -->
-                    <div id="workload-context-summary" class="flex flex-col sm:flex-row sm:items-center justify-between text-xs px-3.5 py-2 bg-blue-50/60 rounded-lg border border-blue-200/60 text-[#1C58A8] gap-2">
+                    <div id="workload-context-summary"
+                        class="flex flex-col sm:flex-row sm:items-center justify-between text-xs px-3.5 py-2 bg-blue-50/60 rounded-lg border border-blue-200/60 text-[#1C58A8] gap-2">
                         <div class="flex items-center gap-2">
                             <span class="font-bold">Vista Activa:</span>
-                            <span id="workload-current-filter-label" class="font-medium text-gray-800">Consolidado General — Departamento IP (Todas las áreas y operadores)</span>
+                            <span id="workload-current-filter-label" class="font-medium text-gray-800">Consolidado
+                                General — Departamento IP (Todas las áreas y operadores)</span>
                         </div>
                         <div class="flex items-center gap-3 font-mono text-[11px]">
-                            <span>Total Tareas: <strong id="workload-total-tasks" class="text-gray-900">842</strong></span>
+                            <span>Total Tareas: <strong id="workload-total-tasks"
+                                    class="text-gray-900">842</strong></span>
                             <span>·</span>
-                            <span>Tiempo Promedio de Solución: <strong id="workload-avg-mttr" class="text-gray-900">31.5m</strong></span>
+                            <span>Tiempo Promedio de Solución: <strong id="workload-avg-mttr"
+                                    class="text-gray-900">31.5m</strong></span>
                             <span>·</span>
-                            <span>Puntos Totales: <strong id="workload-total-pts" class="text-[#0B3B78]">3.210 pts</strong></span>
+                            <span>Puntos Totales: <strong id="workload-total-pts" class="text-[#0B3B78]">3.210
+                                    pts</strong></span>
                         </div>
                     </div>
 
@@ -822,7 +941,8 @@
                         </div>
 
                         <!-- X-Axis Labels Row -->
-                        <div class="flex items-center text-[11px] font-mono text-gray-500 pt-2 border-t border-gray-200 mt-2">
+                        <div
+                            class="flex items-center text-[11px] font-mono text-gray-500 pt-2 border-t border-gray-200 mt-2">
                             <span class="w-28"></span>
                             <div class="flex-1 flex justify-between mr-6 px-0.5">
                                 <span>0</span>
@@ -846,22 +966,29 @@
             <!-- ============================================================== -->
             <section id="tab-tickets" class="space-y-6 hidden">
                 <!-- Tablero Title & Controls Bar -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-3">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-3">
                     <div class="animate-fade-in-up" style="animation-delay: 50ms;">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-lg bg-[#EAF2FC] text-[#1C58A8] flex items-center justify-center font-bold shadow-2xs">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-[#EAF2FC] text-[#1C58A8] flex items-center justify-center font-bold shadow-2xs">
                                 <i data-lucide="ticket" class="w-4 h-4"></i>
                             </div>
                             <div>
-                                <h2 class="text-base font-bold text-gray-900 tracking-tight">Tablero de Tickets y Operadores Activos</h2>
-                                <p class="text-xs text-gray-500">Distribución en tiempo real por cuadrantes y áreas técnicas</p>
+                                <h2 class="text-base font-bold text-gray-900 tracking-tight">Tablero de Tickets y
+                                    Operadores Activos</h2>
+                                <p class="text-xs text-gray-500">Distribución en tiempo real por cuadrantes y áreas
+                                    técnicas</p>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-2xs hover:border-[#1C58A8]/40 transition">
-                            <label for="filter-tablero-area" class="text-xs font-semibold text-gray-600">Área Técnica:</label>
-                            <select id="filter-tablero-area" onchange="filterAreaDropdown(this.value)" class="text-xs font-bold text-[#1C58A8] bg-transparent focus:outline-none cursor-pointer pr-2 border-0 p-0">
+                        <div
+                            class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-2xs hover:border-[#1C58A8]/40 transition">
+                            <label for="filter-tablero-area" class="text-xs font-semibold text-gray-600">Área
+                                Técnica:</label>
+                            <select id="filter-tablero-area" onchange="filterAreaDropdown(this.value)"
+                                class="text-xs font-bold text-[#1C58A8] bg-transparent focus:outline-none cursor-pointer pr-2 border-0 p-0">
                                 <option value="all">Todas las Áreas</option>
                                 <option value="ACCESO_APROV">Redes de Acceso &amp; Aprov.</option>
                                 <option value="TRAFICO_INALAMBRICO">Tráfico e Inalámbricas</option>
@@ -871,7 +998,8 @@
                                 <option value="GRANDES_CLIENTES">Grandes Clientes</option>
                             </select>
                         </div>
-                        <button onclick="openNewTicketModal()" class="px-3.5 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                        <button onclick="openNewTicketModal()"
+                            class="px-3.5 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                             <span>Nuevo Ticket</span>
                         </button>
@@ -880,13 +1008,15 @@
 
                 <!-- 4 KPI Scorecards de Despacho -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="animation-delay: 80ms;">
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 80ms;">
                         <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
                             <span>OPERADORES EN TURNO</span>
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-indicator shadow-xs"></span>
                         </div>
                         <div class="flex items-baseline gap-2 mt-2">
-                            <span class="text-3xl font-extrabold text-gray-900 tracking-tight" id="kpi-total-ops">12</span>
+                            <span class="text-3xl font-extrabold text-gray-900 tracking-tight"
+                                id="kpi-total-ops">12</span>
                             <span class="text-xs text-gray-500">especialistas</span>
                         </div>
                         <div class="mt-2 text-[11px] text-[#1C58A8] font-semibold flex items-center gap-1">
@@ -895,13 +1025,16 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="animation-delay: 130ms;">
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 130ms;">
                         <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
                             <span>DISPONIBLES</span>
-                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Libres</span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Libres</span>
                         </div>
                         <div class="flex items-baseline gap-2 mt-2">
-                            <span class="text-3xl font-extrabold text-emerald-600 tracking-tight" id="kpi-avail-count">4</span>
+                            <span class="text-3xl font-extrabold text-emerald-600 tracking-tight"
+                                id="kpi-avail-count">4</span>
                             <span class="text-xs text-gray-500">listos para asignar</span>
                         </div>
                         <div class="mt-2 text-[11px] text-gray-500 font-medium">
@@ -909,13 +1042,17 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="animation-delay: 180ms;">
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 180ms;">
                         <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
                             <span>EN ATENCIÓN</span>
-                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200">En Curso</span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200">En
+                                Curso</span>
                         </div>
                         <div class="flex items-baseline gap-2 mt-2">
-                            <span class="text-3xl font-extrabold text-[#0B3B78] tracking-tight" id="kpi-in-progress-count">6</span>
+                            <span class="text-3xl font-extrabold text-[#0B3B78] tracking-tight"
+                                id="kpi-in-progress-count">6</span>
                             <span class="text-xs text-gray-500">con caso activo</span>
                         </div>
                         <div class="mt-2 text-[11px] text-gray-500 font-medium">
@@ -923,13 +1060,17 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up" style="animation-delay: 230ms;">
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 230ms;">
                         <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
                             <span>TICKETS EN ESPERA</span>
-                            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300">Cola Viva</span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300">Cola
+                                Viva</span>
                         </div>
                         <div class="flex items-baseline gap-2 mt-2">
-                            <span class="text-3xl font-extrabold text-amber-600 tracking-tight" id="kpi-queue-count">14</span>
+                            <span class="text-3xl font-extrabold text-amber-600 tracking-tight"
+                                id="kpi-queue-count">14</span>
                             <span class="text-xs text-gray-500">pendientes</span>
                         </div>
                         <div class="mt-2 text-[11px] text-rose-600 font-semibold flex items-center gap-1">
@@ -939,62 +1080,34 @@
                     </div>
                 </div>
 
-                <!-- Operadores Activos en Turno Card Container -->
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4 animate-fade-in-up" style="animation-delay: 280ms;">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs">
-                                <i data-lucide="users" class="w-4 h-4"></i>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="text-sm font-bold text-gray-900">Operadores Activos en Turno</h3>
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono font-bold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-500/30">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span>
-                                        12 Activos
-                                    </span>
-                                </div>
-                                <p class="text-[11px] text-gray-500">Estado de disponibilidad y carga instantánea para asignación directa</p>
-                            </div>
-                        </div>
-                        <!-- Filter Pills -->
-                        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] p-0.5 bg-gray-100/70 rounded-lg border border-gray-200/80">
-                            <button onclick="filterOperatorsByPill('all', this)" class="filter-pill-btn pill-active px-3 py-1 rounded-md font-bold text-white transition btn-press" data-filter="all">Todas</button>
-                            <button onclick="filterOperatorsByPill('ACCESO_APROV', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="ACCESO_APROV">Acceso</button>
-                            <button onclick="filterOperatorsByPill('TRAFICO_INALAMBRICO', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="TRAFICO_INALAMBRICO">Tráfico</button>
-                            <button onclick="filterOperatorsByPill('REDES_WAN', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="REDES_WAN">WAN</button>
-                            <button onclick="filterOperatorsByPill('SEGURIDAD', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="SEGURIDAD">Seguridad</button>
-                            <button onclick="filterOperatorsByPill('TELEFONIA', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="TELEFONIA">Telefonía</button>
-                            <button onclick="filterOperatorsByPill('GRANDES_CLIENTES', this)" class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press" data-filter="GRANDES_CLIENTES">Grandes Clientes</button>
-                        </div>
-                    </div>
-
-                    <!-- Operator Cards Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="operators-grid-cards">
-                        <div class="col-span-full py-8 text-center text-gray-400 text-xs flex items-center justify-center gap-2">
-                            <span class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
-                            <span>Sincronizando operadores en turno con el NOC...</span>
-                        </div>
-                    </div>
-                </div>
-
+                <!-- ============================================================== -->
+                <!-- SECCIÓN PRINCIPAL: TABLERO DE ASIGNACIONES PENDIENTES           -->
+                <!-- ============================================================== -->
                 <!-- Cola de Despacho Inmediato Card -->
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4 animate-fade-in-up" style="animation-delay: 340ms;">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4 animate-fade-in-up"
+                    style="animation-delay: 280ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold border border-amber-200 shadow-2xs">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold border border-amber-200 shadow-2xs">
                                 <i data-lucide="inbox" class="w-4 h-4"></i>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h3 class="text-sm font-bold text-gray-900">Cola de Despacho Inmediato (Tickets No Asignados)</h3>
-                                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-50 text-amber-800 border border-amber-200" id="queue-badge-count">14 Tickets</span>
+                                    <h3 class="text-sm font-bold text-gray-900">Cola de Despacho Inmediato (Tickets No
+                                        Asignados)</h3>
+                                    <span
+                                        class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-50 text-amber-800 border border-amber-200"
+                                        id="queue-badge-count">14 Tickets</span>
                                 </div>
-                                <p class="text-[11px] text-gray-500">Buffer de asignación prioritaria y balanceo de carga en tiempo real</p>
+                                <p class="text-[11px] text-gray-500">Buffer de asignación prioritaria y balanceo de
+                                    carga en tiempo real</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="refreshDispatchQueue()" class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                            <button onclick="refreshDispatchQueue()"
+                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
                                 <i data-lucide="rotate-cw" id="refresh-spin-icon" class="w-3.5 h-3.5"></i>
                                 <span>Actualizar</span>
                             </button>
@@ -1018,62 +1131,153 @@
                                 <tr class="hidden" data-area="olt" data-ticket="#INC-4830">
                                     <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4830</td>
                                     <td class="py-2.5 px-3 font-medium text-gray-900">Banco Universal Corp</td>
-                                    <td class="py-2.5 px-3 text-gray-700">Caída enlace secundario MetroEthernet OLT-04</td>
+                                    <td class="py-2.5 px-3 text-gray-700">Caída enlace secundario MetroEthernet OLT-04
+                                    </td>
                                     <td class="py-2.5 px-3 text-gray-600 font-medium">Cabecera OLT</td>
                                     <td class="py-2.5 px-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30 flex items-center gap-1 w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>P1 - Crítico
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30 flex items-center gap-1 w-max">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>P1
+                                            - Crítico
                                         </span>
                                     </td>
                                     <td class="py-2.5 px-3">
-                                        <button type="button" onclick="openTicketDetail('#INC-4830', null, 'Banco Universal Corp', 'Caída enlace secundario MetroEthernet OLT-04', 'Cabecera OLT', 'P1 - Crítico')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                                        <button type="button"
+                                            onclick="openTicketDetail('#INC-4830', null, 'Banco Universal Corp', 'Caída enlace secundario MetroEthernet OLT-04', 'Cabecera OLT', 'P1 - Crítico')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
                                             <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
                                         </button>
                                     </td>
                                     <td class="py-2.5 px-3 text-right">
-                                        <button onclick="promptAssignTicket('#INC-4830', 'Cabecera OLT')" class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar Ahora</button>
+                                        <button onclick="promptAssignTicket('#INC-4830', 'Cabecera OLT')"
+                                            class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar
+                                            Ahora</button>
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="ftth" data-ticket="#INC-4831">
+                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="ftth"
+                                    data-ticket="#INC-4831">
                                     <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4831</td>
                                     <td class="py-2.5 px-3 font-medium text-gray-900">Farmacias Saas Centro</td>
-                                    <td class="py-2.5 px-3 text-gray-700">Aprovisionamiento ONT módem bridge IP estática</td>
+                                    <td class="py-2.5 px-3 text-gray-700">Aprovisionamiento ONT módem bridge IP estática
+                                    </td>
                                     <td class="py-2.5 px-3 text-gray-600 font-medium">Soporte FTTH</td>
                                     <td class="py-2.5 px-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200 w-max">P3 - Estándar</span>
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200 w-max">P3
+                                            - Estándar</span>
                                     </td>
                                     <td class="py-2.5 px-3">
-                                        <button type="button" onclick="openTicketDetail('#INC-4831', null, 'Farmacias Saas Centro', 'Aprovisionamiento ONT módem bridge IP estática', 'Soporte FTTH', 'P3 - Estándar')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                                        <button type="button"
+                                            onclick="openTicketDetail('#INC-4831', null, 'Farmacias Saas Centro', 'Aprovisionamiento ONT módem bridge IP estática', 'Soporte FTTH', 'P3 - Estándar')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
                                             <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
                                         </button>
                                     </td>
                                     <td class="py-2.5 px-3 text-right">
-                                        <button onclick="promptAssignTicket('#INC-4831', 'Soporte FTTH')" class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar Ahora</button>
+                                        <button onclick="promptAssignTicket('#INC-4831', 'Soporte FTTH')"
+                                            class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar
+                                            Ahora</button>
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="voip" data-ticket="#INC-4832">
+                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="voip"
+                                    data-ticket="#INC-4832">
                                     <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4832</td>
                                     <td class="py-2.5 px-3 font-medium text-gray-900">Call Center Altamira</td>
-                                    <td class="py-2.5 px-3 text-gray-700">Degradación audio RTP códec G729 canales 12 a 24</td>
+                                    <td class="py-2.5 px-3 text-gray-700">Degradación audio RTP códec G729 canales 12 a
+                                        24</td>
                                     <td class="py-2.5 px-3 text-gray-600 font-medium">Telefonía VoIP</td>
                                     <td class="py-2.5 px-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 w-max">P2 - Alto</span>
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 w-max">P2
+                                            - Alto</span>
                                     </td>
                                     <td class="py-2.5 px-3">
-                                        <button type="button" onclick="openTicketDetail('#INC-4832', null, 'Call Center Altamira', 'Degradación audio RTP códec G729 canales 12 a 24', 'Telefonía VoIP', 'P2 - Alto')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                                        <button type="button"
+                                            onclick="openTicketDetail('#INC-4832', null, 'Call Center Altamira', 'Degradación audio RTP códec G729 canales 12 a 24', 'Telefonía VoIP', 'P2 - Alto')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
                                             <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
                                         </button>
                                     </td>
                                     <td class="py-2.5 px-3 text-right">
-                                        <button onclick="promptAssignTicket('#INC-4832', 'Telefonía VoIP')" class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar Ahora</button>
+                                        <button onclick="promptAssignTicket('#INC-4832', 'Telefonía VoIP')"
+                                            class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar
+                                            Ahora</button>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div id="queue-empty-state" class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-amber-200 bg-amber-50/30 mt-3">
+                    <div id="queue-empty-state"
+                        class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-amber-200 bg-amber-50/30 mt-3">
                         <p class="text-sm font-bold text-amber-900">No hay tickets pendientes de asignación</p>
-                        <p class="text-xs text-amber-800/70 mt-1">{% if current_user and current_user.role == 'COORDINADOR' %}Tu mesa de triage está vacía — excelente balance del turno.{% else %}La cola de despacho está al día.{% endif %}</p>
+                        <p class="text-xs text-amber-800/70 mt-1">{% if current_user and current_user.role ==
+                            'COORDINADOR' %}Tu mesa de triage está vacía — excelente balance del turno.{% else %}La cola
+                            de despacho está al día.{% endif %}</p>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- SECCIÓN AL FINAL: OPERADORES ACTIVOS EN TURNO                   -->
+                <!-- ============================================================== -->
+                <!-- Operadores Activos en Turno Card Container (Ubicado al final para posterior modificación) -->
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4 animate-fade-in-up"
+                    style="animation-delay: 340ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs">
+                                <i data-lucide="users" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-gray-900">Operadores Activos en Turno</h3>
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono font-bold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span>
+                                        12 Activos
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-gray-500">Estado de disponibilidad y carga instantánea para
+                                    asignación directa</p>
+                            </div>
+                        </div>
+                        <!-- Filter Pills -->
+                        <div
+                            class="flex items-center gap-1.5 overflow-x-auto text-[11px] p-0.5 bg-gray-100/70 rounded-lg border border-gray-200/80">
+                            <button onclick="filterOperatorsByPill('all', this)"
+                                class="filter-pill-btn pill-active px-3 py-1 rounded-md font-bold text-white transition btn-press"
+                                data-filter="all">Todas</button>
+                            <button onclick="filterOperatorsByPill('ACCESO_APROV', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="ACCESO_APROV">Acceso</button>
+                            <button onclick="filterOperatorsByPill('TRAFICO_INALAMBRICO', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="TRAFICO_INALAMBRICO">Tráfico</button>
+                            <button onclick="filterOperatorsByPill('REDES_WAN', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="REDES_WAN">WAN</button>
+                            <button onclick="filterOperatorsByPill('SEGURIDAD', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="SEGURIDAD">Seguridad</button>
+                            <button onclick="filterOperatorsByPill('TELEFONIA', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="TELEFONIA">Telefonía</button>
+                            <button onclick="filterOperatorsByPill('GRANDES_CLIENTES', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="GRANDES_CLIENTES">Grandes Clientes</button>
+                        </div>
+                    </div>
+
+                    <!-- Operator Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                        id="operators-grid-cards">
+                        <div
+                            class="col-span-full py-8 text-center text-gray-400 text-xs flex items-center justify-center gap-2">
+                            <span
+                                class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
+                            <span>Sincronizando operadores en turno con el NOC...</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1088,9 +1292,11 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-base font-bold text-gray-900">Bitácora Forense de Trazabilidad</h2>
-                            <p class="text-xs text-gray-500">Registro inmutable de inicio de sesión, tomas de tickets y resoluciones</p>
+                            <p class="text-xs text-gray-500">Registro inmutable de inicio de sesión, tomas de tickets y
+                                resoluciones</p>
                         </div>
-                        <button onclick="showToast('Exportando bitácora forense de auditoría en formato Excel...')" class="px-3.5 py-1.5 rounded-lg bg-[#1C58A8] hover:bg-[#0056B3] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs btn-press">
+                        <button id="btn-export-excel-audit" onclick="downloadExcelReport()"
+                            class="px-3.5 py-1.5 rounded-lg bg-[#1C58A8] hover:bg-[#0056B3] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs btn-press">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             <span>Exportar Excel</span>
                         </button>
@@ -1111,7 +1317,9 @@
                                 <tr class="hidden hover:bg-blue-50/30 transition-colors" id="audit-placeholder-row">
                                     <td class="font-mono text-xs text-gray-500">2026-03-30 11:42:15</td>
                                     <td class="font-bold text-gray-900">José Corobo</td>
-                                    <td><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">TOMA_TICKET</span></td>
+                                    <td><span
+                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">TOMA_TICKET</span>
+                                    </td>
                                     <td class="font-mono font-bold text-[#1C58A8]">#INC-4821</td>
                                     <td class="text-xs text-gray-700">Desatasco de demonio OLT en Slot 3 PON 4</td>
                                     <td class="text-right font-mono text-xs text-gray-400">10.20.4.12</td>
@@ -1119,9 +1327,12 @@
                                 <tr class="hover:bg-blue-50/30 transition-colors">
                                     <td class="font-mono text-xs text-gray-500">2026-03-30 11:35:00</td>
                                     <td class="font-bold text-gray-900">Luis Gómez</td>
-                                    <td><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">CIERRE_TICKET</span></td>
+                                    <td><span
+                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">CIERRE_TICKET</span>
+                                    </td>
                                     <td class="font-mono font-bold text-[#1C58A8]">#INC-4811</td>
-                                    <td class="text-xs text-gray-700">Homologación confirmada con power meter -19.4 dBm</td>
+                                    <td class="text-xs text-gray-700">Homologación confirmada con power meter -19.4 dBm
+                                    </td>
                                     <td class="text-right font-mono text-xs text-gray-400">10.20.4.18</td>
                                 </tr>
                             </tbody>
@@ -1135,12 +1346,15 @@
             <!-- ============================================================== -->
             <section id="tab-inbox" class="space-y-4 hidden">
                 <div class="bg-white rounded-xl border border-gray-200 shadow-md p-8 text-center space-y-3">
-                    <div class="w-12 h-12 rounded-full bg-blue-50 text-[#0056B3] mx-auto flex items-center justify-center font-bold">
+                    <div
+                        class="w-12 h-12 rounded-full bg-blue-50 text-[#0056B3] mx-auto flex items-center justify-center font-bold">
                         <i data-lucide="mail" class="w-6 h-6"></i>
                     </div>
                     <h3 class="text-base font-bold text-gray-900">Consola de Mensajería M365 NOC</h3>
-                    <p class="text-xs text-gray-500 max-w-md mx-auto">Módulo sincronizado con Microsoft Exchange IP Services. Puedes gestionar los tickets directamente desde el Tablero de Tickets.</p>
-                    <button onclick="switchDashboardTab('tickets')" class="px-4 py-2 rounded-lg bg-[#0056B3] text-white text-xs font-bold hover:bg-[#1C58A8] transition btn-press inline-flex items-center gap-1.5">
+                    <p class="text-xs text-gray-500 max-w-md mx-auto">Módulo sincronizado con Microsoft Exchange IP
+                        Services. Puedes gestionar los tickets directamente desde el Tablero de Tickets.</p>
+                    <button onclick="switchDashboardTab('tickets')"
+                        class="px-4 py-2 rounded-lg bg-[#0056B3] text-white text-xs font-bold hover:bg-[#1C58A8] transition btn-press inline-flex items-center gap-1.5">
                         <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
                         <span>Ir a Tablero de Tickets</span>
                     </button>
@@ -1156,7 +1370,8 @@
                         <i data-lucide="settings" class="w-5 h-5 text-[#1C58A8]"></i>
                         <h3 class="text-sm font-bold text-gray-900">Configuración Operativa del NOC</h3>
                     </div>
-                    <p class="text-xs text-gray-600">Parámetros de conexión a OLTs, sincronización SNMP, y balanceo ponderado DERS.</p>
+                    <p class="text-xs text-gray-600">Parámetros de conexión a OLTs, sincronización SNMP, y balanceo
+                        ponderado DERS.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                         <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
                             <span class="font-bold text-gray-800">Servidor Core OLT Caracas</span>
@@ -1175,8 +1390,10 @@
     <!-- ============================================================== -->
     <!-- MODAL 1: DIAGNÓSTICO DETALLADO DE TICKET                       -->
     <!-- ============================================================== -->
-    <div id="modal-ticket-details" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-xl w-full overflow-hidden animate-fade-in-up">
+    <div id="modal-ticket-details"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-xl w-full overflow-hidden animate-fade-in-up">
             <div class="px-6 py-4 bg-[#0B1326] text-white flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-[#0056B3] flex items-center justify-center">
@@ -1185,21 +1402,29 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h3 class="text-sm font-bold text-white tracking-wide" id="modal-ticket-id">#INC-4830</h3>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40" id="modal-ticket-prio">P1 - Crítico</span>
+                            <span
+                                class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                id="modal-ticket-prio">P1 - Crítico</span>
                         </div>
-                        <p class="text-[11px] text-gray-300" id="modal-ticket-entity">Banco Universal Corp · Área: Cabecera OLT</p>
+                        <p class="text-[11px] text-gray-300" id="modal-ticket-entity">Banco Universal Corp · Área:
+                            Cabecera OLT</p>
                     </div>
                 </div>
-                <button onclick="closeModal('modal-ticket-details')" class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
+                <button onclick="closeModal('modal-ticket-details')"
+                    class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="p-6 space-y-4 text-xs">
                 <div>
-                    <h4 class="font-bold text-gray-900 text-sm mb-1" id="modal-ticket-subject">Caída enlace secundario MetroEthernet OLT-04</h4>
-                    <p class="text-gray-600 leading-relaxed" id="modal-ticket-desc">Falla detectada por telemetría SNMP a las 11:20:00. Picos de atenuación en enlace óptico y pérdida del 40% de tramas en interfaz LAG-02.</p>
+                    <h4 class="font-bold text-gray-900 text-sm mb-1" id="modal-ticket-subject">Caída enlace secundario
+                        MetroEthernet OLT-04</h4>
+                    <p class="text-gray-600 leading-relaxed" id="modal-ticket-desc">Falla detectada por telemetría SNMP
+                        a las 11:20:00. Picos de atenuación en enlace óptico y pérdida del 40% de tramas en interfaz
+                        LAG-02.</p>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
                     <div>
                         <span class="text-[10px] text-gray-500 uppercase font-semibold">Serial ONT / PON</span>
                         <p class="font-mono font-bold text-gray-800 mt-0.5" id="telemetry-serial">ZTEGC892A014</p>
@@ -1229,18 +1454,22 @@
                 </div>
                 <div class="flex items-center gap-2 p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-[#0056B3]">
                     <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
-                    <span>Este ticket califica para despacho automático inmediato hacia especialistas disponibles.</span>
+                    <span>Este ticket califica para despacho automático inmediato hacia especialistas
+                        disponibles.</span>
                 </div>
             </div>
             <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                <button onclick="closeModal('modal-ticket-details')" class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
+                <button onclick="closeModal('modal-ticket-details')"
+                    class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
                     Cerrar
                 </button>
                 <div class="flex items-center gap-2">
-                    <button onclick="takeTicketDirectly()" class="px-3.5 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-800 hover:border-[#1C58A8] text-xs font-bold transition shadow-2xs btn-press">
+                    <button onclick="takeTicketDirectly()"
+                        class="px-3.5 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-800 hover:border-[#1C58A8] text-xs font-bold transition shadow-2xs btn-press">
                         Tomar yo mismo
                     </button>
-                    <button onclick="quickAssignFromModal()" class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold shadow-xs transition btn-press">
+                    <button onclick="quickAssignFromModal()"
+                        class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold shadow-xs transition btn-press">
                         Asignar a Especialista
                     </button>
                 </div>
@@ -1252,7 +1481,8 @@
     <!-- MODAL 2: ASIGNACIÓN MANUAL DE TICKET                           -->
     <!-- ============================================================== -->
     <div id="modal-assign-picker" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
             <div class="px-5 py-3.5 bg-[#1C58A8] text-white flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="user-check" class="w-4 h-4"></i>
@@ -1263,13 +1493,15 @@
                 </button>
             </div>
             <div class="p-5 space-y-3.5 text-xs">
-                <p class="text-gray-600">Selecciona el operador disponible para transferir <span class="font-bold text-[#1C58A8]" id="assign-target-ticket-label">#INC-4830</span>:</p>
+                <p class="text-gray-600">Selecciona el operador disponible para transferir <span
+                        class="font-bold text-[#1C58A8]" id="assign-target-ticket-label">#INC-4830</span>:</p>
                 <div class="space-y-2 max-h-72 overflow-y-auto" id="assign-operators-list">
                     <!-- Dinámicamente poblado por initLiveBackendData -->
                 </div>
             </div>
             <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
-                <button onclick="closeModal('modal-assign-picker')" class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold btn-press">Cancelar</button>
+                <button onclick="closeModal('modal-assign-picker')"
+                    class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold btn-press">Cancelar</button>
             </div>
         </div>
     </div>
@@ -1278,7 +1510,8 @@
     <!-- MODAL 3: CREAR NUEVO TICKET                                    -->
     <!-- ============================================================== -->
     <div id="modal-new-ticket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-lg w-full overflow-hidden animate-fade-in-up">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-lg w-full overflow-hidden animate-fade-in-up">
             <div class="px-6 py-4 bg-[#0056B3] text-white flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i>
@@ -1291,12 +1524,14 @@
             <form onsubmit="handleCreateTicket(event)" class="p-6 space-y-3.5 text-xs">
                 <div>
                     <label class="block text-gray-700 font-semibold mb-1">Cliente / Entidad</label>
-                    <input type="text" id="new-client" placeholder="Ej: Mercantil Banco Corp" required class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs">
+                    <input type="text" id="new-client" placeholder="Ej: Mercantil Banco Corp" required
+                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-gray-700 font-semibold mb-1">Área Técnica Destino</label>
-                        <select id="new-area" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
+                        <select id="new-area"
+                            class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
                             <option value="ACCESO_APROV">Redes de Acceso &amp; Aprov.</option>
                             <option value="TRAFICO_INALAMBRICO">Tráfico e Inalámbricas</option>
                             <option value="REDES_WAN">Redes WAN</option>
@@ -1307,7 +1542,8 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 font-semibold mb-1">Prioridad (Tiempo Objetivo)</label>
-                        <select id="new-prio" class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs font-bold text-rose-600">
+                        <select id="new-prio"
+                            class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs font-bold text-rose-600">
                             <option value="P1 - Crítico">P1 - Crítico (Objetivo: 2h)</option>
                             <option value="P2 - Alto">P2 - Alto (Objetivo: 4h)</option>
                             <option value="P3 - Estándar" selected>P3 - Estándar (Objetivo: 8h)</option>
@@ -1316,23 +1552,31 @@
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-1">Asunto / Resumen del Incidente</label>
-                    <input type="text" id="new-subject" placeholder="Ej: Pérdida sincronismo OLT Chacao" required class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
+                    <input type="text" id="new-subject" placeholder="Ej: Pérdida sincronismo OLT Chacao" required
+                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-1">Diagnóstico Inicial / Observaciones</label>
-                    <textarea id="new-desc" rows="3" placeholder="Detalles de logs, potencia óptica, interfaz..." class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs"></textarea>
+                    <textarea id="new-desc" rows="3" placeholder="Detalles de logs, potencia óptica, interfaz..."
+                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                    <button type="button" onclick="closeModal('modal-new-ticket')" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
-                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white font-bold transition shadow-xs btn-press">Crear e Insertar en Cola</button>
+                    <button type="button" onclick="closeModal('modal-new-ticket')"
+                        class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit"
+                        class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white font-bold transition shadow-xs btn-press">Crear
+                        e Insertar en Cola</button>
                 </div>
             </form>
         </div>
+    </div>
     <!-- ============================================================== -->
     <!-- MODAL: RESOLUCIÓN RÁPIDA DE TICKET (OPERADOR)                  -->
     <!-- ============================================================== -->
-    <div id="modalQuickResolveTicket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+    <div id="modalQuickResolveTicket"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
             <div class="px-5 py-3.5 bg-emerald-700 text-white flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="check-circle" class="w-4 h-4"></i>
@@ -1344,32 +1588,42 @@
             </div>
             <form onsubmit="handleQuickResolveSubmit(event)" class="p-5 space-y-3.5 text-xs">
                 <input type="hidden" id="quick-resolve-ticket-id">
-                
+
                 <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1">
                     <div class="flex items-center justify-between">
                         <span id="quick-resolve-code" class="font-mono font-bold text-xs text-[#1C58A8]">#INC-</span>
-                        <span id="quick-resolve-ders" class="px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100">+2 pts</span>
+                        <span id="quick-resolve-ders"
+                            class="px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100">+2
+                            pts</span>
                     </div>
                     <p id="quick-resolve-subject" class="font-semibold text-gray-900 text-xs truncate"></p>
                     <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
                         <span>Tarea: <strong id="quick-resolve-task" class="text-gray-700"></strong></span>
-                        <span>Tiempo: <strong id="quick-resolve-timer" class="font-mono text-emerald-700">00:00</strong></span>
+                        <span>Tiempo: <strong id="quick-resolve-timer"
+                                class="font-mono text-emerald-700">00:00</strong></span>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Notas de Diagnóstico y Resolución <span class="text-rose-500">*</span></label>
-                    <textarea id="quick-resolve-notes" required rows="3" placeholder="Describe brevemente la solución técnica aplicada (ej: OLT sincronizada, potencia normalizada, prueba ok)..." class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 text-xs"></textarea>
+                    <label class="block text-gray-700 font-semibold mb-1">Notas de Diagnóstico y Resolución <span
+                            class="text-rose-500">*</span></label>
+                    <textarea id="quick-resolve-notes" required rows="3"
+                        placeholder="Describe brevemente la solución técnica aplicada (ej: OLT sincronizada, potencia normalizada, prueba ok)..."
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 text-xs"></textarea>
                 </div>
 
-                <div class="p-2.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-[11px] flex items-center gap-2">
+                <div
+                    class="p-2.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-[11px] flex items-center gap-2">
                     <i data-lucide="info" class="w-4 h-4 shrink-0 text-purple-600"></i>
-                    <span>Al enviar, el ticket pasará a <strong>Por Verificar</strong> para que el Coordinador valide los puntos DERS.</span>
+                    <span>Al enviar, el ticket pasará a <strong>Por Verificar</strong> para que el Coordinador valide
+                        los puntos DERS.</span>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                    <button type="button" onclick="closeQuickResolveModal()" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
-                    <button type="submit" id="btn-quick-resolve-submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                    <button type="button" onclick="closeQuickResolveModal()"
+                        class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit" id="btn-quick-resolve-submit"
+                        class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
                         <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
                         <span>Confirmar y Resolver</span>
                     </button>
@@ -1382,7 +1636,8 @@
     <!-- MODAL: APROBACIÓN Y VERIFICACIÓN DERS (COORDINADOR)             -->
     <!-- ============================================================== -->
     <div id="modalVerifyTicket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
             <div class="px-5 py-3.5 bg-purple-700 text-white flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="check-check" class="w-4 h-4"></i>
@@ -1394,11 +1649,12 @@
             </div>
             <form onsubmit="submitCoordinatorVerification(event)" class="p-5 space-y-3.5 text-xs">
                 <input type="hidden" id="verify-ticket-id">
-                
+
                 <div class="p-3 rounded-lg bg-purple-50/50 border border-purple-200 space-y-1.5">
                     <div class="flex items-center justify-between">
                         <span id="verify-ticket-code" class="font-mono font-bold text-xs text-purple-900">#INC-</span>
-                        <span id="verify-duration" class="font-mono text-[11px] font-semibold text-purple-700">15 min netos</span>
+                        <span id="verify-duration" class="font-mono text-[11px] font-semibold text-purple-700">15 min
+                            netos</span>
                     </div>
                     <div class="text-[11px] text-gray-700">
                         Especialista: <strong id="verify-operator-name" class="text-gray-900"></strong>
@@ -1407,7 +1663,8 @@
                         Tarea: <strong id="verify-task-name" class="text-gray-900"></strong>
                     </div>
                     <div class="text-[11px] text-gray-600 bg-white p-2 rounded border border-purple-100 mt-1">
-                        <span class="font-semibold text-gray-700 block text-[10px] uppercase">Notas del Especialista:</span>
+                        <span class="font-semibold text-gray-700 block text-[10px] uppercase">Notas del
+                            Especialista:</span>
                         <p id="verify-operator-notes" class="italic mt-0.5 text-gray-800"></p>
                     </div>
                 </div>
@@ -1415,11 +1672,13 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-gray-700 font-semibold mb-1">Puntos a Acreditar</label>
-                        <input type="number" id="verify-points-input" min="1" max="10" value="2" required class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs font-bold text-purple-900">
+                        <input type="number" id="verify-points-input" min="1" max="10" value="2" required
+                            class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs font-bold text-purple-900">
                     </div>
                     <div>
                         <label class="block text-gray-700 font-semibold mb-1">Decisión</label>
-                        <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 font-bold rounded-lg border border-emerald-200 text-xs flex items-center gap-1">
+                        <div
+                            class="px-3 py-1.5 bg-emerald-50 text-emerald-800 font-bold rounded-lg border border-emerald-200 text-xs flex items-center gap-1">
                             <i data-lucide="check" class="w-3.5 h-3.5"></i>
                             <span>Aprobar Cierre</span>
                         </div>
@@ -1428,12 +1687,15 @@
 
                 <div>
                     <label class="block text-gray-700 font-semibold mb-1">Notas de Auditoría / Coordinación</label>
-                    <textarea id="verify-coord-notes" rows="2" placeholder="Observaciones de calidad (opcional)..." class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs"></textarea>
+                    <textarea id="verify-coord-notes" rows="2" placeholder="Observaciones de calidad (opcional)..."
+                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs"></textarea>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                    <button type="button" onclick="closeVerifyModal()" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
-                    <button type="submit" id="btn-submit-verification" class="px-4 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                    <button type="button" onclick="closeVerifyModal()"
+                        class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit" id="btn-submit-verification"
+                        class="px-4 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
                         <i data-lucide="award" class="w-3.5 h-3.5"></i>
                         <span>Acreditar Puntos y Cerrar</span>
                     </button>
@@ -1445,8 +1707,10 @@
     <!-- ============================================================== -->
     <!-- MODAL: FICHA TÉCNICA Y WORKSPACE DE TICKET                     -->
     <!-- ============================================================== -->
-    <div id="modalTicketWorkspace" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-2xl w-full overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
+    <div id="modalTicketWorkspace"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-2xl w-full overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
             <!-- Header -->
             <div class="px-6 py-4 bg-[#0B1326] text-white flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
@@ -1455,19 +1719,25 @@
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-bold text-white font-mono tracking-wide" id="ws-ticket-code">#INC-</h3>
-                            <span id="ws-ticket-status-badge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200">En Atención</span>
-                            <span id="ws-ticket-source-badge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-gray-300">Correo</span>
+                            <h3 class="text-sm font-bold text-white font-mono tracking-wide" id="ws-ticket-code">#INC-
+                            </h3>
+                            <span id="ws-ticket-status-badge"
+                                class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200">En
+                                Atención</span>
+                            <span id="ws-ticket-source-badge"
+                                class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-gray-300">Correo</span>
                         </div>
                         <p class="text-[11px] text-gray-300 mt-0.5" id="ws-ticket-sender">cliente@inter.com.ve</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-white font-mono text-xs">
+                    <div
+                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-white font-mono text-xs">
                         <i data-lucide="timer" class="w-3.5 h-3.5 text-blue-300"></i>
                         <span id="ws-live-timer">00:00:00</span>
                     </div>
-                    <button type="button" onclick="closeWorkspaceModal()" class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
+                    <button type="button" onclick="closeWorkspaceModal()"
+                        class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -1478,15 +1748,18 @@
                 <!-- Subject -->
                 <div>
                     <h4 class="font-bold text-gray-900 text-sm mb-1" id="ws-ticket-subject"></h4>
-                    <div id="ws-bridge-alert" class="hidden mb-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5">
+                    <div id="ws-bridge-alert"
+                        class="hidden mb-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
                         <span>Configuración de Modo Bridge requerida — IP Certificada</span>
                     </div>
-                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto" id="ws-ticket-body"></div>
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto"
+                        id="ws-ticket-body"></div>
                 </div>
 
                 <!-- Telemetry Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
                     <div>
                         <span class="text-[10px] text-gray-500 uppercase font-semibold">Abonado</span>
                         <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-subscriber">—</p>
@@ -1513,7 +1786,8 @@
                     </div>
                 </div>
 
-                <div class="text-[11px] text-gray-600 flex items-center justify-between p-2 rounded bg-blue-50 border border-blue-100">
+                <div
+                    class="text-[11px] text-gray-600 flex items-center justify-between p-2 rounded bg-blue-50 border border-blue-100">
                     <span>Tarea sugerida: <strong id="ws-param-taskname" class="text-[#1C58A8]"></strong></span>
                     <span>Meta: <strong class="text-gray-800">Resolución con Telemetría</strong></span>
                 </div>
@@ -1521,15 +1795,19 @@
 
             <!-- Footer Actions -->
             <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between shrink-0">
-                <button type="button" onclick="closeWorkspaceModal()" class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
+                <button type="button" onclick="closeWorkspaceModal()"
+                    class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
                     Cerrar
                 </button>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="togglePauseTicket()" class="px-3.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold transition flex items-center gap-1 btn-press">
+                    <button type="button" onclick="togglePauseTicket()"
+                        class="px-3.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold transition flex items-center gap-1 btn-press">
                         <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
                         <span id="btn-pause-text">Pausar (En Espera)</span>
                     </button>
-                    <button type="button" onclick="closeWorkspaceModal(); if(currentOpenTicket) openQuickResolveModal(currentOpenTicket.id);" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1 btn-press">
+                    <button type="button"
+                        onclick="closeWorkspaceModal(); if(currentOpenTicket) openQuickResolveModal(currentOpenTicket.id);"
+                        class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1 btn-press">
                         <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
                         <span>Resolver Caso</span>
                     </button>
@@ -1538,12 +1816,20 @@
         </div>
     </div>
 
+    <!-- Legacy / Aux Modals Stubs -->
+    <div id="modalParserTester" class="hidden"></div>
+    <div id="modalReportsAudit" class="hidden"></div>
+    <div id="modalMailWorkerConfig" class="hidden"></div>
+
     <!-- ============================================================== -->
     <!-- TOAST NOTIFICATION POPUP                                       -->
     <!-- ============================================================== -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
-    <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-900 text-white shadow-2xl border border-gray-700 text-xs">
-        <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center" id="toast-icon">
+    <div id="toast-container"
+        class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+    <div id="toast-notification"
+        class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-900 text-white shadow-2xl border border-gray-700 text-xs">
+        <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center"
+            id="toast-icon">
             <i data-lucide="check" class="w-3.5 h-3.5"></i>
         </div>
         <span id="toast-message" class="font-medium">Acción completada con éxito</span>
@@ -1562,4 +1848,5 @@
         });
     </script>
 </body>
+
 </html>

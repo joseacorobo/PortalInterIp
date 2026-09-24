@@ -25,3 +25,7 @@ uv.exe
 Thumbs.db
 .DS_Store
 *.bak
+
+# Scratch scripts & Seed attachments
+scratch/
+app/static/attachments/

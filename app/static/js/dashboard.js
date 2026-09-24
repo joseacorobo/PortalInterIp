@@ -2479,15 +2479,23 @@ async function loadFeed() {
 let lastAnalyzedData = null;
 
 function openTesterModal() {
-    document.getElementById("modalParserTester").classList.remove("hidden");
-    document.getElementById("modalParserTester").classList.add("flex");
-    loadExampleText(1);
-    lucide.createIcons();
+    const modal = document.getElementById("modalParserTester");
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        loadExampleText(1);
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            lucide.createIcons();
+        }
+    }
 }
 
 function closeTesterModal() {
-    document.getElementById("modalParserTester").classList.add("hidden");
-    document.getElementById("modalParserTester").classList.remove("flex");
+    const modal = document.getElementById("modalParserTester");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
 }
 
 function loadExampleText(type) {
@@ -2591,8 +2599,11 @@ function openReportsModal() {
 }
 
 function closeReportsModal() {
-    document.getElementById("modalReportsAudit").classList.add("hidden");
-    document.getElementById("modalReportsAudit").classList.remove("flex");
+    const modal = document.getElementById("modalReportsAudit");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
 }
 
 function changeReportRange(range) {
@@ -2702,8 +2713,33 @@ async function loadReportsData() {
 }
 
 function downloadExcelReport() {
-    window.location.href = `/api/reports/export/excel?area=${reportCurrentArea}&range_filter=${reportCurrentRange}`;
+    const area = window.reportCurrentArea || "Todas";
+    const range = window.reportCurrentRange || "all";
+    const btn = document.getElementById("btn-export-excel-audit");
+    const originalContent = btn ? btn.innerHTML : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path></svg> Generando Excel...`;
+    }
+    showToast("Generando reporte Excel estructurado de guardia y auditoría...", "info");
+    
+    const url = `/api/reports/export-excel?area=${encodeURIComponent(area)}&range_filter=${encodeURIComponent(range)}`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => {
+        if (btn && originalContent) {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+            if (window.lucide) lucide.createIcons();
+        }
+    }, 2500);
 }
+window.downloadExcelReport = downloadExcelReport;
 
 // =============================================================
 // CONTROLADOR DEL WORKER DE INGESTA DE CORREO (MÓDULO 6)
@@ -3473,27 +3509,28 @@ window.currentTriageOperators = [];
 
 function getPriorityBadgeClass(p) {
     const pri = (p || '').toUpperCase();
-    if (pri === 'P1') return 'bg-rose-50 text-rose-700 border border-rose-200';
-    if (pri === 'P2') return 'bg-amber-50 text-amber-800 border border-amber-200';
-    if (pri === 'P3') return 'bg-blue-50 text-blue-800 border border-blue-200';
-    if (pri === 'P4') return 'bg-surface-container-low text-on-surface-variant border border-outline-variant';
-    return 'bg-surface-container-low text-on-surface-variant border border-outline-variant';
+    if (pri === 'P1' || pri === 'P2') return 'bg-slate-100 text-slate-700 border border-slate-300 font-mono';
+    if (pri === 'P3') return 'bg-amber-50 text-amber-800 border border-amber-300 font-mono';
+    if (pri === 'P4' || pri === 'P5') return 'bg-rose-50 text-rose-700 border border-rose-300 font-mono font-bold';
+    return 'bg-slate-100 text-slate-700 border border-slate-300 font-mono';
 }
 
 function getPriorityBarClass(p) {
     const pri = (p || '').toUpperCase();
-    if (pri === 'P1') return 'bg-error';
-    if (pri === 'P2') return 'bg-amber-500';
-    if (pri === 'P3') return 'bg-blue-500';
-    return 'bg-outline';
+    if (pri === 'P1' || pri === 'P2') return 'bg-slate-400';
+    if (pri === 'P3') return 'bg-amber-500';
+    if (pri === 'P4' || pri === 'P5') return 'bg-rose-600';
+    return 'bg-slate-400';
 }
 
 function getPrioritySeverityName(p) {
     const pri = (p || '').toUpperCase();
-    if (pri === 'P1') return 'CRÍTICO';
-    if (pri === 'P2') return 'ALTO';
-    if (pri === 'P3') return 'MEDIO';
-    return 'PROGRAMADO';
+    if (pri === 'P5') return 'CRÍTICO';
+    if (pri === 'P4') return 'COMPLEJO';
+    if (pri === 'P3') return 'INTERMEDIO';
+    if (pri === 'P2') return 'ESTÁNDAR';
+    if (pri === 'P1') return 'CONSULTA';
+    return pri;
 }
 
 function calcWaitTime(dateStr) {
@@ -4957,7 +4994,7 @@ let _allDepartamentosCatalog = [];
 let _allTaskTypesCache = [];
 
 async function openCreateTicketModal() {
-    const modal = document.getElementById("modalCreateTicket");
+    const modal = document.getElementById("modal-new-ticket") || document.getElementById("modalCreateTicket");
     if (!modal) return;
 
     const form = document.getElementById("create-ticket-form");
@@ -4977,9 +5014,9 @@ async function openCreateTicketModal() {
         }
     }
 
-    if (deptoSelect) {
+    if (deptoSelect && _allDepartamentosCatalog && _allDepartamentosCatalog.length > 0) {
         deptoSelect.innerHTML = '';
-        (_allDepartamentosCatalog || []).forEach(d => {
+        _allDepartamentosCatalog.forEach(d => {
             const opt = document.createElement("option");
             opt.value = d.id;
             opt.textContent = `${d.nombre} (${d.codigo})`;
@@ -5001,16 +5038,27 @@ async function openCreateTicketModal() {
     }
 
     modal.classList.remove("hidden");
-    if (window.lucide) lucide.createIcons();
+    modal.classList.add("flex");
+    modal.style.display = "flex";
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        lucide.createIcons();
+    }
 
     const subjectInput = document.getElementById("new-ticket-subject");
     if (subjectInput) subjectInput.focus();
 }
 
 function closeCreateTicketModal() {
-    const modal = document.getElementById("modalCreateTicket");
-    if (modal) modal.classList.add("hidden");
+    const modal = document.getElementById("modal-new-ticket") || document.getElementById("modalCreateTicket");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        modal.style.display = "none";
+    }
 }
+window.openCreateTicketModal = openCreateTicketModal;
+window.closeCreateTicketModal = closeCreateTicketModal;
+
 
 async function onNewTicketDeptoChange(deptoId) {
     const taskSelect = document.getElementById("new-ticket-task");
@@ -5122,6 +5170,8 @@ async function handleCreateTicketSubmit(event) {
             if (typeof loadOperatorAssignments === 'function') await loadOperatorAssignments(true);
             if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
             if (typeof loadFeed === 'function') loadFeed();
+            if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
         } else {
             showStitchSuccessToast("Error al Crear", data.detail || data.error || "No se pudo crear el ticket.");
         }
@@ -5726,7 +5776,11 @@ function openTicketDetail(ticketId, assignedTo, client, subject, area, prio, ser
 
 function closeModal(modalId) {
     const el = document.getElementById(modalId);
-    if (el) el.classList.add('hidden');
+    if (el) {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+        el.style.display = 'none';
+    }
 }
 
 let ticketToAssign = '#INC-4830';
@@ -5914,8 +5968,7 @@ function handleGlobalSearch(query) {
 }
 
 function openNewTicketModal() {
-    const el = document.getElementById('modal-new-ticket');
-    if (el) el.classList.remove('hidden');
+    openCreateTicketModal();
 }
 
 async function handleCreateTicket(e) {
@@ -6016,3 +6069,22 @@ function filterActiveCasesLocal(query) {
     }
 }
 window.filterActiveCasesLocal = filterActiveCasesLocal;
+
+// =============================================================
+// LISTENER GLOBAL DE TECLA ESCAPE PARA CERRAR MODALES ACTIVOS
+// =============================================================
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        if (typeof closeCreateTicketModal === 'function') closeCreateTicketModal();
+        if (typeof closeModal === 'function') {
+            closeModal("modal-new-ticket");
+            closeModal("modal-assign-picker");
+            closeModal("modal-ticket-details");
+            closeModal("modalQuickResolveTicket");
+        }
+        if (typeof closeQuickResolveModal === 'function') closeQuickResolveModal();
+        if (typeof closeWorkspaceModal === 'function') closeWorkspaceModal();
+        if (typeof closeVerifyModal === 'function') closeVerifyModal();
+    }
+});
+

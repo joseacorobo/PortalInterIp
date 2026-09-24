@@ -2,8 +2,47 @@ import sqlite3
 import os
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ip_ops.db")
+DB_ENGINE = os.getenv("DB_ENGINE", "sqlite").lower()
+MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
+MYSQL_USER = os.getenv("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "inter_ip_ops")
 
 def get_db():
+    """
+    Factoría de base de datos híbrida:
+    - Entorno Local / SQLite por defecto: utiliza archivo WAL local.
+    - Entorno Producción Ubuntu / MySQL: detecta DB_ENGINE=mysql o MYSQL_HOST.
+    """
+    if DB_ENGINE == "mysql" or MYSQL_HOST:
+        try:
+            import pymysql
+            import pymysql.cursors
+            conn = pymysql.connect(
+                host=MYSQL_HOST or "127.0.0.1",
+                port=MYSQL_PORT,
+                user=MYSQL_USER,
+                password=MYSQL_PASSWORD,
+                database=MYSQL_DATABASE,
+                cursorclass=pymysql.cursors.DictCursor,
+                autocommit=True
+            )
+            return conn
+        except ImportError:
+            try:
+                import mysql.connector
+                conn = mysql.connector.connect(
+                    host=MYSQL_HOST or "127.0.0.1",
+                    port=MYSQL_PORT,
+                    user=MYSQL_USER,
+                    password=MYSQL_PASSWORD,
+                    database=MYSQL_DATABASE
+                )
+                return conn
+            except ImportError:
+                print("Aviso: Conectores MySQL (pymysql / mysql-connector) no disponibles. Utilizando SQLite como fallback.")
+    
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     try:
         conn.execute("PRAGMA journal_mode=WAL;")

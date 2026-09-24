@@ -1,321 +1,544 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full">
+<html class="h-full" lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inter | Operaciones IP - Software de Gestión de Rendimiento</title>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Inter | Operaciones IP - Iniciar Sesión</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #04060d;
         }
-        .hero-hub-bg {
-            background: linear-gradient(0deg, rgba(7, 12, 25, 0.62), rgba(7, 12, 25, 0.62)), url('/static/img/hub_bg.jpg') center/cover no-repeat;
+
+        .input-box:focus-within {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
         }
-        .input-container:focus-within {
-            border-color: #0056B3;
-            box-shadow: 0 0 0 1px #0056B3;
+
+        /* ============================================================== */
+        /* 3D IP NETWORK TOPOLOGY CANVAS (INTERACTIVE NOC NODES & MESH)    */
+        /* ============================================================== */
+        .network-scene {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #networkCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#070C19] text-[#0F172A] antialiased selection:bg-[#0056B3] selection:text-white">
 
-    <!-- login-operaciones-ip-combinado: Root Flex Container -->
-    <div class="relative w-full min-h-screen flex flex-col lg:flex-row items-stretch">
+<body class="min-h-screen sm:h-screen w-full bg-[#04060d] text-[#101828] overflow-y-auto sm:overflow-hidden flex flex-col justify-between select-none">
 
-        <!-- ========================================== -->
-        <!-- Hero_Visual_Section (Left Column / 820px)  -->
-        <!-- ========================================== -->
-        <section class="hero-hub-bg flex-1 lg:w-[820px] flex flex-col justify-between p-8 sm:p-12 lg:p-16 text-white min-h-[480px] lg:min-h-screen">
-            
-            <!-- Top_Brand -->
-            <div class="flex items-center gap-[14px]">
-                <!-- Brand_Container: Badge azul 72x32 con inter -->
-                <div class="w-[72px] h-[32px] bg-[#0056B3] rounded-[5px] flex items-center justify-center shadow-xs px-2">
-                    <img src="/static/img/inter_logo.png" alt="inter" class="h-[15px] w-auto object-contain brightness-0 invert">
-                </div>
-                <!-- Operaciones -->
-                <span class="font-['Inter'] font-semibold text-[11px] uppercase tracking-wider text-white/50">
-                    Operaciones
-                </span>
-            </div>
-
-            <!-- Bottom_Text -->
-            <div class="w-full max-w-[480px] my-auto py-12 lg:py-0 flex flex-col gap-4">
-                <!-- Redes IP & Telefonía -->
-                <span class="font-['Inter'] font-bold text-[11px] uppercase tracking-wider text-[#38BDF8]">
-                    Redes IP &amp; Telefonía
-                </span>
-                <!-- Software de Gestion de Rendimiento -->
-                <h1 class="font-['Inter'] font-bold text-3xl sm:text-4xl lg:text-[38px] text-white leading-tight lg:leading-[115%]">
-                    Software de Gestion de Rendimiento
-                </h1>
-                <!-- Exclusivo para ingenieros autorizados de Inter Telecomunicaciones. -->
-                <p class="font-['Inter'] font-normal text-sm text-white/60 leading-[160%]">
-                    Exclusivo para ingenieros autorizados de Inter.
-                </p>
-            </div>
-
-            <!-- Telemetría sutil inferior -->
-            <div class="flex items-center gap-2 text-[11px] text-white/40 font-mono">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
-                <span>NOC-CORE // PRIMARY SWITCH HUB 1A</span>
-            </div>
-
-        </section>
-
-        <!-- ========================================== -->
-        <!-- Login_Panel_Section (Right Column / 620px) -->
-        <!-- ========================================== -->
-        <section class="w-full lg:w-[620px] shrink-0 bg-white flex flex-col justify-between p-8 sm:p-12 lg:px-[72px] lg:py-16 min-h-screen">
-            
-            <!-- Brand_Block -->
-            <div class="w-full max-w-[476px] flex flex-col gap-10">
-                
-                <!-- Logo_Row -->
-                <div class="flex items-center gap-[14px]">
-                    <!-- Brand_Container: Badge azul 80x36 con imagotipo oficial Inter -->
-                    <div class="w-[80px] h-[36px] bg-[#0056B3] rounded-[6px] flex items-center justify-center shadow-xs px-2">
-                        <img src="/static/img/inter_logo.png" alt="inter" class="h-4 sm:h-[18px] w-auto object-contain brightness-0 invert">
-                    </div>
-                    <!-- Corporate_Tags -->
-                    <div class="flex flex-col gap-[2px]">
-                        <span class="font-['Inter'] font-bold text-[10px] uppercase text-[#0056B3] tracking-wide leading-none">
-                            Operaciones
-                        </span>
-                        <span class="font-['Inter'] font-semibold text-[10px] uppercase text-[#94A3B8] tracking-wide leading-none">
-                            Red Privada NOC
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Heading_Block -->
-                <div class="flex flex-col gap-2.5">
-                    <h2 class="font-['Inter'] font-bold text-3xl sm:text-[34px] text-[#0F172A] leading-tight tracking-tight">
-                        Bienvenido
-                    </h2>
-                    <p class="font-['Inter'] font-normal text-sm text-[#64748B] leading-[150%]">
-                        Ingresa tus credenciales para acceder al portal de Redes IP y Telefonía.
-                    </p>
-                </div>
-
-            </div>
-
-            <!-- Form_Wrapper -->
-            <div class="w-full max-w-[476px] my-6 flex flex-col gap-5">
-                
-                <!-- Mensaje de Alerta de Error (Dinámico) -->
-                <div id="login-alert" class="hidden p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-                    <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
-                    <span id="login-alert-text">Credenciales incorrectas. Verifique su correo o clave.</span>
-                </div>
-
-                <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="w-full flex flex-col gap-5">
-                    
-                    <!-- Field_Group_User -->
-                    <div class="flex flex-col gap-[7px]">
-                        <label for="email" class="font-['Inter'] font-semibold text-[12px] uppercase tracking-wider text-[#94A3B8]">
-                            Correo corporativo
-                        </label>
-                        <div class="input-container h-[52px] bg-[#F8FAFC] border border-[#E2E8F0] rounded-[6px] px-4 flex items-center gap-3 transition">
-                            <i data-lucide="user" class="w-4 h-4 text-[#94A3B8] shrink-0"></i>
-                            <input 
-                                type="email" 
-                                id="email" 
-                                required 
-                                autocomplete="email" 
-                                value="admin@inter.com.ve" 
-                                placeholder="admin@inter.com.ve" 
-                                class="w-full bg-transparent font-['Inter'] font-normal text-[14px] text-[#0F172A] outline-none placeholder-[#94A3B8]"
-                            >
-                        </div>
-                    </div>
-
-                    <!-- Field_Group_Password -->
-                    <div class="flex flex-col gap-[7px]">
-                        <div class="flex items-center justify-between">
-                            <label for="password" class="font-['Inter'] font-semibold text-[12px] uppercase tracking-wider text-[#94A3B8]">
-                                Contraseña
-                            </label>
-                            <a href="#" class="font-['Inter'] font-medium text-[12px] text-[#0056B3] hover:underline" onclick="event.preventDefault(); alert('Por favor contacte al administrador de sistemas NOC.');">
-                                ¿Olvidaste tu contraseña?
-                            </a>
-                        </div>
-                        <div class="input-container h-[52px] bg-[#F8FAFC] border border-[#E2E8F0] rounded-[6px] px-4 flex items-center gap-3 transition">
-                            <i data-lucide="lock" class="w-4 h-4 text-[#94A3B8] shrink-0"></i>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                required 
-                                autocomplete="current-password" 
-                                value="admin" 
-                                placeholder="••••••••••••" 
-                                class="w-full bg-transparent font-['Inter'] font-normal text-[14px] text-[#475569] outline-none placeholder-[#94A3B8]"
-                            >
-                            <button type="button" onclick="togglePasswordVisibility()" class="text-[#94A3B8] hover:text-[#475569] p-1 cursor-pointer transition" title="Mostrar/Ocultar contraseña">
-                                <i data-lucide="eye" id="icon-eye" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Form_Meta_Row: Recordar sesión -->
-                    <div class="flex items-center gap-2.5">
-                        <label class="flex items-center gap-2.5 cursor-pointer">
-                            <input type="checkbox" id="remember" checked class="w-4 h-4 rounded-[3px] border-[#E2E8F0] text-[#0056B3] focus:ring-[#0056B3] accent-[#0056B3]">
-                            <span class="font-['Inter'] font-medium text-[13px] text-[#64748B]">
-                                Recordar sesión
-                            </span>
-                        </label>
-                    </div>
-
-                    <!-- Button_Submit: Iniciar sesión -->
-                    <button 
-                        type="submit" 
-                        id="btn-submit-login" 
-                        class="h-[52px] w-full bg-[#0056B3] hover:bg-[#004494] active:bg-[#00387a] rounded-[6px] text-white font-['Inter'] font-bold text-[14px] flex items-center justify-center gap-2.5 transition shadow-xs cursor-pointer"
-                    >
-                        <span>Iniciar sesión</span>
-                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                    </button>
-
-                </form>
-
-                <!-- Perfiles de Validación Rápida en 1 Clic -->
-                <div class="space-y-2">
-                    <span class="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider block mb-1">
-                        Acceso Rápido por Perfil de Operaciones
-                    </span>
-                    
-                    <!-- Perfil 1: Coordinador de Pruebas -->
-                    <button type="button" onclick="quickFillAndLogin('coordinador.pruebas@inter.com.ve', 'inter2026')" class="w-full p-2.5 rounded-[6px] bg-[#FEF3C7] hover:bg-[#FDE68A] border border-[#FCD34D] flex items-center justify-between transition cursor-pointer text-left">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-[4px] bg-[#D97706] text-white flex items-center justify-center font-bold text-[10px]">
-                                CP
-                            </div>
-                            <div>
-                                <span class="block text-xs font-bold text-[#78350F] leading-tight">Coordinador de Pruebas</span>
-                                <span class="block text-[10px] text-[#B45309] font-mono leading-tight">coordinador.pruebas@inter.com.ve (Acceso / Triage)</span>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-[#B45309] border border-[#FCD34D] shadow-2xs">Coordinador</span>
-                    </button>
-
-                    <!-- Perfil 2: Operador de Pruebas -->
-                    <button type="button" onclick="quickFillAndLogin('operador.pruebas@inter.com.ve', 'inter2026')" class="w-full p-2.5 rounded-[6px] bg-[#EFF6FF] hover:bg-[#DBEAFE] border border-[#BFDBFE] flex items-center justify-between transition cursor-pointer text-left">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-[4px] bg-[#1C58A8] text-white flex items-center justify-center font-bold text-[10px]">
-                                OP
-                            </div>
-                            <div>
-                                <span class="block text-xs font-bold text-[#0F172A] leading-tight">Operador de Pruebas</span>
-                                <span class="block text-[10px] text-[#2563EB] font-mono leading-tight">operador.pruebas@inter.com.ve (Especialista Soporte)</span>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-[#1C58A8] border border-[#BFDBFE] shadow-2xs">Operador</span>
-                    </button>
-
-                    <!-- 3. Administrador General -->
-                    <button type="button" onclick="quickFillAndLogin('admin@inter.com.ve', 'inter2026')" class="w-full p-2.5 rounded-[6px] bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-between transition cursor-pointer text-left">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-[4px] bg-[#475569] text-white flex items-center justify-center font-bold text-[10px]">
-                                AD
-                            </div>
-                            <div>
-                                <span class="block text-xs font-bold text-[#0F172A] leading-tight">Administrador General</span>
-                                <span class="block text-[10px] text-[#94A3B8] font-mono leading-tight">admin@inter.com.ve (Administrador NOC)</span>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-gray-700 border border-gray-200 shadow-2xs">Admin</span>
-                    </button>
-                </div>
-
-            </div>
-
-            <!-- Footer_Container -->
-            <div class="w-full max-w-[476px] flex flex-col items-center gap-4 pt-2">
-                
-                <!-- Line Separator -->
-                <div class="w-full h-px bg-[#E2E8F0]"></div>
-
-                <!-- Legal Notice -->
-                <p class="font-['Inter'] font-normal text-[11px] text-[#475569] text-center leading-[150%]">
-                    © 2026 Inter Telecomunicaciones C.A. — Red Privada NOC
-                </p>
-
-            </div>
-
-        </section>
-
+    <!-- ============================================================== -->
+    <!-- 3D IP NETWORK TOPOLOGY BACKGROUND (INTERACTIVE NOC MESH)       -->
+    <!-- ============================================================== -->
+    <div class="network-scene">
+        <!-- Atmospheric glow behind network cluster in Inter blue/cyan hues -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(13,110,253,0.16)_0%,rgba(4,6,13,0)_70%)] lg:bg-[radial-gradient(circle_at_36%_50%,rgba(13,110,253,0.22)_0%,rgba(56,189,248,0.08)_42%,rgba(4,6,13,0)_72%)] pointer-events-none"></div>
+        <canvas id="networkCanvas"></canvas>
     </div>
 
-    <!-- Scripts de Interacción Lucide y Autenticación -->
+    <!-- Main Container: Particle Background with Login Card Aligned to the Right -->
+    <div class="relative w-full min-h-screen sm:h-full flex items-center justify-center sm:justify-end px-4 sm:px-12 md:px-20 lg:px-28 py-10 sm:py-0 z-10">
+
+        <!-- Subtle gradient overlay to guarantee card contrast and depth -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-slate-950/20 to-slate-950/70 pointer-events-none z-10"></div>
+
+        <!-- Left Brand Watermark / Minimalist Tag (Discreet & Professional) -->
+        <div class="absolute left-6 sm:left-8 lg:left-14 top-6 sm:top-10 flex items-center gap-3 z-20">
+            <div class="h-9 px-3 bg-[#0d6efd] rounded-lg flex items-center justify-center shadow-lg">
+                <span class="text-white font-black text-lg tracking-wider">inter</span>
+            </div>
+            <div class="hidden sm:flex flex-col">
+                <span class="text-white text-xs font-bold tracking-widest uppercase">Operaciones IP</span>
+                <span class="text-blue-200/60 text-[10px] tracking-wide">Red Central NOC</span>
+            </div>
+        </div>
+
+        <!-- Telemetry Status Bottom Left -->
+        <div class="absolute left-6 sm:left-8 lg:left-14 bottom-6 sm:bottom-8 hidden sm:flex items-center gap-2 text-[11px] text-white/50 font-mono z-20">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>HUB CENTRAL // NODO IP ACTIVO</span>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- LOGIN CARD: Aligned to the right, Simple, Clean & Modern       -->
+        <!-- ============================================================== -->
+        <div class="relative z-20 w-full max-w-[430px] bg-white rounded-2xl shadow-2xl p-8 sm:p-10 border border-slate-100 flex flex-col justify-between">
+            <!-- Header: Inter Logo & Essential Title -->
+            <div>
+                <div class="flex items-center justify-between mb-7">
+                    <div class="h-8 px-2.5 bg-[#0d6efd] rounded-md flex items-center justify-center shadow-xs">
+                        <span class="text-white font-extrabold text-base tracking-wide">inter</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-[#0d6efd] bg-blue-50 px-2.5 py-1 rounded-full">
+                        Acceso Seguro
+                    </span>
+                </div>
+                <h1 class="text-2xl font-bold text-[#0f172a] tracking-tight mb-1.5">
+                    Iniciar sesión
+                </h1>
+                <p class="text-xs text-[#64748b]">
+                    Ingresa tus credenciales para acceder al portal.
+                </p>
+            </div>
+
+            <!-- Login Form: Only Essential Fields (Usuario & Contraseña) -->
+            <form class="mt-7 space-y-4" id="loginForm" method="POST" action="/api/auth/login" onsubmit="handleLogin(event)">
+                <!-- Dynamic Alert Box -->
+                <div id="loginAlert" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2 transition">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-red-500 shrink-0"></i>
+                    <span id="loginAlertText">Credenciales inválidas.</span>
+                </div>
+
+                <!-- Field: Usuario -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-[#334155]" for="username">
+                        Usuario
+                    </label>
+                    <div class="input-box h-12 bg-[#f8f9ff] border border-[#e2e8f0] rounded-xl px-3.5 flex items-center gap-2.5 transition">
+                        <i data-lucide="user" class="w-4 h-4 text-[#94a3b8] shrink-0"></i>
+                        <input autocomplete="username" class="w-full bg-transparent text-xs sm:text-sm text-[#0f172a] placeholder-[#94a3b8] outline-none font-medium" id="username" name="username" placeholder="carlos.mendez" required="" type="text" value="carlos.mendez" />
+                    </div>
+                </div>
+
+                <!-- Field: Contraseña -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-[#334155]" for="password">
+                            Contraseña
+                        </label>
+                        <a class="text-[11px] font-medium text-[#0d6efd] hover:underline cursor-pointer" href="#" onclick="showForgotPasswordInfo(event)">
+                            ¿Olvidaste tu clave?
+                        </a>
+                    </div>
+                    <div class="input-box h-12 bg-[#f8f9ff] border border-[#e2e8f0] rounded-xl px-3.5 flex items-center gap-2.5 transition">
+                        <i data-lucide="lock" class="w-4 h-4 text-[#94a3b8] shrink-0"></i>
+                        <input autocomplete="current-password" class="w-full bg-transparent text-xs sm:text-sm text-[#0f172a] placeholder-[#94a3b8] outline-none font-medium" id="password" name="password" placeholder="••••••••••••" required="" type="password" value="password123" />
+                        <button class="text-[#94a3b8] hover:text-[#475569] p-1 cursor-pointer transition" onclick="togglePasswordVisibility()" type="button" title="Mostrar/Ocultar contraseña">
+                            <span id="eyeIconWrapper">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div class="pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input id="remember" name="remember" checked="" class="w-4 h-4 rounded text-[#0d6efd] focus:ring-[#0d6efd] border-slate-300 accent-[#0d6efd]" type="checkbox" />
+                        <span class="text-xs text-[#64748b]">Recordar sesión</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="w-full h-12 mt-2 bg-[#0d6efd] hover:bg-[#0b5ed7] active:bg-[#0a58ca] text-white rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition cursor-pointer" id="submitBtn" type="submit">
+                    <span id="btnText">Ingresar</span>
+                    <span id="btnIcon" class="flex items-center">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </span>
+                </button>
+
+                <!-- Quick Profiles for Easy Validation -->
+                <div class="pt-3 border-t border-[#f1f5f9] flex items-center justify-between text-[11px] text-[#94a3b8]">
+                    <span class="font-medium text-[#64748b]">Acceso rápido:</span>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="quickFill('admin@inter.com.ve', 'inter2026')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer text-[10px]">Admin</button>
+                        <button type="button" onclick="quickFill('coordinador.pruebas@inter.com.ve', 'inter2026')" class="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 font-medium transition cursor-pointer text-[10px]">Coord</button>
+                        <button type="button" onclick="quickFill('operador.pruebas@inter.com.ve', 'inter2026')" class="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-[#0d6efd] border border-blue-200/60 font-medium transition cursor-pointer text-[10px]">Operador</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Card Footer -->
+            <div class="mt-6 pt-4 border-t border-[#f1f5f9] text-center">
+                <p class="text-[11px] text-[#94a3b8]">
+                    © Inter Telecomunicaciones C.A. — Red Privada
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script>
         lucide.createIcons();
 
+        // ==============================================================
+        // 3D IP NETWORK TOPOLOGY & NOC NODES MESH (HTML5 CANVAS 60/120FPS)
+        // ==============================================================
+        (function initNetworkMesh() {
+            const canvas = document.getElementById('networkCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            let width = 0;
+            let height = 0;
+            let dpr = 1;
+            let baseRadius = 200;
+            let centerX = 0;
+            let centerY = 0;
+
+            const TOTAL_NODES = 85;
+            const CORE_COUNT = 8;
+            const MAX_PACKETS = 24;
+            const nodes = [];
+            const packets = [];
+
+            // Mouse parallax
+            let mouseX = 0;
+            let mouseY = 0;
+            let currentMouseX = 0;
+            let currentMouseY = 0;
+
+            window.addEventListener('mousemove', (e) => {
+                const nx = (e.clientX / window.innerWidth) - 0.5;
+                const ny = (e.clientY / window.innerHeight) - 0.5;
+                mouseX = nx * 0.5;
+                mouseY = ny * 0.5;
+            }, { passive: true });
+
+            function resize() {
+                dpr = window.devicePixelRatio || 1;
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+
+                const isDesktop = width >= 1024;
+                centerX = isDesktop ? width * 0.36 : width * 0.50;
+                centerY = height * 0.50;
+                baseRadius = isDesktop ? Math.min(width * 0.17, 210) : Math.min(width * 0.34, 150);
+            }
+
+            // Generate 3D Spherical Network Topology Cluster
+            function initNodes() {
+                nodes.length = 0;
+                for (let i = 0; i < TOTAL_NODES; i++) {
+                    const phi = Math.acos(-1 + (2 * i) / TOTAL_NODES);
+                    const theta = Math.sqrt(TOTAL_NODES * Math.PI) * phi;
+                    const r = baseRadius * (0.45 + 0.55 * Math.sqrt((i + 1) / TOTAL_NODES));
+
+                    const x = r * Math.sin(phi) * Math.cos(theta);
+                    const y = r * Math.sin(phi) * Math.sin(theta);
+                    const z = r * Math.cos(phi);
+
+                    const isCore = i < CORE_COUNT;
+
+                    nodes.push({
+                        x, y, z,
+                        origR: r,
+                        isCore,
+                        size: isCore ? 4.0 : (1.8 + Math.random() * 1.3),
+                        driftSpeed: 0.001 + Math.random() * 0.0015,
+                        seed: Math.random() * 100,
+                        pulsePhase: Math.random() * Math.PI * 2,
+                        px: 0, py: 0, pz: 0,
+                        scale: 1,
+                        alpha: 1,
+                        neighbors: []
+                    });
+                }
+            }
+
+            // Packet traffic
+            function spawnPacket(sourceNode) {
+                if (!sourceNode || !sourceNode.neighbors.length) return;
+                const targetNode = sourceNode.neighbors[Math.floor(Math.random() * sourceNode.neighbors.length)];
+                packets.push({
+                    from: sourceNode,
+                    to: targetNode,
+                    progress: 0,
+                    speed: 0.012 + Math.random() * 0.018,
+                    color: Math.random() > 0.35 ? '#38bdf8' : '#ffffff'
+                });
+            }
+
+            resize();
+            initNodes();
+            window.addEventListener('resize', () => {
+                resize();
+                initNodes();
+            });
+
+            let rotX = 0.2;
+            let rotY = 0;
+
+            function animate(timestamp) {
+                ctx.clearRect(0, 0, width, height);
+
+                // Smooth rotation & interactive mouse parallax
+                rotY += 0.0028;
+                currentMouseX += (mouseX - currentMouseX) * 0.05;
+                currentMouseY += (mouseY - currentMouseY) * 0.05;
+
+                const curRotY = rotY + currentMouseX;
+                const curRotX = rotX + Math.sin(timestamp * 0.0006) * 0.08 + currentMouseY;
+
+                const cosY = Math.cos(curRotY), sinY = Math.sin(curRotY);
+                const cosX = Math.cos(curRotX), sinX = Math.sin(curRotX);
+                const fov = 420;
+
+                // 1. Project all nodes in 3D
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+
+                    // Subtle organic breathing oscillation
+                    const breath = Math.sin(timestamp * node.driftSpeed + node.seed) * 5;
+                    const curX = node.x * (1 + breath / node.origR);
+                    const curY = node.y * (1 + breath / node.origR);
+                    const curZ = node.z * (1 + breath / node.origR);
+
+                    // Y rotation
+                    const x1 = curX * cosY - curZ * sinY;
+                    const z1 = curZ * cosY + curX * sinY;
+
+                    // X rotation
+                    const y2 = curY * cosX - z1 * sinX;
+                    const z2 = z1 * cosX + curY * sinX;
+
+                    const scale = fov / (fov + z2 + baseRadius * 0.9);
+                    node.px = centerX + x1 * scale;
+                    node.py = centerY + y2 * scale;
+                    node.pz = z2;
+                    node.scale = scale;
+                    node.alpha = Math.max(0.12, Math.min(1, (z2 + baseRadius) / (2 * baseRadius)));
+                    node.neighbors = [];
+                }
+
+                // 2. Connect nearby nodes (Network Graph Topology)
+                const maxLinkDist = baseRadius * 0.44;
+                ctx.lineWidth = 1;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const a = nodes[i];
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const b = nodes[j];
+                        const dx = a.x - b.x;
+                        const dy = a.y - b.y;
+                        const dz = a.z - b.z;
+                        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                        if (dist < maxLinkDist) {
+                            a.neighbors.push(b);
+                            b.neighbors.push(a);
+
+                            const distFactor = (1 - dist / maxLinkDist);
+                            const linkAlpha = distFactor * Math.min(a.alpha, b.alpha) * 0.55;
+
+                            if (linkAlpha > 0.03) {
+                                ctx.beginPath();
+                                ctx.moveTo(a.px, a.py);
+                                ctx.lineTo(b.px, b.py);
+
+                                if (a.isCore || b.isCore) {
+                                    ctx.strokeStyle = `rgba(56, 189, 248, ${linkAlpha * 1.25})`;
+                                } else {
+                                    ctx.strokeStyle = `rgba(13, 110, 253, ${linkAlpha})`;
+                                }
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+
+                // 3. Update & render Data Packets (IP Traffic)
+                while (packets.length < MAX_PACKETS) {
+                    const randomSource = nodes[Math.floor(Math.random() * nodes.length)];
+                    spawnPacket(randomSource);
+                }
+
+                for (let i = packets.length - 1; i >= 0; i--) {
+                    const pkt = packets[i];
+                    pkt.progress += pkt.speed;
+
+                    if (pkt.progress >= 1) {
+                        if (Math.random() > 0.4 && pkt.to.neighbors.length > 0) {
+                            pkt.from = pkt.to;
+                            pkt.to = pkt.to.neighbors[Math.floor(Math.random() * pkt.to.neighbors.length)];
+                            pkt.progress = 0;
+                        } else {
+                            packets.splice(i, 1);
+                            continue;
+                        }
+                    }
+
+                    const x = pkt.from.px + (pkt.to.px - pkt.from.px) * pkt.progress;
+                    const y = pkt.from.py + (pkt.to.py - pkt.from.py) * pkt.progress;
+                    const pktAlpha = Math.min(pkt.from.alpha, pkt.to.alpha);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 1.8 * pkt.from.scale, 0, Math.PI * 2);
+                    ctx.fillStyle = pkt.color === '#ffffff' 
+                        ? `rgba(255, 255, 255, ${pktAlpha * 0.95})` 
+                        : `rgba(56, 189, 248, ${pktAlpha * 0.9})`;
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 4;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // 4. Render Nodes (Routers, Switches, Gateway Hubs)
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    const r = node.size * node.scale;
+
+                    if (node.isCore) {
+                        // Gateway Hub: Pulse radar rings
+                        const pulse = (timestamp * 0.002 + node.pulsePhase) % 1;
+                        const ringR = r * (1 + pulse * 2.8);
+                        const ringAlpha = (1 - pulse) * node.alpha * 0.7;
+
+                        ctx.beginPath();
+                        ctx.arc(node.px, node.py, ringR, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${ringAlpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+
+                        // Core Node Outer Glow
+                        ctx.beginPath();
+                        ctx.arc(node.px, node.py, r * 1.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(13, 110, 253, ${node.alpha * 0.35})`;
+                        ctx.fill();
+
+                        // Core Node Center
+                        ctx.beginPath();
+                        ctx.arc(node.px, node.py, r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${node.alpha * 0.95})`;
+                        ctx.shadowColor = '#38bdf8';
+                        ctx.shadowBlur = 8;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    } else {
+                        // Standard IP Node
+                        ctx.beginPath();
+                        ctx.arc(node.px, node.py, r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(56, 189, 248, ${node.alpha * 0.85})`;
+                        ctx.fill();
+
+                        // White pinpoint core
+                        ctx.beginPath();
+                        ctx.arc(node.px, node.py, Math.max(0.8, r * 0.4), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${node.alpha})`;
+                        ctx.fill();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            requestAnimationFrame(animate);
+        })();
+
         function togglePasswordVisibility() {
-            const passInput = document.getElementById("password");
-            const eyeIcon = document.getElementById("icon-eye");
-            if (passInput.type === "password") {
-                passInput.type = "text";
-                eyeIcon.setAttribute("data-lucide", "eye-off");
+            const passwordInput = document.getElementById('password');
+            const eyeWrapper = document.getElementById('eyeIconWrapper');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeWrapper.innerHTML = '<i data-lucide="eye-off" class="w-4 h-4"></i>';
             } else {
-                passInput.type = "password";
-                eyeIcon.setAttribute("data-lucide", "eye");
+                passwordInput.type = 'password';
+                eyeWrapper.innerHTML = '<i data-lucide="eye" class="w-4 h-4"></i>';
             }
             lucide.createIcons();
         }
 
-        function quickFillAndLogin(email, password) {
-            document.getElementById("email").value = email;
-            document.getElementById("password").value = password;
-            document.getElementById("loginForm").requestSubmit();
+        function quickFill(user, pass) {
+            document.getElementById('username').value = user;
+            document.getElementById('password').value = pass;
+            const alertBox = document.getElementById('loginAlert');
+            if (alertBox) alertBox.classList.add('hidden');
+            document.getElementById('loginForm').requestSubmit();
         }
 
-        async function handleLoginSubmit(e) {
-            e.preventDefault();
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
-            const alertBox = document.getElementById("login-alert");
-            const alertText = document.getElementById("login-alert-text");
-            const submitBtn = document.getElementById("btn-submit-login");
+        function showForgotPasswordInfo(e) {
+            if (e) e.preventDefault();
+            const alertBox = document.getElementById('loginAlert');
+            const alertText = document.getElementById('loginAlertText');
+            if (alertBox && alertText) {
+                alertBox.className = 'p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-[#0d6efd] flex items-center gap-2 transition';
+                alertText.textContent = 'Contacte al Administrador NOC para restablecer sus credenciales.';
+                alertBox.classList.remove('hidden');
+            } else {
+                alert('Contacte al Administrador NOC para restablecer sus credenciales.');
+            }
+        }
 
-            alertBox.classList.add("hidden");
+        async function handleLogin(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const alertBox = document.getElementById('loginAlert');
+            const alertText = document.getElementById('loginAlertText');
+            const userInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value;
+
+            if (alertBox) {
+                alertBox.className = 'hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2 transition';
+            }
+
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>Verificando...</span>';
+            btnText.textContent = 'Verificando...';
+            btnIcon.innerHTML = '';
 
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email: userInput, username: userInput, password: passwordInput })
                 });
 
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    submitBtn.innerHTML = '<span>Acceso Concedido...</span>';
-                    window.location.href = '/';
+                    btnText.textContent = 'Acceso Concedido';
+                    btnIcon.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                    lucide.createIcons();
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 400);
                 } else {
-                    alertBox.classList.remove("hidden");
-                    alertText.innerText = data.message || "Credenciales inválidas.";
+                    if (alertBox && alertText) {
+                        alertBox.classList.remove('hidden');
+                        alertText.textContent = data.message || 'Credenciales inválidas. Verifique sus datos.';
+                    }
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<span>Iniciar sesión</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
+                    btnText.textContent = 'Ingresar';
+                    btnIcon.innerHTML = '<i data-lucide="arrow-right" class="w-4 h-4"></i>';
                     lucide.createIcons();
                 }
             } catch (err) {
-                alertBox.classList.remove("hidden");
-                alertText.innerText = "Error de comunicación con el servidor.";
+                if (alertBox && alertText) {
+                    alertBox.classList.remove('hidden');
+                    alertText.textContent = 'Error de comunicación con el servidor.';
+                }
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>Iniciar sesión</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
+                btnText.textContent = 'Ingresar';
+                btnIcon.innerHTML = '<i data-lucide="arrow-right" class="w-4 h-4"></i>';
                 lucide.createIcons();
             }
         }
     </script>
 </body>
+
 </html>
