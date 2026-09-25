@@ -99,6 +99,29 @@ def resolve_dashboard_user(request: Request) -> dict:
         "departamento_id": 1,
     }
 
+def check_coordinator_permission(request: Request) -> Optional[JSONResponse]:
+    """
+    Control de Acceso Basado en Roles (RBAC):
+    Permite acceso total a Coordinadores y Administradores para Métricas, Auditoría y Reportes.
+    Bloquea con 403 Forbidden a Especialistas y Operadores.
+    """
+    if not request:
+        return None
+    user = get_authenticated_user(request)
+    if not user:
+        user = resolve_dashboard_user(request)
+    if user:
+        role = (user.get("role") or "").upper()
+        if role not in ("COORDINADOR", "ADMINISTRADOR"):
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "status": "error",
+                    "error": "Acceso restringido: Se requiere perfil de Coordinador o Administrador para consultar Métricas, Auditoría y Reportes de procesos lógicos."
+                }
+            )
+    return None
+
 @app.on_event("startup")
 def startup_event():
     init_db()
@@ -397,7 +420,11 @@ def get_kpis(area: str = "Todas"):
     }
 
 @app.get("/api/charts/technicians")
-def get_technicians_chart(area: str = "Todas"):
+def get_technicians_chart(request: Request = None, area: str = "Todas"):
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
     conn = get_db()
     cur = conn.cursor()
     
@@ -448,7 +475,11 @@ def get_technicians_chart(area: str = "Todas"):
 
 
 @app.get("/api/charts/task-weights")
-def get_task_weights(area: str = "Todas"):
+def get_task_weights(request: Request = None, area: str = "Todas"):
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
     conn = get_db()
     cur = conn.cursor()
     
@@ -477,7 +508,11 @@ def get_task_weights(area: str = "Todas"):
     return data
 
 @app.get("/api/charts/hourly")
-def get_hourly_chart(area: str = "Todas"):
+def get_hourly_chart(request: Request = None, area: str = "Todas"):
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
     if area == "Soporte":
         pointsData = [15, 32, 58, 85, 110, 132, 150, 168]
     elif area == "Cabecera":
@@ -1085,13 +1120,28 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
         ticket_code = f"INC-{cand_num}"
         attempts += 1
 
-    # 2. Resolver departamento y área
-    user, coord_depto_id = get_authenticated_coordinator(request)
-    depto_id = payload.departamento_id or coord_depto_id or 1
+    # 2. Resolver departamento, área y perfil del creador (Coordinador u Operador)
+    caller = get_authenticated_user(request)
+    if not caller:
+        caller = resolve_dashboard_user(request)
+    caller_role = (caller.get("role") or "").upper() if caller else "COORDINADOR"
+    caller_name = caller.get("name") if caller else "Coordinación"
+    caller_id = caller.get("id") if caller else 1
+
+    coord_user, coord_depto_id = get_authenticated_coordinator(request)
+    depto_id = payload.departamento_id or (caller.get("departamento_id") if caller else None) or coord_depto_id or 1
 
     cur.execute("SELECT nombre FROM departamentos WHERE id = ?", (depto_id,))
     d_row = cur.fetchone()
     depto_nombre = d_row[0] if d_row else (payload.area or "Redes de acceso y aprovisionamiento")
+
+    # Determinar origen según el rol del creador
+    if caller_role in ("ESPECIALISTA", "OPERADOR"):
+        ticket_source = "MANUAL_OPERADOR"
+        default_sender = caller.get("email") or "operaciones@inter.com.ve"
+    else:
+        ticket_source = "MANUAL_COORDINADOR"
+        default_sender = caller.get("email") or "coordinacion@inter.com.ve"
 
     # 3. Resolver operador si se especificó asignación directa
     op_name = None
@@ -1116,10 +1166,10 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
         ticket_code, sender_email, subject, full_body, area, departamento_id,
         subscriber_code, serial_pon, node_name, mac_address, suggested_task_type_id,
         operador_id, claimed_by_user_id, status, source, created_at, fecha_creacion
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'MANUAL_COORDINADOR', ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         ticket_code,
-        payload.sender_email or "coordinacion@inter.com.ve",
+        payload.sender_email or default_sender,
         payload.subject.strip(),
         payload.body_text or payload.subject.strip(),
         depto_nombre,
@@ -1132,33 +1182,36 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
         operador_id,
         operador_id,
         status,
+        ticket_source,
         now_str,
         now_str
     ))
     new_ticket_id = cur.lastrowid
 
     # 5. Insertar historial de estado
-    nota = f"Ticket creado y asignado directamente a {op_name}" if operador_id else "Ticket creado en estado Pendiente para despacho de área"
+    if operador_id:
+        nota = f"Ticket creado por {caller_name} ({caller_role}) y asignado a {op_name}"
+    else:
+        nota = f"Ticket creado por {caller_name} ({caller_role}) en estado Pendiente para despacho"
+
     cur.execute("""
     INSERT INTO ticket_historial_estados (
         ticket_id, operador_id, estado_anterior, estado_nuevo, nota_cambio, fecha_cambio
     ) VALUES (?, ?, 'CREADO', ?, ?, ?)
-    """, (new_ticket_id, operador_id or 1, status, nota, now_str))
+    """, (new_ticket_id, operador_id or caller_id, status, nota, now_str))
 
     conn.commit()
     conn.close()
 
     # 6. Auditoría forense
     client_ip = request.client.host if request and request.client else "127.0.0.1"
-    creator_id = user["id"] if user else 1
-    creator_name = user["name"] if user else "Coordinación"
     log_audit_event(
-        user_id=creator_id,
-        user_name=creator_name,
+        user_id=caller_id,
+        user_name=caller_name,
         action="CREAR_TICKET",
         entity_type="TICKET",
         entity_id=ticket_code,
-        details=f"Ticket {ticket_code} ({depto_nombre}) creado con ID automático. Estado: {status}" + (f", asignado a {op_name}" if op_name else ""),
+        details=f"Ticket {ticket_code} ({depto_nombre}) creado por {caller_name} ({caller_role}). Estado: {status}" + (f", asignado a {op_name}" if op_name else ""),
         ip_address=client_ip
     )
 
@@ -1171,8 +1224,98 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
         "operador_id": operador_id,
         "operador_nombre": op_name,
         "estado": status,
+        "source": ticket_source,
         "message": f"Ticket #{ticket_code} creado exitosamente con ID automático" + (f" y asignado a {op_name}." if op_name else ".")
     }
+
+@app.get("/api/tickets/general-board")
+def get_general_tickets_board(
+    request: Request,
+    source_filter: Optional[str] = "all",
+    search: Optional[str] = None
+):
+    """
+    Retorna el tablero general de casos para Operadores y Coordinadores:
+    Muestra todos los casos creados por Coordinación, correo M365 y asignaciones entre operadores.
+    Permite a los operadores consultar casos y asignar/designar tareas a otros compañeros.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    query = """
+    SELECT et.id, et.ticket_code, et.sender_email, et.subject, et.full_body, et.area,
+           et.departamento_id, COALESCE(d.nombre, et.area) as departamento_nombre,
+           COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo,
+           et.subscriber_code, et.serial_pon, et.node_name, et.slot_pon, et.mac_address,
+           et.status, et.claimed_by_user_id, et.operador_id,
+           COALESCE(u_op.name, u_claim.name, 'Sin Asignar') as operador_nombre,
+           COALESCE(u_op.avatar, u_claim.avatar, 'OP') as operador_avatar,
+           tt.name as suggested_task_name, tt.points as suggested_points, tt.id as suggested_task_id, tt.code as task_code,
+           COALESCE(tt.sla_minutes, 30) as sla_minutes,
+           COALESCE(et.fecha_creacion, et.created_at) as fecha_creacion,
+           et.fecha_inicio_atencion, et.claimed_at,
+           et.source
+    FROM email_tickets et
+    LEFT JOIN departamentos d ON et.departamento_id = d.id
+    LEFT JOIN users u_op ON et.operador_id = u_op.id
+    LEFT JOIN users u_claim ON et.claimed_by_user_id = u_claim.id
+    LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
+    WHERE et.status != 'COMPLETADO'
+    """
+    params = []
+
+    if source_filter == "coordinator":
+        query += " AND (UPPER(et.source) LIKE '%COORD%' OR LOWER(et.sender_email) LIKE '%coordinacion%')"
+    elif source_filter == "m365":
+        query += " AND (UPPER(et.source) NOT LIKE '%COORD%' AND LOWER(et.sender_email) NOT LIKE '%coordinacion%')"
+    elif source_filter == "unassigned":
+        query += " AND (et.operador_id IS NULL AND et.claimed_by_user_id IS NULL OR UPPER(et.status) = 'PENDIENTE')"
+
+    if search:
+        s = f"%{search.strip().lower()}%"
+        query += " AND (LOWER(et.ticket_code) LIKE ? OR LOWER(et.subject) LIKE ? OR LOWER(et.subscriber_code) LIKE ? OR LOWER(et.node_name) LIKE ? OR LOWER(COALESCE(u_op.name, '')) LIKE ?)"
+        params.extend([s, s, s, s, s])
+
+    query += """
+    ORDER BY
+      CASE UPPER(et.status)
+        WHEN 'PENDIENTE' THEN 1
+        WHEN 'ASIGNADO' THEN 2
+        WHEN 'EN PROGRESO' THEN 3
+        WHEN 'EN ESPERA' THEN 4
+        WHEN 'POR_VERIFICAR' THEN 5
+        ELSE 6
+      END,
+      et.id DESC
+    LIMIT 150
+    """
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    
+    tickets = []
+    for r in rows:
+        t = dict(r)
+        src = (t.get("source") or "").upper()
+        snd = (t.get("sender_email") or "").lower()
+        if "COORD" in src or "coordinacion" in snd:
+            t["source_type"] = "COORDINACION"
+            t["source_label"] = "Coordinación"
+            t["source_color"] = "blue"
+        elif "OPERADOR" in src:
+            t["source_type"] = "OPERADOR"
+            t["source_label"] = "Operador Técnico"
+            t["source_color"] = "emerald"
+        else:
+            t["source_type"] = "M365"
+            t["source_label"] = "Correo M365"
+            t["source_color"] = "purple"
+
+        pts = t.get("suggested_points") or 2
+        t["priority"] = "P5" if pts >= 8 else "P4" if pts >= 5 else "P3" if pts >= 3 else "P2" if pts >= 2 else "P1"
+        tickets.append(t)
+
+    conn.close()
+    return tickets
 
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket_detail(ticket_id: int):
@@ -1449,38 +1592,47 @@ def assign_ticket(ticket_id: int, request: Request, payload: AssignTicketPayload
         conn.close()
         return JSONResponse(status_code=404, content={"error": f"Operador #{payload.operador_id} no encontrado."})
 
-    # Resolver quién ejecuta la asignación (Coordinador autenticado)
-    caller, coord_depto_id = get_authenticated_coordinator(request, payload.coordinador_id)
+    # Resolver quién ejecuta la asignación (Coordinador u Operador autenticado)
+    caller = get_authenticated_user(request)
+    if not caller and payload.coordinador_id:
+        caller, _ = get_authenticated_coordinator(request, payload.coordinador_id)
+    if not caller:
+        caller = resolve_dashboard_user(request)
+
     if not caller:
         conn.close()
-        return JSONResponse(status_code=401, content={"error": "Autenticación requerida. Debe iniciar sesión como Coordinador o Administrador."})
+        return JSONResponse(status_code=401, content={"error": "Autenticación requerida."})
 
     caller_role = (caller.get("role") or "").upper()
-    if caller_role not in ("COORDINADOR", "ADMINISTRADOR"):
+    is_coord_or_admin = caller_role in ("COORDINADOR", "ADMINISTRADOR")
+    is_operator = caller_role in ("ESPECIALISTA", "OPERADOR")
+
+    if not (is_coord_or_admin or is_operator):
         conn.close()
-        return JSONResponse(status_code=403, content={"error": "Acceso denegado: Se requiere rol de Coordinador o Administrador para asignar tickets."})
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado: Perfil no autorizado."})
 
     ticket_depto_id = t_row["departamento_id"]
     operator_depto_id = u_row["departamento_id"]
+    coord_depto_id = caller.get("departamento_id")
 
     is_admin = caller_role == "ADMINISTRADOR"
 
-    # 1. Validación de departamento del Coordinador con el Ticket
+    # 1. Validación de departamento del usuario asignador con el Ticket
     if coord_depto_id and ticket_depto_id and not is_admin:
         if coord_depto_id != ticket_depto_id:
             conn.close()
             return JSONResponse(
                 status_code=403,
-                content={"error": f"Acceso denegado: El coordinador pertenece al departamento {coord_depto_id}, pero el ticket pertenece al departamento {ticket_depto_id}."}
+                content={"error": f"Acceso denegado: El usuario pertenece al departamento {coord_depto_id}, pero el ticket pertenece al departamento {ticket_depto_id}."}
             )
 
-    # 2. Validación de departamento del Coordinador con el Operador
+    # 2. Validación de departamento del usuario asignador con el Operador designado
     if coord_depto_id and operator_depto_id and not is_admin:
         if coord_depto_id != operator_depto_id:
             conn.close()
             return JSONResponse(
                 status_code=400,
-                content={"error": f"El operador '{u_row['name']}' pertenece al departamento {operator_depto_id}, que no coincide con el del coordinador ({coord_depto_id})."}
+                content={"error": f"El operador '{u_row['name']}' pertenece al departamento {operator_depto_id}, que no coincide con el del asignador ({coord_depto_id})."}
             )
 
     # 3. VALIDACIÓN CRÍTICA: Ticket y Operador deben pertenecer al mismo departamento
@@ -2163,11 +2315,15 @@ def ingest_custom_email(payload: IngestCustomPayload):
 # =============================================================
 
 @app.get("/api/reports/summary")
-def get_reports_summary_endpoint(area: str = "Todas", range_filter: str = "all"):
+def get_reports_summary_endpoint(request: Request = None, area: str = "Todas", range_filter: str = "all"):
     """
     Retorna métricas consolidadas, KPIs de productividad, balance por célula
     y ranking de los especialistas para la vista previa en el dashboard.
     """
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
     return get_managerial_summary(area=area, range_filter=range_filter)
 
 
@@ -2354,8 +2510,12 @@ def get_current_user_profile(request: Request, user_id: Optional[int] = None):
 # =============================================================
 
 @app.get("/api/audit/logs")
-def get_audit_logs_endpoint(limit: int = 50, user_id: Optional[int] = None, action: Optional[str] = None, area: Optional[str] = None):
+def get_audit_logs_endpoint(request: Request = None, limit: int = 50, user_id: Optional[int] = None, action: Optional[str] = None, area: Optional[str] = None):
     """Consulta los registros de la bitácora de auditoría forense"""
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
     return get_audit_logs(limit=limit, user_id=user_id, action=action, area=area)
 
 # =============================================================
@@ -2559,11 +2719,15 @@ def get_workload_current_alias(area: str = "Todas"):
 
 
 @app.get("/api/reports/export")
-def export_productivity_report_endpoint(area: str = "Todas", range_filter: str = "all"):
+def export_productivity_report_endpoint(request: Request = None, area: str = "Todas", range_filter: str = "all"):
     """
     Genera en memoria un libro Excel (.xlsx) con los KPIs gerenciales, balance de célula
     y productividad de especialistas, retornándolo como StreamingResponse.
     """
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
     stream = export_productivity_report(area=area, range_filter=range_filter)
     safe_area = area.replace(" ", "_").lower()
     filename = f"reporte_kpi_operaciones_{safe_area}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
@@ -2578,9 +2742,9 @@ def export_productivity_report_endpoint(area: str = "Todas", range_filter: str =
 
 
 @app.get("/api/reports/export/excel")
-def export_reports_excel_alias(area: str = "Todas", range_filter: str = "all"):
+def export_reports_excel_alias(request: Request = None, area: str = "Todas", range_filter: str = "all"):
     """Alias para compatibilidad con rutas previas de descarga de reportes"""
-    return export_productivity_report_endpoint(area=area, range_filter=range_filter)
+    return export_productivity_report_endpoint(request=request, area=area, range_filter=range_filter)
 
 
 @app.get("/api/operators/workload", response_model=WorkloadMetric)
@@ -2592,26 +2756,34 @@ def get_operators_workload_canonical(area: str = "Todas"):
 
 
 @app.get("/api/metrics/hourly")
-def get_metrics_hourly_canonical(area: str = "Todas"):
+def get_metrics_hourly_canonical(request: Request = None, area: str = "Todas"):
     """
     Endpoint canónico oficial: Curva horaria de rendimiento (8:00 AM - 12:00 PM).
     """
-    return get_hourly_chart(area=area)
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
+    return get_hourly_chart(request=request, area=area)
 
 
 @app.get("/api/metrics/ders-distribution")
-def get_metrics_ders_distribution_canonical(area: str = "Todas"):
+def get_metrics_ders_distribution_canonical(request: Request = None, area: str = "Todas"):
     """
     Endpoint canónico oficial: Distribución de esfuerzo y complejidad DERS P1 a P5.
     """
-    return get_task_weights(area=area)
+    if request:
+        err = check_coordinator_permission(request)
+        if err:
+            return err
+    return get_task_weights(request=request, area=area)
 
 
 @app.get("/api/reports/export-excel")
-def export_reports_excel_canonical(area: str = "Todas", range_filter: str = "all"):
+def export_reports_excel_canonical(request: Request = None, area: str = "Todas", range_filter: str = "all"):
     """
     Endpoint canónico oficial: Generación y descarga directa en streaming de archivo .xlsx estructurado.
     """
-    return export_productivity_report_endpoint(area=area, range_filter=range_filter)
+    return export_productivity_report_endpoint(request=request, area=area, range_filter=range_filter)
 
 

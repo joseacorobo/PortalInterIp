@@ -283,30 +283,60 @@ async function loadDashboardData() {
 
         renderAreaProgress(kpis.points_by_area, kpis.total_points);
 
-        const techRes = await fetch(`/api/charts/technicians?area=${currentArea}`);
-        const techData = await techRes.json();
-        renderTechniciansChart(techData);
-        renderTechRankingTable(techData);
-        populateTechFilter(techData);
+        const isCoord = (window.isCoordinator !== undefined) 
+            ? window.isCoordinator 
+            : (window.currentUser ? ['COORDINADOR', 'ADMINISTRADOR'].includes(window.currentUser.role) : (window.currentUserRole ? ['COORDINADOR', 'ADMINISTRADOR'].includes(window.currentUserRole) : false));
 
-        const countEl = document.getElementById("kpi-tech-count");
-        if (countEl) {
-            const num = techData.length;
-            countEl.innerText = `${num} especialista${num !== 1 ? 's' : ''}`;
+        if (isCoord && document.getElementById("tab-rendimiento")) {
+            try {
+                const techRes = await fetch(`/api/charts/technicians?area=${currentArea}`);
+                if (techRes.ok) {
+                    const techData = await techRes.json();
+                    renderTechniciansChart(techData);
+                    renderTechRankingTable(techData);
+                    populateTechFilter(techData);
+
+                    const countEl = document.getElementById("kpi-tech-count");
+                    if (countEl) {
+                        const num = techData.length;
+                        countEl.innerText = `${num} especialista${num !== 1 ? 's' : ''}`;
+                    }
+                }
+            } catch (eTech) {
+                console.warn("Chart technicians fetch error:", eTech);
+            }
+
+            try {
+                const weightsRes = await fetch(`/api/charts/task-weights?area=${currentArea}`);
+                if (weightsRes.ok) {
+                    const weightsData = await weightsRes.json();
+                    renderWeightsChart(weightsData);
+                }
+            } catch (eWeights) {
+                console.warn("Chart weights fetch error:", eWeights);
+            }
+
+            try {
+                const hourlyRes = await fetch(`/api/charts/hourly?area=${currentArea}`);
+                if (hourlyRes.ok) {
+                    const hourlyData = await hourlyRes.json();
+                    renderHourlyChart(hourlyData);
+                }
+            } catch (eHourly) {
+                console.warn("Chart hourly fetch error:", eHourly);
+            }
         }
 
-        const weightsRes = await fetch(`/api/charts/task-weights?area=${currentArea}`);
-        const weightsData = await weightsRes.json();
-        renderWeightsChart(weightsData);
-
-        const hourlyRes = await fetch(`/api/charts/hourly?area=${currentArea}`);
-        const hourlyData = await hourlyRes.json();
-        renderHourlyChart(hourlyData);
-
-        loadInbox();
-        loadFeed();
-        loadMailWorkerStatus();
-        await loadCurrentWorkload();
+        if (isCoord) {
+            loadInbox();
+            loadFeed();
+            loadMailWorkerStatus();
+            await loadCurrentWorkload();
+        } else {
+            if (typeof loadOperatorGeneralCases === 'function') {
+                loadOperatorGeneralCases();
+            }
+        }
 
     } catch (err) {
         console.error("Error loading dashboard data:", err);
@@ -5316,6 +5346,7 @@ async function handleCreateTicketSubmit(event) {
             // Refrescar Mesa de Coordinación y Triage
             if (typeof loadCoordinatorTriage === 'function') await loadCoordinatorTriage();
             if (typeof loadOperatorAssignments === 'function') await loadOperatorAssignments(true);
+            if (typeof loadOperatorGeneralCases === 'function') await loadOperatorGeneralCases();
             if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
             if (typeof loadFeed === 'function') loadFeed();
             if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
@@ -5470,6 +5501,17 @@ async function loadAuditLogs() {
 let currentDashboardTab = 'operativa'; // 'operativa' | 'rendimiento' | 'auditoria' | 'assistant'
 
 function switchDashboardTab(tabName) {
+    const isCoord = (window.isCoordinator !== undefined) 
+        ? window.isCoordinator 
+        : (window.currentUser ? ['COORDINADOR', 'ADMINISTRADOR'].includes(window.currentUser.role) : (window.currentUserRole ? ['COORDINADOR', 'ADMINISTRADOR'].includes(window.currentUserRole) : true));
+
+    if (!isCoord && (tabName === 'rendimiento' || tabName === 'auditoria')) {
+        if (typeof showToast === 'function') {
+            showToast("Acceso Restringido: El perfil de Operador Técnico no tiene acceso a Métricas ni Auditoría.", "warning");
+        }
+        tabName = 'operativa';
+    }
+
     currentDashboardTab = tabName;
     window.currentDashboardTab = tabName;
     window.currentDashboardView = tabName;
@@ -5593,12 +5635,14 @@ function switchDashboardTab(tabName) {
         if (typeof loadAuditLogs === 'function') loadAuditLogs();
         if (typeof loadLiveAuditLogs === 'function') loadLiveAuditLogs();
     } else if (tabName === 'operativa') {
-        if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
-        if (typeof loadFeed === 'function') loadFeed();
-        if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(false);
-        if (window.currentUser && (window.currentUser.role === 'COORDINADOR' || window.currentUser.role === 'ADMINISTRADOR') && typeof loadCoordinatorTriage === 'function') {
-            loadCoordinatorTriage();
+        if (isCoord) {
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadFeed === 'function') loadFeed();
+            if (typeof loadCoordinatorTriage === 'function') loadCoordinatorTriage();
+        } else {
+            if (typeof loadOperatorGeneralCases === 'function') loadOperatorGeneralCases();
         }
+        if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(false);
     } else if (tabName === 'rendimiento') {
         if (window.chartHourly && typeof window.chartHourly.resize === 'function') window.chartHourly.resize();
         if (window.chartTechnicians && typeof window.chartTechnicians.resize === 'function') window.chartTechnicians.resize();
@@ -5635,6 +5679,225 @@ function switchDashboardView(viewId) {
         switchDashboardTab('operativa');
     }
 }
+
+// ==============================================================
+// GESTIÓN DEL TABLERO GENERAL DE CASOS PARA OPERADORES
+// ==============================================================
+window.currentOperatorGeneralFilter = 'all';
+window.allOperatorGeneralCases = [];
+
+async function loadOperatorGeneralCases(sourceFilter = null) {
+    const tbody = document.getElementById('operator-general-cases-tbody');
+    const badge = document.getElementById('operator-general-count-badge');
+    const refreshIcon = document.getElementById('icon-refresh-operator-general');
+    
+    if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+    try {
+        const filter = sourceFilter || window.currentOperatorGeneralFilter || 'all';
+        const url = (filter && filter !== 'all') 
+            ? `/api/tickets/general-board?source=${encodeURIComponent(filter)}`
+            : `/api/tickets/general-board`;
+
+        const res = await fetch(url);
+        if (!res.ok) {
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-xs text-rose-500 font-medium">Error al sincronizar casos generales (${res.status})</td></tr>`;
+            }
+            return;
+        }
+
+        const data = await res.json();
+        const tickets = Array.isArray(data) ? data : (data.tickets || []);
+        window.allOperatorGeneralCases = tickets;
+
+        if (badge) {
+            badge.innerText = `${tickets.length} caso${tickets.length !== 1 ? 's' : ''}`;
+        }
+
+        renderOperatorGeneralCases(tickets);
+    } catch (err) {
+        console.error("Error loading operator general cases:", err);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-xs text-rose-500">Error de conexión al cargar casos generales</td></tr>`;
+        }
+    } finally {
+        if (refreshIcon) {
+            setTimeout(() => refreshIcon.classList.remove('animate-spin'), 300);
+        }
+    }
+}
+
+function renderOperatorGeneralCases(tickets) {
+    const tbody = document.getElementById('operator-general-cases-tbody');
+    if (!tbody) return;
+
+    if (!tickets || tickets.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="py-10 px-4 text-center">
+                    <div class="max-w-xs mx-auto text-center space-y-1">
+                        <i data-lucide="inbox" class="w-8 h-8 text-gray-300 mx-auto mb-1"></i>
+                        <p class="text-xs font-bold text-gray-700">No hay casos en esta categoría</p>
+                        <p class="text-[11px] text-gray-400">Los tickets enviados por correo M365 o creados por coordinación aparecerán aquí.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        if (window.lucide && typeof window.lucide.createIcons === 'function') lucide.createIcons();
+        return;
+    }
+
+    tbody.innerHTML = tickets.map(t => {
+        // Source Badge
+        let sourceBadge = '';
+        if (t.source === 'M365_EMAIL') {
+            sourceBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200"><i data-lucide="mail" class="w-2.5 h-2.5"></i>Correo M365</span>`;
+        } else if (t.source === 'MANUAL_COORDINADOR') {
+            sourceBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200"><i data-lucide="shield" class="w-2.5 h-2.5"></i>Coordinación</span>`;
+        } else if (t.source === 'MANUAL_OPERADOR') {
+            sourceBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><i data-lucide="user" class="w-2.5 h-2.5"></i>Operador</span>`;
+        } else {
+            sourceBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-200">${t.source || 'GENERAL'}</span>`;
+        }
+
+        // Priority Badge
+        let prioClass = 'bg-gray-100 text-gray-700 border-gray-200';
+        if (t.priority === 'P1' || t.priority === 'CRITICAL') prioClass = 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse';
+        else if (t.priority === 'P2') prioClass = 'bg-amber-50 text-amber-700 border-amber-200';
+        else if (t.priority === 'P3') prioClass = 'bg-blue-50 text-blue-700 border-blue-200';
+
+        // Assigned operator info
+        const assignedName = t.assigned_technician_name || t.assigned_operator || (t.assigned_technician_id ? `ID #${t.assigned_technician_id}` : null);
+        const isAssigned = !!assignedName;
+
+        return `
+            <tr class="hover:bg-blue-50/30 transition-colors border-b border-gray-100">
+                <td class="py-2.5 px-3">
+                    <div class="font-mono font-bold text-xs text-[#1C58A8]">#${t.id || t.ticket_number || 'N/A'}</div>
+                    <div class="mt-1">${sourceBadge}</div>
+                </td>
+                <td class="py-2.5 px-3 max-w-xs">
+                    <p class="font-bold text-xs text-gray-900 truncate" title="${t.subject || t.title || ''}">${t.subject || t.title || 'Sin requerimiento'}</p>
+                    <p class="text-[11px] text-gray-500 truncate mt-0.5">${t.description || t.notes || '—'}</p>
+                </td>
+                <td class="py-2.5 px-3">
+                    <div class="text-[11px] space-y-0.5">
+                        ${t.technical_parameters?.ip_address || t.client_ip ? `<span class="font-mono text-gray-700">IP: <strong>${t.technical_parameters?.ip_address || t.client_ip}</strong></span><br>` : ''}
+                        ${t.technical_parameters?.node_olt || t.node ? `<span class="text-gray-500 font-mono">Nodo: ${t.technical_parameters?.node_olt || t.node}</span><br>` : ''}
+                        ${t.technical_parameters?.subscriber_id ? `<span class="text-gray-500 font-mono">Abonado: ${t.technical_parameters.subscriber_id}</span>` : ''}
+                        ${(!t.technical_parameters?.ip_address && !t.client_ip && !t.node) ? '<span class="text-gray-400 font-mono">—</span>' : ''}
+                    </div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] border ${prioClass}">${t.priority || 'P3'}</span>
+                    <div class="text-[10px] text-gray-500 mt-1 font-mono">${t.sla_remaining_minutes ? t.sla_remaining_minutes + ' min SLA' : 'SLA Normal'}</div>
+                </td>
+                <td class="py-2.5 px-3">
+                    ${isAssigned ? `
+                        <div class="flex items-center gap-1.5 text-xs text-gray-800 font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span class="truncate max-w-[120px]">${assignedName}</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">${t.status || 'ASIGNADO'}</span>
+                    ` : `
+                        <div class="flex items-center gap-1.5 text-xs text-amber-600 font-medium">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            <span>Sin asignar</span>
+                        </div>
+                    `}
+                </td>
+                <td class="py-2.5 px-3 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                        <button type="button" onclick="takeOperatorGeneralCase('${t.id}')"
+                            class="px-2.5 py-1 rounded bg-[#1C58A8] hover:bg-[#0056B3] text-white text-[11px] font-bold shadow-2xs transition btn-press inline-flex items-center gap-1 cursor-pointer">
+                            <i data-lucide="check" class="w-3 h-3"></i>
+                            <span>Tomar</span>
+                        </button>
+                        <button type="button" onclick="designateOperatorToCase('${t.id}', '${t.subject ? encodeURIComponent(t.subject) : ''}')"
+                            class="px-2.5 py-1 rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 text-[11px] font-semibold transition btn-press inline-flex items-center gap-1 cursor-pointer">
+                            <i data-lucide="user-plus" class="w-3 h-3 text-[#1C58A8]"></i>
+                            <span>Designar</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        lucide.createIcons();
+    }
+}
+
+function setOperatorGeneralFilter(source, btn) {
+    window.currentOperatorGeneralFilter = source;
+    document.querySelectorAll('#operator-general-cases-panel .filter-pill-btn').forEach(b => {
+        b.classList.remove('pill-active');
+        b.classList.add('text-gray-600');
+    });
+    if (btn) {
+        btn.classList.add('pill-active');
+        btn.classList.remove('text-gray-600');
+    }
+    loadOperatorGeneralCases(source);
+}
+
+function filterOperatorGeneralCasesLocal(term) {
+    if (!window.allOperatorGeneralCases) return;
+    const clean = (term || '').trim().toLowerCase();
+    if (!clean) {
+        renderOperatorGeneralCases(window.allOperatorGeneralCases);
+        return;
+    }
+    const filtered = window.allOperatorGeneralCases.filter(t => {
+        const str = `${t.id || ''} ${t.ticket_number || ''} ${t.subject || ''} ${t.description || ''} ${t.client_ip || ''} ${t.node || ''} ${t.technical_parameters?.ip_address || ''} ${t.technical_parameters?.subscriber_id || ''}`.toLowerCase();
+        return str.includes(clean);
+    });
+    renderOperatorGeneralCases(filtered);
+}
+
+async function takeOperatorGeneralCase(ticketId) {
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/take`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (res.ok) {
+            if (typeof showToast === 'function') showToast(`Caso #${ticketId} tomado exitosamente`, 'success');
+            loadOperatorGeneralCases();
+            if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(true);
+        } else {
+            const err = await res.json().catch(() => ({}));
+            if (typeof showToast === 'function') showToast(err.detail || 'Error al tomar el caso', 'error');
+        }
+    } catch (e) {
+        console.error("Error taking case:", e);
+        if (typeof showToast === 'function') showToast('Error de red al tomar el caso', 'error');
+    }
+}
+
+function designateOperatorToCase(ticketId, encodedSubject) {
+    if (typeof openCreateTicketModal === 'function') {
+        openCreateTicketModal();
+    }
+    const subjInput = document.getElementById('new-ticket-subject');
+    const descInput = document.getElementById('new-ticket-description') || document.getElementById('new-ticket-body');
+    if (subjInput && encodedSubject) {
+        subjInput.value = `[REASIGNACIÓN #${ticketId}] ${decodeURIComponent(encodedSubject)}`;
+    }
+    if (descInput) {
+        descInput.value = `Tarea técnica derivada y reasignada del Ticket #${ticketId}.`;
+    }
+}
+
+window.loadOperatorGeneralCases = loadOperatorGeneralCases;
+window.renderOperatorGeneralCases = renderOperatorGeneralCases;
+window.setOperatorGeneralFilter = setOperatorGeneralFilter;
+window.filterOperatorGeneralCasesLocal = filterOperatorGeneralCasesLocal;
+window.takeOperatorGeneralCase = takeOperatorGeneralCase;
+window.designateOperatorToCase = designateOperatorToCase;
+window.openNewTicketModal = openCreateTicketModal;
 
 window.switchDashboardTab = switchDashboardTab;
 window.switchTab = switchDashboardTab;
