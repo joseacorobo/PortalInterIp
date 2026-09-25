@@ -10,6 +10,7 @@ let isPaused = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     initTheme();
+    initSidebarState();
     lucide.createIcons();
     loadCurrentUserProfile();
     loadDashboardData();
@@ -3126,6 +3127,144 @@ function checkGroupContainsActiveArea(groupId) {
 }
 
 // =============================================================
+// GESTOR DE MINIMIZACIÓN DE SIDEBAR Y DASHBOARD (Stitch Precision)
+// =============================================================
+
+function initSidebarState() {
+    const savedState = localStorage.getItem('sidebar-collapsed');
+    const sidebar = document.getElementById('main-sidebar');
+    if (!sidebar) return;
+
+    if (savedState === '1' || savedState === 'true') {
+        sidebar.classList.add('collapsed');
+        updateSidebarToggleState(true);
+    } else {
+        sidebar.classList.remove('collapsed');
+        updateSidebarToggleState(false);
+    }
+}
+
+function updateSidebarToggleState(isCollapsed) {
+    const btnSidebar = document.getElementById('btn-toggle-sidebar');
+    const iconSidebar = document.getElementById('sidebar-chevron-icon');
+    const btnHeader = document.getElementById('btn-toggle-sidebar-header');
+
+    if (btnSidebar) {
+        btnSidebar.setAttribute('title', isCollapsed ? 'Expandir panel lateral (Ctrl+B)' : 'Minimizar panel lateral (Ctrl+B)');
+        btnSidebar.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+    }
+    if (iconSidebar) {
+        if (isCollapsed) {
+            iconSidebar.classList.add('rotate-180');
+        } else {
+            iconSidebar.classList.remove('rotate-180');
+        }
+    }
+    if (btnHeader) {
+        btnHeader.setAttribute('title', isCollapsed ? 'Expandir panel lateral (Ctrl+B)' : 'Minimizar panel lateral (Ctrl+B)');
+        const icon = btnHeader.querySelector('[data-lucide]');
+        if (icon) {
+            icon.setAttribute('data-lucide', isCollapsed ? 'panel-left-open' : 'panel-left');
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons({ nodes: [icon] });
+            }
+        }
+    }
+}
+
+function toggleSidebarCollapse() {
+    const sidebar = document.getElementById('main-sidebar');
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
+    updateSidebarToggleState(isCollapsed);
+
+    // Si está colapsado, cerrar el submenú de tickets para evitar desbordes visuales
+    if (isCollapsed) {
+        const sub = document.getElementById('tickets-submenu');
+        const chev = document.getElementById('tickets-chevron');
+        if (sub) sub.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+    }
+
+    // Notificar a Chart.js y componentes que el ancho del viewport cambió
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            lucide.createIcons();
+        }
+    }, 260);
+}
+
+function handleTicketsNavClick() {
+    const sidebar = document.getElementById('main-sidebar');
+    if (sidebar && sidebar.classList.contains('collapsed')) {
+        // Al hacer click en tickets mientras está minimizado, cambiamos directamente a la pestaña de tickets
+        switchDashboardTab('tickets');
+    } else {
+        switchDashboardTab('tickets');
+        toggleSubmenu();
+    }
+}
+
+function toggleDashboardFullscreen() {
+    const icon = document.getElementById('fullscreen-icon');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.warn('Error solicitando pantalla completa:', err);
+        });
+        if (icon) {
+            icon.setAttribute('data-lucide', 'minimize');
+            if (window.lucide) lucide.createIcons({ nodes: [icon] });
+        }
+        if (typeof showToast === 'function') {
+            showToast('Dashboard maximizado a pantalla completa', 'info');
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+        if (icon) {
+            icon.setAttribute('data-lucide', 'maximize');
+            if (window.lucide) lucide.createIcons({ nodes: [icon] });
+        }
+        if (typeof showToast === 'function') {
+            showToast('Pantalla completa desactivada', 'info');
+        }
+    }
+}
+
+// Sincronizar cambio de pantalla completa nativo (por ejemplo con F11 o Esc)
+document.addEventListener('fullscreenchange', () => {
+    const icon = document.getElementById('fullscreen-icon');
+    const isFull = !!document.fullscreenElement;
+    if (icon) {
+        icon.setAttribute('data-lucide', isFull ? 'minimize' : 'maximize');
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons({ nodes: [icon] });
+        }
+    }
+    const btn = document.getElementById('btn-fullscreen-toggle');
+    if (btn) {
+        btn.setAttribute('title', isFull ? 'Restaurar tamaño del Dashboard' : 'Maximizar / Pantalla completa del Dashboard');
+    }
+});
+
+// Atajo de teclado: Ctrl + B o Cmd + B para minimizar/expandir sidebar
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleSidebarCollapse();
+    }
+});
+
+window.initSidebarState = initSidebarState;
+window.toggleSidebarCollapse = toggleSidebarCollapse;
+window.handleTicketsNavClick = handleTicketsNavClick;
+window.toggleDashboardFullscreen = toggleDashboardFullscreen;
+
+// =============================================================
 // GESTIÓN DE SESIÓN, PERFIL DE USUARIO Y CONMUTADOR RÁPIDO
 // =============================================================
 
@@ -5125,9 +5264,17 @@ async function handleCreateTicketSubmit(event) {
     const nodeInput = document.getElementById("new-ticket-node");
     const bodyInput = document.getElementById("new-ticket-body");
 
+    function notifyToast(title, desc, type = 'success') {
+        if (typeof showToast === 'function') {
+            showToast(desc ? `${title}: ${desc}` : title, type);
+        } else {
+            console.log(title, desc);
+        }
+    }
+
     const subject = subjectInput ? subjectInput.value.trim() : "";
     if (!subject) {
-        showStitchSuccessToast("Campo Obligatorio", "Por favor ingrese el asunto de la incidencia.");
+        notifyToast("Campo Obligatorio", "Por favor ingrese el asunto de la incidencia.", "warning");
         if (subjectInput) subjectInput.focus();
         return;
     }
@@ -5160,9 +5307,10 @@ async function handleCreateTicketSubmit(event) {
         if (res.ok) {
             closeCreateTicketModal();
             const actionText = data.operador_nombre ? `Asignado a ${data.operador_nombre}` : 'En cola Pendiente';
-            showStitchSuccessToast(
+            notifyToast(
                 `¡Ticket #${data.ticket_code} Creado!`,
-                `ID generado automáticamente · ${data.departamento_nombre} · ${actionText}`
+                `ID generado automáticamente · ${data.departamento_nombre} · ${actionText}`,
+                'success'
             );
 
             // Refrescar Mesa de Coordinación y Triage
@@ -5173,11 +5321,11 @@ async function handleCreateTicketSubmit(event) {
             if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
             if (typeof loadDashboardData === 'function') loadDashboardData();
         } else {
-            showStitchSuccessToast("Error al Crear", data.detail || data.error || "No se pudo crear el ticket.");
+            notifyToast("Error al Crear", data.detail || data.error || "No se pudo crear el ticket.", "error");
         }
     } catch (e) {
         console.error("Error creating ticket:", e);
-        showStitchSuccessToast("Error de Conexión", "No se pudo comunicar con el servidor.");
+        notifyToast("Error de Conexión", "No se pudo comunicar con el servidor.", "error");
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -5972,37 +6120,7 @@ function openNewTicketModal() {
 }
 
 async function handleCreateTicket(e) {
-    e.preventDefault();
-    const client = document.getElementById('new-client').value;
-    const area = document.getElementById('new-area').value;
-    const prio = document.getElementById('new-prio').value;
-    const subject = document.getElementById('new-subject').value;
-    const desc = document.getElementById('new-desc').value;
-
-    try {
-        const res = await fetch('/api/tickets/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subject: subject,
-                body_text: desc || subject,
-                area: area,
-                subscriber_code: client
-            })
-        });
-        if (res.ok) {
-            const data = await res.json();
-            showToast(`¡Ticket ${data.ticket_code || ''} creado con éxito!`, 'success');
-            closeModal('modal-new-ticket');
-            e.target.reset();
-            if (typeof loadDispatchQueue === 'function') loadDispatchQueue();
-            if (typeof loadDashboardData === 'function') loadDashboardData();
-        } else {
-            showToast('Error al crear el ticket', 'error');
-        }
-    } catch (err) {
-        showToast('Error de conexión al crear ticket', 'error');
-    }
+    return handleCreateTicketSubmit(e);
 }
 
 async function refreshDispatchQueue() {

@@ -11,6 +11,29 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            inter: {
+              50: '#F0F6FD',
+              100: '#E1EDFB',
+              200: '#B8DAF7',
+              500: '#0056B3',
+              600: '#004A9E',
+              700: '#003D82',
+              800: '#003066',
+              900: '#002047',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
     <!-- Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -140,7 +163,83 @@
             padding: 1rem;
             height: 100vh;
             user-select: none;
-            transition: width 0.2s ease;
+            transition: width 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+                        min-width 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+                        padding 0.24s ease;
+            position: relative;
+            z-index: 30;
+            overflow-x: hidden;
+        }
+
+        /* Modo Colapsado / Minimizado */
+        .sidebar-container.collapsed {
+            width: 4.75rem !important;
+            min-width: 4.75rem !important;
+            padding: 1rem 0.5rem !important;
+        }
+
+        .sidebar-container.collapsed .sidebar-label-hide {
+            display: none !important;
+        }
+
+        .sidebar-container.collapsed .sidebar-header-top {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .sidebar-container.collapsed .sidebar-brand-wrapper {
+            justify-content: center;
+            width: 100%;
+            padding: 0;
+        }
+
+        .sidebar-container.collapsed .sidebar-logo-img {
+            height: 1.15rem;
+            max-width: 42px;
+        }
+
+        .sidebar-container.collapsed .sidebar-collapse-btn {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-container.collapsed .sidebar-nav-pill {
+            justify-content: center !important;
+            padding: 0.625rem 0.25rem !important;
+            position: relative;
+        }
+
+        .sidebar-container.collapsed .sidebar-nav-pill span:not(.sidebar-badge-compact) {
+            display: none !important;
+        }
+
+        .sidebar-container.collapsed #tickets-chevron {
+            display: none !important;
+        }
+
+        .sidebar-container.collapsed #tickets-submenu {
+            display: none !important;
+        }
+
+        .sidebar-container.collapsed .sidebar-footer {
+            justify-content: center;
+            padding-top: 0.5rem;
+        }
+
+        .sidebar-container.collapsed .sidebar-footer > div {
+            justify-content: center;
+            width: 100%;
+            padding: 0;
+        }
+
+        .sidebar-container.collapsed #sidebar-inbox-badge {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 8px;
+            padding: 1px 4px;
+            line-height: 1.1;
         }
 
         .sidebar-nav-pill {
@@ -270,52 +369,52 @@
     <aside id="main-sidebar" class="sidebar-container select-none z-30"
         style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%); border-right: 1px solid rgba(255, 255, 255, 0.1);">
         <!-- Top Brand & Collapse -->
-        <div class="flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/10">
-            <div
-                class="flex-1 max-w-[172px] h-[58px] flex items-center justify-center px-4 py-2 shadow-md ring-1 ring-white/15 shrink-0 overflow-hidden rounded-lg bg-[#1C58A8]">
+        <div class="sidebar-header-top flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/10 transition-all">
+            <div class="sidebar-brand-wrapper flex items-center overflow-hidden py-1 px-1 transition-all">
                 <img src="/static/img/inter_logo.png" alt="Inter"
-                    class="w-full h-full object-contain brightness-0 invert drop-shadow-xs">
+                    class="sidebar-logo-img h-7.5 w-auto object-contain brightness-0 invert opacity-95 hover:opacity-100 transition-all drop-shadow-sm">
             </div>
-            <button
-                class="w-7 h-7 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0"
-                title="Colapsar menú">
-                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            <button id="btn-toggle-sidebar" onclick="toggleSidebarCollapse()"
+                class="sidebar-collapse-btn w-7 h-7 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0"
+                title="Minimizar panel lateral (Ctrl+B)" aria-label="Minimizar panel lateral">
+                <i data-lucide="chevron-left" id="sidebar-chevron-icon" class="w-4 h-4 transition-transform duration-200"></i>
             </button>
         </div>
         <!-- Grupo PANEL -->
         <div class="flex-1 flex flex-col gap-2 overflow-y-auto">
-            <p class="text-[14px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1.5">Dashboard</p>
+            <p class="text-[13px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1 sidebar-label-hide">Dashboard</p>
             <div class="space-y-1">
                 <button onclick="switchDashboardTab('operativa')" id="nav-view-operativa"
-                    class="sidebar-nav-pill active btn-press">
+                    class="sidebar-nav-pill active btn-press" title="General">
                     <i data-lucide="columns-3" class="w-4 h-4 shrink-0 text-[#7CB2EA]"></i>
-                    <span>General</span>
+                    <span class="sidebar-label-hide">General</span>
                 </button>
                 <button onclick="switchDashboardTab('rendimiento')" id="nav-view-rendimiento"
-                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press" title="Métricas">
                     <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
-                    <span>Métricas</span>
+                    <span class="sidebar-label-hide">Métricas</span>
                 </button>
                 <button onclick="switchDashboardTab('auditoria')" id="nav-view-auditoria"
-                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press" title="Reportes y Auditoría">
                     <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
-                    <span>Reportes y     Auditoría</span>
+                    <span class="sidebar-label-hide">Reportes y Auditoría</span>
                 </button>
 
                 <!-- Tickets Tablero Accordion -->
                 <div class="space-y-1" id="tickets-accordion-group">
-                    <button type="button" onclick="switchDashboardTab('tickets'); toggleSubmenu();"
+                    <button type="button" onclick="handleTicketsNavClick()"
                         id="nav-view-tickets"
-                        class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press">
+                        class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press"
+                        title="Tablero de Tickets">
                         <div class="flex items-center gap-2 min-w-0 flex-1">
                             <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
-                            <span class="truncate">Tablero de Tickets</span>
+                            <span class="truncate sidebar-label-hide">Tablero de Tickets</span>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0 ml-1">
                             <span id="sidebar-inbox-badge"
-                                class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60 shrink-0">14</span>
+                                class="sidebar-badge-compact px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60 shrink-0">14</span>
                             <i data-lucide="chevron-down" id="tickets-chevron"
-                                class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0"></i>
+                                class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 sidebar-label-hide"></i>
                         </div>
                     </button>
                     <div id="tickets-submenu" class="pl-6 space-y-1 text-xs transition-all">
@@ -338,22 +437,22 @@
                         </button>
                     </div>
                 </div>     
-        </div>
+
                 <button onclick="switchDashboardTab('configuracion')" id="nav-view-configuracion"
-                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press">
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press" title="Configuración">
                     <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
-                    <span>Configuración</span>
+                    <span class="sidebar-label-hide">Configuración</span>
                 </button>
             </div>
         </div>
         <!-- Footer: Switch Tema & Live Ping -->
-        <div class="pt-3 border-t border-white/10 space-y-2">
+        <div class="sidebar-footer pt-3 border-t border-white/10 space-y-2">
             <div class="flex items-center justify-between px-2 text-[10px] text-gray-400 font-mono">
-                <span class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Servidor: <span id="server-status-text">Conectado</span>
+                <span class="flex items-center gap-1.5" title="Servidor: Conectado">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                    <span class="sidebar-label-hide">Servidor: <span id="server-status-text">Conectado</span></span>
                 </span>
-                <span id="live-sync-indicator">Sync: 0s</span>
+                <span id="live-sync-indicator" class="sidebar-label-hide">Sync: 0s</span>
             </div>
         </div>
     </aside>
@@ -365,6 +464,11 @@
         <header class="h-12 px-6 flex items-center justify-between select-none z-20 border-b border-white/10"
             style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%);">
             <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleSidebarCollapse()" id="btn-toggle-sidebar-header"
+                    class="p-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0 flex items-center justify-center mr-1"
+                    title="Minimizar / Expandir menú lateral (Ctrl+B)" aria-label="Minimizar panel lateral">
+                    <i data-lucide="panel-left" class="w-4 h-4"></i>
+                </button>
                 <div class="flex items-center gap-2 shrink-0">
                     <span class="text-xs font-semibold text-white tracking-wide">Operaciones IP — Inter</span>
                     <span class="text-white/20">|</span>
@@ -383,23 +487,27 @@
                         placeholder="Buscar ticket o serial..."
                         class="w-48 pl-8 pr-3 py-1 text-xs bg-white/5 rounded-lg text-white placeholder-white/50 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] focus:w-60 transition-all">
                 </div>
-                <div class="flex items-center gap-2">
-                    <!-- Perfil Usuario -->
-        <div class="flex-1 flex flex-col overflow-y-auto space-y-4 pr-1">
-            <div
-                class="flex items-center gap-2.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
-                <div id="sidebar-user-avatar"
-                    class="w-10 h-10 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                    {{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</div>
-                <div class="overflow-hidden">
-                    <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">{{ current_user.name if
-                        current_user else 'Usuario NOC' }}</p>
-                </div>
-                <button type="button" onclick="logoutSession()"
-                    class="p-1.5 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer shrink-0"
-                    title="Cerrar sesión">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                <!-- Boton Maximizar / Pantalla Completa Dashboard -->
+                <button type="button" onclick="toggleDashboardFullscreen()" id="btn-fullscreen-toggle"
+                    class="p-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0 flex items-center justify-center"
+                    title="Maximizar / Pantalla completa del Dashboard" aria-label="Pantalla completa">
+                    <i data-lucide="maximize" id="fullscreen-icon" class="w-4 h-4"></i>
                 </button>
+                <!-- Perfil Usuario -->
+                <div class="flex items-center gap-2.5 p-1.5 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
+                    <div id="sidebar-user-avatar"
+                        class="w-7 h-7 rounded-lg bg-[#1C58A8] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                        {{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</div>
+                    <div class="overflow-hidden">
+                        <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate">{{ current_user.name if
+                            current_user else 'Usuario NOC' }}</p>
+                    </div>
+                    <button type="button" onclick="logoutSession()"
+                        class="p-1 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer shrink-0 ml-1"
+                        title="Cerrar sesión">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -1507,65 +1615,133 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- MODAL 3: CREAR NUEVO TICKET                                    -->
+    <!-- MODAL 3: CREAR TICKET O ASIGNACIÓN TÉCNICA                     -->
     <!-- ============================================================== -->
     <div id="modal-new-ticket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-        <div
-            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-lg w-full overflow-hidden animate-fade-in-up">
-            <div class="px-6 py-4 bg-[#0056B3] text-white flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <h3 class="text-sm font-bold">Generar Nuevo Ticket Técnico NOC</h3>
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-lg w-full overflow-hidden animate-fade-in-up">
+            <!-- Modal Header -->
+            <div class="px-6 pt-6 pb-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#0056B3] flex items-center justify-center shrink-0">
+                            <i data-lucide="ticket" class="w-4 h-4"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-gray-900">Crear Ticket o Asignación Técnica</h3>
+                    </div>
+                    <button type="button" onclick="closeCreateTicketModal()" class="text-gray-400 hover:text-gray-600 transition p-1">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
                 </div>
-                <button onclick="closeModal('modal-new-ticket')" class="text-white/80 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                <p class="text-xs text-gray-500 mt-2 leading-relaxed">
+                    El número de ticket es generado y registrado automáticamente por el sistema de numeración IP.
+                </p>
             </div>
-            <form onsubmit="handleCreateTicket(event)" class="p-6 space-y-3.5 text-xs">
-                <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Cliente / Entidad</label>
-                    <input type="text" id="new-client" placeholder="Ej: Mercantil Banco Corp" required
-                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+
+            <!-- Autogenerated ID Banner -->
+            <div class="mx-6 my-3 p-3.5 rounded-xl bg-blue-50/50 border border-blue-100/80 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-blue-100/60 text-[#0056B3] flex items-center justify-center shrink-0">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </div>
                     <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Área Técnica Destino</label>
-                        <select id="new-area"
-                            class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
-                            <option value="ACCESO_APROV">Redes de Acceso &amp; Aprov.</option>
-                            <option value="TRAFICO_INALAMBRICO">Tráfico e Inalámbricas</option>
-                            <option value="REDES_WAN">Redes WAN</option>
-                            <option value="SEGURIDAD">Seguridad de Red</option>
-                            <option value="TELEFONIA">Telefonía VoIP</option>
-                            <option value="GRANDES_CLIENTES">Grandes Clientes</option>
+                        <h4 class="text-xs font-bold text-[#0056B3]">ID de Ticket Autogenerado</h4>
+                        <p class="text-[11px] text-[#0056B3]/70">Numeración consecutiva protegida contra duplicados</p>
+                    </div>
+                </div>
+                <div class="px-3 py-1 bg-white border border-blue-200/90 rounded-lg text-xs font-bold font-mono text-[#0056B3] shadow-xs">
+                    #INC-(Automático)
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="create-ticket-form" onsubmit="handleCreateTicketSubmit(event)" class="px-6 pb-6 space-y-3.5 text-xs">
+                <!-- Row 1: Área y Tarea Técnica -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1" for="new-ticket-depto">
+                            Área / Departamento <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="new-ticket-depto" onchange="onNewTicketDeptoChange(this.value)"
+                            class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 bg-white font-medium outline-none transition">
+                            <option value="">Cargando áreas...</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Prioridad (Tiempo Objetivo)</label>
-                        <select id="new-prio"
-                            class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs font-bold text-rose-600">
-                            <option value="P1 - Crítico">P1 - Crítico (Objetivo: 2h)</option>
-                            <option value="P2 - Alto">P2 - Alto (Objetivo: 4h)</option>
-                            <option value="P3 - Estándar" selected>P3 - Estándar (Objetivo: 8h)</option>
+                        <label class="block text-gray-700 font-semibold mb-1" for="new-ticket-task">
+                            Tarea Técnica (DERS)
+                        </label>
+                        <select id="new-ticket-task"
+                            class="w-full px-3 py-2 rounded-lg border border-blue-600 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 bg-white font-medium outline-none transition">
+                            <option value="">-- Tarea Técnica Sugerida por Defecto --</option>
                         </select>
                     </div>
                 </div>
+
+                <!-- Row 2: Asunto / Incidencia -->
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Asunto / Resumen del Incidente</label>
-                    <input type="text" id="new-subject" placeholder="Ej: Pérdida sincronismo OLT Chacao" required
-                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs">
+                    <label class="block text-gray-700 font-semibold mb-1" for="new-ticket-subject">
+                        Asunto / Incidencia <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" id="new-ticket-subject" required
+                        placeholder="Ej. Caída de enlace troncal BGP / Falla de sincronismo ONT"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 placeholder-gray-400 outline-none transition">
                 </div>
+
+                <!-- Row 3: Textbars Faltantes - Abonado / Contrato y Nodo / Enlace / OLT -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1" for="new-ticket-subscriber">
+                            Abonado / Contrato (Opcional)
+                        </label>
+                        <input type="text" id="new-ticket-subscriber" placeholder="Ej. CLI-CORP-5501"
+                            class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 placeholder-gray-400 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1" for="new-ticket-node">
+                            Nodo / Enlace / OLT (Opcional)
+                        </label>
+                        <input type="text" id="new-ticket-node" placeholder="Ej. OLT-CHACAO-01"
+                            class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 placeholder-gray-400 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Row 4: Descripción Técnica / Notas -->
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Diagnóstico Inicial / Observaciones</label>
-                    <textarea id="new-desc" rows="3" placeholder="Detalles de logs, potencia óptica, interfaz..."
-                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] text-xs"></textarea>
+                    <label class="block text-gray-700 font-semibold mb-1" for="new-ticket-body">
+                        Descripción Técnica / Notas
+                    </label>
+                    <textarea id="new-ticket-body" rows="3"
+                        placeholder="Detalles de la falla, sintomatología, nivel de atenuación óptica o reporte del cliente..."
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 placeholder-gray-400 outline-none transition resize-none"></textarea>
                 </div>
-                <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                    <button type="button" onclick="closeModal('modal-new-ticket')"
-                        class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
-                    <button type="submit"
-                        class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white font-bold transition shadow-xs btn-press">Crear
-                        e Insertar en Cola</button>
+
+                <!-- Row 5: Asignar Directamente a Operador -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-gray-700 font-semibold" for="new-ticket-operator">
+                            Asignar Directamente a Operador
+                        </label>
+                        <span class="text-[11px] text-gray-400 font-normal">
+                            Opcional (si no se selecciona, queda en cola Pendiente de despacho)
+                        </span>
+                    </div>
+                    <select id="new-ticket-operator"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-[#0056B3] focus:border-[#0056B3] text-xs text-gray-800 bg-white font-medium outline-none transition">
+                        <option value="">-- Sin Asignar (Dejar en cola Pendiente de despacho) --</option>
+                    </select>
+                </div>
+
+                <!-- Row 6: Footer Acciones -->
+                <div class="flex justify-end items-center gap-3 pt-3">
+                    <button type="button" onclick="closeCreateTicketModal()"
+                        class="px-5 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold btn-press transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-create-ticket-submit"
+                        class="px-5 py-2 rounded-xl bg-[#0056B3] hover:bg-[#004494] active:bg-[#00387a] text-white text-xs font-bold transition shadow-xs flex items-center gap-2 btn-press cursor-pointer">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Crear y Despachar</span>
+                    </button>
                 </div>
             </form>
         </div>
