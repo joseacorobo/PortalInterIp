@@ -1,0 +1,13 @@
+====Rules========
+
+- Utiliza siempre la tabulacion para formatear el codigo
+- Prioriza siempre soluciones simples
+- Despues de realizar cambios, SIEMPRE asegurate de iniciar un nuevo servidor para que puedan probarse(en caso de que sea).
+- Mata siempre todos los servidores relacionados que hayan sido creados en pruebas anteriores antes de iniciar un nuevo servidor.
+- Busca siempre codigo existente para iterar en lugar de crear nuevo codigo desde cero.
+- Evita la duplicacion de codigo siempre que sea posible; esto implica revisar si ya existe una parte del codigo con logica o funcionalidad similar.
+- Escribe codigo que tenga en cuenta los diferentes entornos: desarrollo, pruebas y produccion.
+- Asegurate de hacer solo los cambios solicidatos o aquellos en los que tengas plena confianza de que estan bien comprendidos y estan relacionados con la solicitud.
+- Al corregir un error o bug, no introduzcas un nuevo patron o tecnologia sin antes haber agotado todas las opciones con la implementacion actual. Y si finalmente decides hacerlo, asegurate de eliminar la implementacion anterior para evitar logica duplicada.
+- Manten la base de codigo limpia y bien organizada.
+- Evita escribir scripts directamente en archivos si es posible, especialmente si ese script solo se va a ejecutar una vez.

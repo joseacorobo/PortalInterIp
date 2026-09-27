@@ -14,28 +14,28 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            inter: {
-              50: '#F0F6FD',
-              100: '#E1EDFB',
-              200: '#B8DAF7',
-              500: '#0056B3',
-              600: '#004A9E',
-              700: '#003D82',
-              800: '#003066',
-              900: '#002047',
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        inter: {
+                            50: '#F0F6FD',
+                            100: '#E1EDFB',
+                            200: '#B8DAF7',
+                            500: '#0056B3',
+                            600: '#004A9E',
+                            700: '#003D82',
+                            800: '#003066',
+                            900: '#002047',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
             }
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-          }
         }
-      }
-    }
-  </script>
+    </script>
 
     <!-- Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -166,8 +166,8 @@
             height: 100vh;
             user-select: none;
             transition: width 0.24s cubic-bezier(0.4, 0, 0.2, 1),
-                        min-width 0.24s cubic-bezier(0.4, 0, 0.2, 1),
-                        padding 0.24s ease;
+                min-width 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.24s ease;
             position: relative;
             z-index: 30;
             overflow-x: hidden;
@@ -248,7 +248,7 @@
             padding-top: 0.5rem;
         }
 
-        .sidebar-container.collapsed .sidebar-footer > div {
+        .sidebar-container.collapsed .sidebar-footer>div {
             justify-content: center;
             width: 100%;
             padding: 0;
@@ -391,20 +391,17 @@
     <aside id="main-sidebar" class="sidebar-container select-none z-30"
         style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%); border-right: 1px solid rgba(255, 255, 255, 0.1);">
         <!-- Top Brand & Collapse -->
-        <div class="sidebar-header-top flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/10 transition-all">
+        <div
+            class="sidebar-header-top flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/10 transition-all">
             <div class="sidebar-brand-wrapper flex items-center overflow-hidden py-1 px-1 transition-all">
                 <img src="/static/img/inter_logo.png" alt="Inter"
                     class="sidebar-logo-img h-7.5 w-auto object-contain brightness-0 invert opacity-95 hover:opacity-100 transition-all drop-shadow-sm">
             </div>
-            <button id="btn-toggle-sidebar" onclick="toggleSidebarCollapse()"
-                class="sidebar-collapse-btn w-7 h-7 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0"
-                title="Minimizar panel lateral (Ctrl+B)" aria-label="Minimizar panel lateral">
-                <i data-lucide="chevron-left" id="sidebar-chevron-icon" class="w-4 h-4 transition-transform duration-200"></i>
-            </button>
         </div>
         <!-- Grupo PANEL -->
         <div class="flex-1 flex flex-col gap-2 overflow-y-auto">
-            <p class="text-[13px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1 sidebar-label-hide">Dashboard</p>
+            <p class="text-[13px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1 sidebar-label-hide">
+                Dashboard</p>
             <div class="space-y-1">
                 <button onclick="switchDashboardTab('operativa')" id="nav-view-operativa"
                     class="sidebar-nav-pill active btn-press" title="General">
@@ -413,12 +410,14 @@
                 </button>
                 {% if is_coordinator %}
                 <button onclick="switchDashboardTab('rendimiento')" id="nav-view-rendimiento"
-                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press" title="Métricas">
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press"
+                    title="Métricas">
                     <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
                     <span class="sidebar-label-hide">Métricas</span>
                 </button>
                 <button onclick="switchDashboardTab('auditoria')" id="nav-view-auditoria"
-                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press" title="Reportes y Auditoría">
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press"
+                    title="Reportes y Auditoría">
                     <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
                     <span class="sidebar-label-hide">Reportes y Auditoría</span>
                 </button>
@@ -426,8 +425,7 @@
 
                 <!-- Tickets Tablero Accordion -->
                 <div class="space-y-1" id="tickets-accordion-group">
-                    <button type="button" onclick="handleTicketsNavClick()"
-                        id="nav-view-tickets"
+                    <button type="button" onclick="handleTicketsNavClick()" id="nav-view-tickets"
                         class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press"
                         title="Tablero de Tickets">
                         <div class="sidebar-ticket-main flex items-center gap-2 min-w-0 flex-1">
@@ -460,10 +458,11 @@
                             </span>
                         </button>
                     </div>
-                </div>     
+                </div>
 
                 <button onclick="switchDashboardTab('configuracion')" id="nav-view-configuracion"
-                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press" title="Configuración">
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press"
+                    title="Configuración">
                     <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
                     <span class="sidebar-label-hide">Configuración</span>
                 </button>
@@ -525,21 +524,25 @@
                     <i data-lucide="maximize" id="fullscreen-icon" class="w-4 h-4"></i>
                 </button>
                 <!-- Perfil Usuario y Rol -->
-                <div class="flex items-center gap-2.5 p-1.5 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
+                <div
+                    class="flex items-center gap-2.5 p-1.5 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
                     <div id="sidebar-user-avatar"
                         class="w-7 h-7 rounded-lg {% if is_coordinator %}bg-gradient-to-br from-[#1C58A8] to-[#0A254D]{% else %}bg-gradient-to-br from-[#059669] to-[#064E3B]{% endif %} text-white flex items-center justify-center font-bold text-xs shadow-sm">
                         {{ current_user.avatar if current_user and current_user.avatar else 'NOC' }}</div>
                     <div class="overflow-hidden">
-                        <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate leading-tight">{{ current_user.name if
+                        <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate leading-tight">{{
+                            current_user.name if
                             current_user else 'Usuario NOC' }}</p>
                         <div class="flex items-center gap-1 mt-0.5">
                             {% if is_coordinator %}
-                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/60 text-[#93C5FD] border border-[#3B82F6]/40 uppercase tracking-wider">
+                            <span
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/60 text-[#93C5FD] border border-[#3B82F6]/40 uppercase tracking-wider">
                                 <i data-lucide="shield-check" class="w-2.5 h-2.5"></i>
                                 <span>{{ current_user.role if current_user else 'COORDINADOR' }}</span>
                             </span>
                             {% else %}
-                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider">
+                            <span
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider">
                                 <i data-lucide="user-check" class="w-2.5 h-2.5"></i>
                                 <span>OPERADOR TÉCNICO</span>
                             </span>
@@ -592,8 +595,7 @@
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2 mt-1">
-                            <span class="text-2xl font-black font-mono text-slate-900"
-                                id="op-kpi-completados">35</span>
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-completados">35</span>
                             <span class="text-[14px] text-slate-500 font-medium">cerrados hoy</span>
                         </div>
                         <div
@@ -616,7 +618,8 @@
                             <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-criticos">0</span>
                             <span class="text-[14px] text-slate-500 font-medium">sin tomar</span>
                         </div>
-                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2 text-[14px] text-rose-700 font-medium     ">
+                        <div
+                            class="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2 text-[14px] text-rose-700 font-medium     ">
                             <span
                                 class="px-5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[12px] font-bold flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Cola Normal
@@ -658,7 +661,7 @@
                                     class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área:
                                     —</span>
                             </div>
-                             <!--<p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y
+                            <!--<p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y
                                 puntos DERS de tu departamento</p>-->
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
@@ -798,23 +801,31 @@
 
                 {% if is_operator %}
                 <!-- Tablero General de Casos — Casos Creados por Coordinación, Correo M365 y Operadores -->
-                <div id="operator-general-cases-panel" class="dashboard-chart-card space-y-4 animate-fade-in-up bg-white border border-slate-200 rounded-xl p-4 shadow-2xs"
+                <div id="operator-general-cases-panel"
+                    class="dashboard-chart-card space-y-4 animate-fade-in-up bg-white border border-slate-200 rounded-xl p-4 shadow-2xs"
                     style="animation-delay: 240ms;">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs shrink-0">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs shrink-0">
                                 <i data-lucide="layers" class="w-4 h-4"></i>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Tablero General de Casos (Coordinación y M365)</h2>
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-[#1C58A8] border border-blue-200">
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Tablero General de Casos
+                                        (Coordinación y M365)</h2>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-[#1C58A8] border border-blue-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8] pulse-indicator"></span>
                                         Cola General
                                     </span>
-                                    <span id="operator-general-count-badge" class="text-[10px] text-gray-500 font-mono font-bold">0 casos</span>
+                                    <span id="operator-general-count-badge"
+                                        class="text-[10px] text-gray-500 font-mono font-bold">0 casos</span>
                                 </div>
-                                <p class="text-[11px] text-gray-500 mt-0.5">Casos activos ingresados por la coordinación o vía correo corporativo. Puedes tomar casos o designar tareas a otros especialistas.</p>
+                                <p class="text-[11px] text-gray-500 mt-0.5">Casos activos ingresados por la coordinación
+                                    o vía correo corporativo. Puedes tomar casos o designar tareas a otros
+                                    especialistas.</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
@@ -836,23 +847,32 @@
                         <div class="flex items-center gap-1 bg-gray-100/90 p-0.5 rounded-lg border border-gray-200">
                             <button type="button" onclick="setOperatorGeneralFilter('all', this)" id="og-filter-all"
                                 class="filter-pill-btn pill-active px-2.5 py-1 rounded-md font-bold transition">Todos</button>
-                            <button type="button" onclick="setOperatorGeneralFilter('MANUAL_COORDINADOR', this)" id="og-filter-coord"
-                                class="filter-pill-btn px-2.5 py-1 rounded-md text-gray-600 hover:text-gray-900 font-semibold transition">De Coordinación</button>
-                            <button type="button" onclick="setOperatorGeneralFilter('M365_EMAIL', this)" id="og-filter-m365"
-                                class="filter-pill-btn px-2.5 py-1 rounded-md text-gray-600 hover:text-gray-900 font-semibold transition">Vía Correo (M365)</button>
-                            <button type="button" onclick="setOperatorGeneralFilter('MANUAL_OPERADOR', this)" id="og-filter-op"
-                                class="filter-pill-btn px-2.5 py-1 rounded-md text-gray-600 hover:text-gray-900 font-semibold transition">De Operadores</button>
+                            <button type="button" onclick="setOperatorGeneralFilter('MANUAL_COORDINADOR', this)"
+                                id="og-filter-coord"
+                                class="filter-pill-btn px-2.5 py-1 rounded-md text-gray-600 hover:text-gray-900 font-semibold transition">De
+                                Coordinación</button>
+                            <button type="button" onclick="setOperatorGeneralFilter('M365_EMAIL', this)"
+                                id="og-filter-m365"
+                                class="filter-pill-btn px-2.5 py-1 rounded-md text-gray-600 hover:text-gray-900 font-semibold transition">Vía
+                                Correo (M365)</button>
+                            <button type="button" onclick="setOperatorGeneralFilter('MANUAL_OPERADOR', this)"
+                                id="og-filter-op"
+                                class="filter-pill-btn px-2.5 py-1 rounded-md text-gray-600 hover:text-gray-900 font-semibold transition">De
+                                Operadores</button>
                         </div>
                         <div class="relative flex items-center">
-                            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-gray-400 pointer-events-none"></i>
-                            <input type="search" id="operator-general-search" oninput="filterOperatorGeneralCasesLocal(this.value)"
+                            <i data-lucide="search"
+                                class="w-3.5 h-3.5 absolute left-2.5 text-gray-400 pointer-events-none"></i>
+                            <input type="search" id="operator-general-search"
+                                oninput="filterOperatorGeneralCasesLocal(this.value)"
                                 placeholder="Buscar abonado, IP, nodo, ticket..."
                                 class="pl-8 pr-2.5 py-1.5 text-xs bg-white rounded-lg border border-gray-200 w-56 focus:ring-1 focus:ring-[#1C58A8] focus:w-64 transition-all">
                         </div>
                     </div>
 
                     <!-- Tabla de Casos Generales -->
-                    <div id="operator-general-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
+                    <div id="operator-general-table-container"
+                        class="overflow-x-auto rounded-lg border border-gray-100">
                         <table class="table-corporate-metrics min-w-full text-left">
                             <thead>
                                 <tr>
@@ -867,7 +887,8 @@
                             <tbody id="operator-general-cases-tbody">
                                 <tr>
                                     <td colspan="6" class="py-8 text-center text-xs text-gray-400">
-                                        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto text-[#1C58A8] mb-2"></i>
+                                        <i data-lucide="loader"
+                                            class="w-5 h-5 animate-spin mx-auto text-[#1C58A8] mb-2"></i>
                                         Cargando casos generales del NOC...
                                     </td>
                                 </tr>
@@ -1750,28 +1771,36 @@
     <!-- ============================================================== -->
     <!-- MODAL 3: CREAR TICKET O ASIGNACIÓN TÉCNICA (LIQUID-GLASS iOS 27)-->
     <!-- ============================================================== -->
-    <div id="modal-new-ticket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4 transition-all duration-300"
-         style="background: rgba(4, 9, 21, 0.76); backdrop-filter: blur(28px) saturate(200%); -webkit-backdrop-filter: blur(28px) saturate(200%);">
-        
+    <div id="modal-new-ticket"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4 transition-all duration-300"
+        style="background: rgba(4, 9, 21, 0.76); backdrop-filter: blur(28px) saturate(200%); -webkit-backdrop-filter: blur(28px) saturate(200%);">
+
         <!-- Liquid Glass Card Container -->
         <div class="relative w-full max-w-xl rounded-3xl overflow-hidden animate-fade-in-up border border-white/20 transition-all duration-300"
-             style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(11, 20, 42, 0.88); backdrop-filter: blur(40px) saturate(220%); -webkit-backdrop-filter: blur(40px) saturate(220%); box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.85), 0 0 50px -10px rgba(28, 88, 168, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);">
-            
+            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(11, 20, 42, 0.88); backdrop-filter: blur(40px) saturate(220%); -webkit-backdrop-filter: blur(40px) saturate(220%); box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.85), 0 0 50px -10px rgba(28, 88, 168, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);">
+
             <!-- Specular Top Light Bar (iOS 27 Liquid Glow Reflection) -->
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-[#7CB2EA] to-transparent opacity-80 rounded-full blur-[0.5px]"></div>
-            <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-72 h-24 bg-[#1C58A8]/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div
+                class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-[#7CB2EA] to-transparent opacity-80 rounded-full blur-[0.5px]">
+            </div>
+            <div
+                class="absolute -top-16 left-1/2 -translate-x-1/2 w-72 h-24 bg-[#1C58A8]/30 rounded-full blur-3xl pointer-events-none">
+            </div>
 
             <!-- Modal Header -->
             <div class="px-6 pt-6 pb-3 relative z-10">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1C58A8]/80 to-[#0A254D] border border-white/25 text-[#7CB2EA] flex items-center justify-center shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_20px_-4px_rgba(28,88,168,0.5)]">
+                        <div
+                            class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1C58A8]/80 to-[#0A254D] border border-white/25 text-[#7CB2EA] flex items-center justify-center shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_20px_-4px_rgba(28,88,168,0.5)]">
                             <i data-lucide="ticket" class="w-5 h-5 text-[#93C5FD]"></i>
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
                                 <span>Crear Ticket o Asignación Técnica</span>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#1C58A8]/40 text-[#93C5FD] border border-white/15">NOC IP</span>
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#1C58A8]/40 text-[#93C5FD] border border-white/15">NOC
+                                    IP</span>
                             </h3>
                             <p class="text-[11px] text-slate-300/80 mt-0.5 font-normal">
                                 Registro con numeración consecutiva autogenerada y validación de SLA DERS
@@ -1787,9 +1816,11 @@
             </div>
 
             <!-- Autogenerated ID Banner (Liquid Frosted Glass Pill) -->
-            <div class="mx-6 my-2 p-3.5 rounded-2xl bg-gradient-to-r from-[#1C58A8]/25 via-[#2E74C9]/15 to-white/5 border border-white/15 flex items-center justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md relative z-10">
+            <div
+                class="mx-6 my-2 p-3.5 rounded-2xl bg-gradient-to-r from-[#1C58A8]/25 via-[#2E74C9]/15 to-white/5 border border-white/15 flex items-center justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md relative z-10">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-white/10 text-[#7CB2EA] flex items-center justify-center shrink-0 border border-white/15 shadow-inner">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 text-[#7CB2EA] flex items-center justify-center shrink-0 border border-white/15 shadow-inner">
                         <i data-lucide="sparkles" class="w-4 h-4 text-[#93C5FD]"></i>
                     </div>
                     <div>
@@ -1797,13 +1828,15 @@
                         <p class="text-[11px] text-[#93C5FD]/80">Numeración oficial protegida contra duplicidad</p>
                     </div>
                 </div>
-                <div class="px-3.5 py-1.5 bg-black/30 border border-white/20 rounded-xl text-xs font-bold font-mono text-[#93C5FD] shadow-inner tracking-wider backdrop-blur-md">
+                <div
+                    class="px-3.5 py-1.5 bg-black/30 border border-white/20 rounded-xl text-xs font-bold font-mono text-[#93C5FD] shadow-inner tracking-wider backdrop-blur-md">
                     #INC-(Automático)
                 </div>
             </div>
 
             <!-- Form -->
-            <form id="create-ticket-form" onsubmit="handleCreateTicketSubmit(event)" class="px-6 pb-6 pt-2 space-y-3.5 text-xs relative z-10">
+            <form id="create-ticket-form" onsubmit="handleCreateTicketSubmit(event)"
+                class="px-6 pb-6 pt-2 space-y-3.5 text-xs relative z-10">
                 <!-- Row 1: Área y Tarea Técnica -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
@@ -1821,7 +1854,8 @@
                         </label>
                         <select id="new-ticket-task"
                             class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
-                            <option value="" class="bg-slate-900 text-white">-- Tarea Técnica Sugerida por Defecto --</option>
+                            <option value="" class="bg-slate-900 text-white">-- Tarea Técnica Sugerida por Defecto --
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -1876,7 +1910,8 @@
                     </div>
                     <select id="new-ticket-operator"
                         class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
-                        <option value="" class="bg-slate-900 text-white">-- Sin Asignar (Dejar en cola Pendiente de despacho) --</option>
+                        <option value="" class="bg-slate-900 text-white">-- Sin Asignar (Dejar en cola Pendiente de
+                            despacho) --</option>
                     </select>
                 </div>
 
