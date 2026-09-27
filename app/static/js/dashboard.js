@@ -227,47 +227,50 @@ async function loadDashboardData() {
         const kpiRes = await fetch(`/api/kpis?area=${currentArea}`);
         const kpis = await kpiRes.json();
         
-        // Nivel 1: Visión Macro (ScoreCards)
-        if (document.getElementById("kpi-queue-pending")) {
-            document.getElementById("kpi-queue-pending").innerText = kpis.pending_count || 0;
-        }
-        if (document.getElementById("kpi-queue-progress")) {
-            document.getElementById("kpi-queue-progress").innerText = kpis.in_progress_count || 0;
-        }
-        if (document.getElementById("kpi-queue-onhold")) {
-            document.getElementById("kpi-queue-onhold").innerText = kpis.on_hold_count || 0;
+        // Helper seguro para asignar texto a elementos si existen
+        const setElText = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = (val !== undefined && val !== null) ? val : 0;
+        };
+
+        // Scorecards Oficiales de la Vista Operativa (dashboard.html)
+        setElText("op-kpi-proceso", kpis.in_progress_count);
+        setElText("op-kpi-completados", kpis.total_tasks);
+        setElText("op-kpi-criticos", kpis.unassigned_critical_count);
+        setElText("op-kpi-sla-time", kpis.avg_first_response || "8.4");
+        const slaPctEl = document.getElementById("op-kpi-sla-pct");
+        if (slaPctEl) {
+            slaPctEl.innerText = kpis.sla_compliance ? `${kpis.sla_compliance}% a tiempo` : "99.4% a tiempo";
         }
 
-        if (document.getElementById("kpi-total-tasks")) {
-            document.getElementById("kpi-total-tasks").innerText = kpis.total_tasks || 0;
-        }
-        if (document.getElementById("kpi-total-points")) {
-            document.getElementById("kpi-total-points").innerText = kpis.total_points || 0;
-        }
-        
-        if (document.getElementById("kpi-critical-unassigned")) {
-            document.getElementById("kpi-critical-unassigned").innerText = kpis.unassigned_critical_count || 0;
-            const critBadge = document.getElementById("kpi-critical-badge");
-            if (critBadge) {
-                if (kpis.unassigned_critical_count > 0) {
-                    critBadge.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 animate-pulse";
-                    critBadge.innerText = "¡Atención Inmediata!";
-                } else {
-                    critBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600";
-                    critBadge.innerText = "Cola Normal";
-                }
+        // Resumen Contextual de Carga de Trabajo y Rendimiento
+        setElText("workload-total-tasks", kpis.total_tasks);
+        setElText("workload-total-pts", `${kpis.total_points || 0} pts`);
+        setElText("workload-avg-mttr", `${kpis.avg_mttr || "31.5"}m`);
+        setElText("metric-hourly-total", `${kpis.total_points || 0} pts Totales`);
+
+        // Nivel 1: Visión Macro (ScoreCards Legacy / Alternativos)
+        setElText("kpi-queue-pending", kpis.pending_count);
+        setElText("kpi-queue-progress", kpis.in_progress_count);
+        setElText("kpi-queue-onhold", kpis.on_hold_count);
+        setElText("kpi-total-tasks", kpis.total_tasks);
+        setElText("kpi-total-points", kpis.total_points);
+        setElText("kpi-critical-unassigned", kpis.unassigned_critical_count);
+
+        const critBadge = document.getElementById("kpi-critical-badge");
+        if (critBadge) {
+            if (kpis.unassigned_critical_count > 0) {
+                critBadge.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 animate-pulse";
+                critBadge.innerText = "¡Atención Inmediata!";
+            } else {
+                critBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600";
+                critBadge.innerText = "Cola Normal";
             }
         }
 
-        if (document.getElementById("kpi-first-response")) {
-            document.getElementById("kpi-first-response").innerText = kpis.avg_first_response || "8.4";
-        }
-        if (document.getElementById("kpi-sla-compliance")) {
-            document.getElementById("kpi-sla-compliance").innerText = `${kpis.sla_compliance || 94.2}%`;
-        }
-        if (document.getElementById("kpi-avg-mttr")) {
-            document.getElementById("kpi-avg-mttr").innerText = kpis.avg_mttr || 0;
-        }
+        setElText("kpi-first-response", kpis.avg_first_response || "8.4");
+        setElText("kpi-sla-compliance", `${kpis.sla_compliance || 94.2}%`);
+        setElText("kpi-avg-mttr", kpis.avg_mttr || 0);
         
         const badgeEl = document.getElementById("kpi-balance-status");
         if (badgeEl) {
@@ -345,6 +348,8 @@ async function loadDashboardData() {
 
 function renderAreaProgress(areaPoints, totalPoints) {
     const container = document.getElementById("area-progress-bars");
+    if (!container) return;
+    if (!areaPoints) return;
     container.innerHTML = "";
     
     const areas = [
@@ -1056,7 +1061,7 @@ async function loadInbox(folderParam) {
     if (folderParam) {
         currentMailFolder = folderParam;
     }
-    const uid = window.currentUser ? window.currentUser.id : 27;
+    const uid = (window.currentUser && window.currentUser.id) ? window.currentUser.id : (window.currentUserId || 1);
     let url = `/api/tickets/inbox?area=${encodeURIComponent(currentArea)}&user_id=${uid}`;
     if (currentMailFolder && currentMailFolder !== 'todos') {
         url += `&folder=${encodeURIComponent(currentMailFolder)}`;
@@ -1086,7 +1091,7 @@ async function loadInbox(folderParam) {
 }
 
 async function loadMailStats() {
-    const uid = window.currentUser ? window.currentUser.id : 27;
+    const uid = (window.currentUser && window.currentUser.id) ? window.currentUser.id : (window.currentUserId || 1);
     try {
         const res = await fetch(`/api/mail/stats?user_id=${uid}`);
         if (!res.ok) return;
@@ -1795,7 +1800,7 @@ async function selectOutlookMessage(ticketId) {
 
 async function claimCurrentTicket() {
     if (!currentOpenTicket) return;
-    const uid = window.currentUser ? window.currentUser.id : 27;
+    const uid = (window.currentUser && window.currentUser.id) ? window.currentUser.id : (window.currentUserId || 1);
     try {
         const res = await fetch(`/api/tickets/${currentOpenTicket.id}/claim`, {
             method: 'POST',
@@ -1811,7 +1816,7 @@ async function claimCurrentTicket() {
             currentOpenTicket.claimed_by_id = uid;
             currentOpenTicket.claimed_by_user_id = uid;
             currentOpenTicket.operador_id = uid;
-            currentOpenTicket.operador_nombre = window.currentUser ? window.currentUser.name : 'José Corobo';
+            currentOpenTicket.operador_nombre = (window.currentUser && window.currentUser.name) ? window.currentUser.name : (window.currentUserName || 'Especialista NOC');
             currentOpenTicket.claimed_by_name = currentOpenTicket.operador_nombre;
             await selectOutlookMessage(currentOpenTicket.id);
             await loadInbox();
@@ -1857,7 +1862,7 @@ async function assignCurrentTicketToOperator(operadorId) {
 
 async function resolveCurrentTicketNow() {
     if (!currentOpenTicket) return;
-    const uid = window.currentUser ? window.currentUser.id : (currentOpenTicket.operador_id || 27);
+    const uid = (window.currentUser && window.currentUser.id) ? window.currentUser.id : (currentOpenTicket.operador_id || window.currentUserId || 1);
     try {
         const res = await fetch(`/api/tickets/${currentOpenTicket.id}/complete`, {
             method: 'POST',
@@ -2385,34 +2390,41 @@ function closeWorkspaceModal() {
 async function togglePauseTicket() {
     if (!currentOpenTicket) return;
     
-    if (currentOpenTicket.status === 'EN PROGRESO') {
-        await fetch(`/api/tickets/${currentOpenTicket.id}/pause`, { method: 'POST', credentials: 'include' });
-        currentOpenTicket.status = 'EN ESPERA';
-        const btnText = document.getElementById("btn-pause-text");
-        if (btnText) btnText.innerText = "Reanudar Caso";
-        const stBadge = document.getElementById("ws-ticket-status-badge");
-        if (stBadge) {
-            stBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5";
-            stBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> En Espera / Pausa`;
+    try {
+        if (currentOpenTicket.status === 'EN PROGRESO') {
+            const res = await fetch(`/api/tickets/${currentOpenTicket.id}/pause`, { method: 'POST', credentials: 'include' });
+            if (!res.ok) throw new Error("Error en servidor al pausar");
+            currentOpenTicket.status = 'EN ESPERA';
+            const btnText = document.getElementById("btn-pause-text");
+            if (btnText) btnText.innerText = "Reanudar Caso";
+            const stBadge = document.getElementById("ws-ticket-status-badge");
+            if (stBadge) {
+                stBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5";
+                stBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> En Espera / Pausa`;
+            }
+            if (liveTimerInterval) clearInterval(liveTimerInterval);
+            if (typeof showStitchSuccessToast === 'function') {
+                showStitchSuccessToast("Pausa Técnica Registrada", `El caso #${currentOpenTicket.ticket_code || currentOpenTicket.id} está en espera.`);
+            }
+        } else {
+            const res = await fetch(`/api/tickets/${currentOpenTicket.id}/resume`, { method: 'POST', credentials: 'include' });
+            if (!res.ok) throw new Error("Error en servidor al reanudar");
+            currentOpenTicket.status = 'EN PROGRESO';
+            const btnText = document.getElementById("btn-pause-text");
+            if (btnText) btnText.innerText = "Pausar (En Espera)";
+            const stBadge = document.getElementById("ws-ticket-status-badge");
+            if (stBadge) {
+                stBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200 flex items-center gap-1.5";
+                stBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#1C58A8] animate-pulse"></span> En Atención`;
+            }
+            startLiveTimer(currentOpenTicket.fecha_inicio_atencion || currentOpenTicket.claimed_at);
+            if (typeof showStitchSuccessToast === 'function') {
+                showStitchSuccessToast("Atención Reanudada", `El cronómetro del caso #${currentOpenTicket.ticket_code || currentOpenTicket.id} continúa.`);
+            }
         }
-        if (liveTimerInterval) clearInterval(liveTimerInterval);
-        if (typeof showStitchSuccessToast === 'function') {
-            showStitchSuccessToast("Pausa Técnica Registrada", `El caso #${currentOpenTicket.ticket_code || currentOpenTicket.id} está en espera.`);
-        }
-    } else {
-        await fetch(`/api/tickets/${currentOpenTicket.id}/resume`, { method: 'POST', credentials: 'include' });
-        currentOpenTicket.status = 'EN PROGRESO';
-        const btnText = document.getElementById("btn-pause-text");
-        if (btnText) btnText.innerText = "Pausar (En Espera)";
-        const stBadge = document.getElementById("ws-ticket-status-badge");
-        if (stBadge) {
-            stBadge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200 flex items-center gap-1.5";
-            stBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#1C58A8] animate-pulse"></span> En Atención`;
-        }
-        startLiveTimer(currentOpenTicket.fecha_inicio_atencion || currentOpenTicket.claimed_at);
-        if (typeof showStitchSuccessToast === 'function') {
-            showStitchSuccessToast("Atención Reanudada", `El cronómetro del caso #${currentOpenTicket.ticket_code || currentOpenTicket.id} continúa.`);
-        }
+    } catch (err) {
+        console.error("Error toggling pause ticket:", err);
+        showToast("Error de conexión al actualizar estado del ticket", "error");
     }
     if (typeof loadOperatorAssignments === 'function') loadOperatorAssignments(true);
 }

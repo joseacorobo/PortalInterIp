@@ -6,7 +6,7 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from services.mail_worker import mail_worker_instance
-from services.reports import get_managerial_summary, generate_excel_report, get_current_workload, export_productivity_report
+from services.reports import get_managerial_summary, generate_excel_report, get_current_workload
 from services.email_parser import TelcoEmailParser
 from services.audit import log_audit_event, get_audit_logs
 from fastapi import FastAPI, Request
@@ -36,7 +36,7 @@ def sign_session_user_id(user_id: int) -> str:
     return f"{user_id}.{sig}"
 
 def verify_session_user_id(cookie_val: Optional[str]) -> Optional[int]:
-    """Verifica la firma criptográfica del user_id"""
+    """Verifica la firma criptográfica del user_id garantizando integridad anti-tampering"""
     if not cookie_val or not isinstance(cookie_val, str):
         return None
     parts = cookie_val.split(".", 1)
@@ -45,9 +45,6 @@ def verify_session_user_id(cookie_val: Optional[str]) -> Optional[int]:
         expected_sig = hmac.new(SESSION_SECRET.encode("utf-8"), uid_str.encode("utf-8"), hashlib.sha256).hexdigest()
         if hmac.compare_digest(sig, expected_sig):
             return int(uid_str)
-    # Soporte permisivo seguro durante migración si el valor es numérico puro
-    if cookie_val.isdigit():
-        return int(cookie_val)
     return None
 
 def get_authenticated_user(request: Request) -> Optional[dict]:
@@ -103,23 +100,29 @@ def check_coordinator_permission(request: Request) -> Optional[JSONResponse]:
     """
     Control de Acceso Basado en Roles (RBAC):
     Permite acceso total a Coordinadores y Administradores para Métricas, Auditoría y Reportes.
+    Bloquea con 401 Unauthorized si no hay usuario autenticado.
     Bloquea con 403 Forbidden a Especialistas y Operadores.
     """
     if not request:
-        return None
+        return JSONResponse(
+            status_code=401,
+            content={"status": "error", "error": "Autenticación requerida."}
+        )
     user = get_authenticated_user(request)
     if not user:
-        user = resolve_dashboard_user(request)
-    if user:
-        role = (user.get("role") or "").upper()
-        if role not in ("COORDINADOR", "ADMINISTRADOR"):
-            return JSONResponse(
-                status_code=403,
-                content={
-                    "status": "error",
-                    "error": "Acceso restringido: Se requiere perfil de Coordinador o Administrador para consultar Métricas, Auditoría y Reportes de procesos lógicos."
-                }
-            )
+        return JSONResponse(
+            status_code=401,
+            content={"status": "error", "error": "Sesión inválida o expirada. Inicie sesión para continuar."}
+        )
+    role = (user.get("role") or "").upper()
+    if role not in ("COORDINADOR", "ADMINISTRADOR"):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "status": "error",
+                "error": "Acceso restringido: Se requiere perfil de Coordinador o Administrador para consultar Métricas, Auditoría y Reportes de procesos lógicos."
+            }
+        )
     return None
 
 @app.on_event("startup")
@@ -129,15 +132,14 @@ def startup_event():
 
 @app.get("/")
 def dashboard_view(request: Request):
-    user = resolve_dashboard_user(request)
+    user = get_authenticated_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
     response = templates.TemplateResponse(
         request=request,
         name="dashboard.html",
         context={"current_user": user}
     )
-    if user and not request.cookies.get("auth_user_id"):
-        signed_cookie = sign_session_user_id(user["id"])
-        response.set_cookie(key="auth_user_id", value=signed_cookie, httponly=True, max_age=86400, samesite="lax")
     return response
 
 @app.get("/login")
@@ -147,13 +149,13 @@ def login_view(request: Request):
         return RedirectResponse(url="/", status_code=303)
     return FileResponse(os.path.join(BASE_DIR, "templates", "login.html"))
 
-@app.get("/mail", response_class=FileResponse)
+@app.get("/mail")
 def mail_portal_view():
-    return FileResponse(os.path.join(BASE_DIR, "templates", "mail.html"))
+    return RedirectResponse(url="/", status_code=303)
 
-@app.get("/inbox", response_class=FileResponse)
+@app.get("/inbox")
 def inbox_portal_view():
-    return FileResponse(os.path.join(BASE_DIR, "templates", "mail.html"))
+    return RedirectResponse(url="/", status_code=303)
 
 # ─────────────────────────────────────────────────────────────
 # CATÁLOGO DE LAS 5 ÁREAS TÉCNICAS OFICIALES Y NORMALIZACIÓN
@@ -241,46 +243,14 @@ def resolve_coordinator_area(area: Optional[str] = None, request: Request = None
     """
     Obtiene el área objetivo del coordinador y su departamento_id:
     1. Si se pasa `area` como parámetro, se normaliza y se usa.
-    2. Si no, se extrae el usuario de la sesión (cookie auth_user_id, token Bearer o encabezado X-Area).
+    2. Si no, se extrae el usuario de la sesión autenticada.
     3. Devuelve (area_normalizada, dict_usuario) — dict_usuario incluye departamento_id.
     """
     user = None
-    user_id = None
-    
     if request:
-        # Header X-Area explícito
+        user = get_authenticated_user(request)
         if not area and request.headers.get("X-Area"):
             area = request.headers.get("X-Area")
-            
-        # Auth Token Bearer o Cookie auth_user_id
-        auth_hdr = request.headers.get("Authorization")
-        if auth_hdr and auth_hdr.startswith("Bearer "):
-            token = auth_hdr.split("Bearer ")[1].strip()
-            if token.isdigit():
-                user_id = int(token)
-            else:
-                conn = get_db()
-                cur = conn.cursor()
-                cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE email = ? OR name = ?", (token, token))
-                row = cur.fetchone()
-                conn.close()
-                if row:
-                    user = dict(row)
-                    user_id = user["id"]
-        if not user_id:
-            auth_u = get_authenticated_user(request)
-            if auth_u:
-                user = auth_u
-                user_id = auth_u["id"]
-                
-    if user_id and not user:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, area, role, email, departamento_id FROM users WHERE id = ?", (user_id,))
-        row = cur.fetchone()
-        conn.close()
-        if row:
-            user = dict(row)
             
     if not area and user:
         area = user.get("area")
@@ -1594,11 +1564,6 @@ def assign_ticket(ticket_id: int, request: Request, payload: AssignTicketPayload
 
     # Resolver quién ejecuta la asignación (Coordinador u Operador autenticado)
     caller = get_authenticated_user(request)
-    if not caller and payload.coordinador_id:
-        caller, _ = get_authenticated_coordinator(request, payload.coordinador_id)
-    if not caller:
-        caller = resolve_dashboard_user(request)
-
     if not caller:
         conn.close()
         return JSONResponse(status_code=401, content={"error": "Autenticación requerida."})
@@ -1606,6 +1571,10 @@ def assign_ticket(ticket_id: int, request: Request, payload: AssignTicketPayload
     caller_role = (caller.get("role") or "").upper()
     is_coord_or_admin = caller_role in ("COORDINADOR", "ADMINISTRADOR")
     is_operator = caller_role in ("ESPECIALISTA", "OPERADOR")
+
+    if is_operator and payload.operador_id != caller.get("id"):
+        conn.close()
+        return JSONResponse(status_code=403, content={"error": "Acceso denegado: Un especialista solo puede asignarse tickets a sí mismo."})
 
     if not (is_coord_or_admin or is_operator):
         conn.close()
@@ -2373,14 +2342,13 @@ def auth_login(req: LoginRequest, request: Request = None):
     if not user:
         return JSONResponse(status_code=401, content={"status": "error", "message": "Credenciales inválidas. Verifique su usuario o contraseña."})
 
-    # Verificación de hash criptográfico SHA-256 con soporte para contraseñas autorizadas
+    # Verificación estricta de hash criptográfico SHA-256
     stored_hash = user["password_hash"]
-    accepted_dev_passwords = {"inter2026", "admin", "password123"}
     if stored_hash:
-        is_valid = (stored_hash == pass_hash) or (req.password in accepted_dev_passwords)
+        is_valid = (stored_hash == pass_hash)
     else:
         default_hash = hashlib.sha256("inter2026".encode('utf-8')).hexdigest()
-        is_valid = (pass_hash == default_hash) or (req.password in accepted_dev_passwords)
+        is_valid = (pass_hash == default_hash)
     
     if is_valid:
         user_data = {
@@ -2440,9 +2408,11 @@ def auth_switch_user(payload: SwitchUserPayload, request: Request = None):
     """
     caller = get_authenticated_user(request) if request else None
     if not caller:
-        caller = resolve_dashboard_user(request) if request else None
-    if not caller:
         return JSONResponse(status_code=401, content={"status": "error", "message": "Autenticación requerida para conmutar de perfil."})
+
+    caller_role = (caller.get("role") or "").upper()
+    if caller_role not in ("ADMINISTRADOR", "COORDINADOR"):
+        return JSONResponse(status_code=403, content={"status": "error", "message": "Acceso denegado: Solo coordinadores y administradores pueden alternar perfiles."})
 
     conn = get_db()
     cur = conn.cursor()
@@ -2728,7 +2698,7 @@ def export_productivity_report_endpoint(request: Request = None, area: str = "To
         err = check_coordinator_permission(request)
         if err:
             return err
-    stream = export_productivity_report(area=area, range_filter=range_filter)
+    stream = generate_excel_report(area=area, range_filter=range_filter)
     safe_area = area.replace(" ", "_").lower()
     filename = f"reporte_kpi_operaciones_{safe_area}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return StreamingResponse(

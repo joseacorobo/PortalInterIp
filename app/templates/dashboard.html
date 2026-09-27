@@ -46,6 +46,7 @@
     <!-- Estilos Oficiales del NOC -->
     <link rel="stylesheet" href="/static/css/snow_ui.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/sidebar.css">
     <style>
         /* Tokens del diseño corporativo Telecom Precision Analytics (Inter NOC) */
         :root {
@@ -2199,6 +2200,15 @@
     <!-- JAVASCRIPT CONTROLLERS Y LÓGICA DE NEGOCIO                     -->
     <!-- ============================================================== -->
     <script>
+        window.currentUserId = {{ current_user.id if current_user and current_user.id else 1 }};
+        window.currentUser = {
+            id: {{ current_user.id if current_user and current_user.id else 1 }},
+            name: "{{ current_user.name if current_user else 'Usuario NOC' }}",
+            role: "{{ current_user.role if current_user else 'OPERADOR' }}",
+            area: "{{ current_user.area if current_user else 'Redes de acceso y aprovisionamiento' }}",
+            avatar: "{{ current_user.avatar if current_user else 'NOC' }}",
+            departamento_id: {{ current_user.departamento_id if current_user and current_user.departamento_id else 1 }}
+        };
         window.currentUserRole = "{{ current_user.role if current_user else 'OPERADOR' }}";
         window.isCoordinator = {{ 'true' if is_coordinator else 'false' }};
         window.currentUserName = "{{ current_user.name if current_user else 'Usuario NOC' }}";
