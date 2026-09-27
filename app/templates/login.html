@@ -13,39 +13,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #04060d;
-        }
-
-        .input-box:focus-within {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
-        }
-
-        /* ============================================================== */
-        /* 3D IP NETWORK TOPOLOGY CANVAS (INTERACTIVE NOC NODES & MESH)    */
-        /* ============================================================== */
-        .network-scene {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        #networkCanvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-    </style>
+    <!-- Design System: Authentication Stylesheet -->
+    <link rel="stylesheet" href="/static/styles/login_auth.css" />
 </head>
 
-<body class="min-h-screen sm:h-screen w-full bg-[#04060d] text-[#101828] overflow-y-auto sm:overflow-hidden flex flex-col justify-between select-none">
+<body class="login-body min-h-screen sm:h-screen w-full bg-[#04060d] text-[#101828] overflow-y-auto sm:overflow-hidden flex flex-col justify-between select-none">
 
     <!-- ============================================================== -->
     <!-- 3D IP NETWORK TOPOLOGY BACKGROUND (INTERACTIVE NOC MESH)       -->

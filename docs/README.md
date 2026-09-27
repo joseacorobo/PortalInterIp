@@ -9,39 +9,39 @@ Sistema web integral de gestión operativa, balanceo de carga de trabajo, medici
 La plataforma modela la estructura jerárquica de la empresa y soporta asignación dinámica de personal:
 
 - **Departamento General:** Operaciones IP
-  - **División Operativa (Alcance Activo FTTH & Infraestructura):** Redes de Acceso y Aprovisionamiento
-    - **Célula de Soporte FTTH:** Diagnóstico ONT, validación de aprovisionamiento, modo bridge, reaprovisionamiento.
-    - **Célula de Cabecera OLT:** Enlaces troncales, interfaces PON, SFP, tarjetas de servicio y contingencias.
-    - **Célula de Telefonía VoIP / SIP:** Aprovisionamiento de líneas, servidores SIP, dialplans, métricas MOS y jitter.
-  - **Otras Divisiones (Expansión - Fase 3):**
-    - **Grandes Cuentas:** Clientes corporativos, enlaces dedicados y acuerdos de nivel de servicio (SLA) preferenciales.
-    - **Redes WAN & Core:** Enrutamiento BGP, transporte de datos, backhaul y troncales IP nacionales.
+  - **1. Redes de Acceso y Aprovisionamiento:** Diagnóstico ONT/FTTH, validación de aprovisionamiento, modo bridge, cabecera OLT.
+  - **2. Control de Tráfico y Redes Inalámbricas:** QoS, enlaces inalámbricos, balanceo de carga.
+  - **3. Seguridad Perimetral:** Firewalls, mitigación DDoS, VPNs y políticas perimetrales.
+  - **4. Telefonía VoIP / SIP:** Aprovisionamiento de líneas, servidores SIP, dialplans, métricas MOS y jitter.
+  - **5. Redes WAN & Core:** Enrutamiento BGP, transporte de datos, backhaul y troncales IP nacionales.
+  - **6. Grandes Clientes:** Clientes corporativos, enlaces dedicados y acuerdos de nivel de servicio (SLA) preferenciales.
 
 ---
 
 ## 2. Módulos y Funcionalidades Principales
 
-### Portal de Autenticación Corporativo (login-operaciones-ip-combinado)
-- **Diseño Auto Layout de Alto Nivel:**
-  - **Hero Visual Section (Izquierda):** Vista fotográfica del datacenter de Inter con gradiente oscuro, indicador de telemetría en vivo (`NOC CENTRAL ONLINE`), membrete corporativo y cuadrícula de métricas clave de infraestructura crítica (`1,420+` Nodos Activos, `400 Gbps` Capacidad Backbone, Criptografía `TLS 1.3 / AES-256`).
-  - **Login Panel Section (Derecha):** Tarjeta en blanco puro con el logotipo oficial de Inter en su azul nativo, etiquetas operativas (`OPERACIONES` / `RED PRIVADA`), campos interactivos para usuario y contraseña con conmutador de visibilidad, y distintivo de auditoría y advertencia de seguridad.
-- **Seguridad y Acceso Basado en Sesión:**
-  - Manejo de sesiones mediante cookie HTTP-Only `auth_user_id`.
-  - Acceso directo en 1 clic para el **Administrador General** (`admin@inter.com.ve` / clave `admin`), otorgando visibilidad sin restricciones sobre todas las células técnicas.
+### Portal de Autenticación Corporativo (login.html)
+- **Diseño NOC Dark-Space:**
+  - Fondo espacial oscuro con simulación de malla de red 3D de nodos interactivos en HTML5 Canvas.
+  - Tarjeta de credenciales con efecto glassmorphism, selector rápido para demos y botón de acceso seguro.
+  - Manejo de sesiones mediante cookie HTTP-Only firmada con HMAC (`auth_user_id`).
+  - Acceso directo para **Administrador General** (`admin@inter.com.ve` / clave `inter2026`) y **Coordinadores**.
 
-### Sidebar Minimalista de Navegación y Perfil Dinámico (Modelo Figma)
-- **Navegación Jerárquica Plegable:**
-  - Acordeón interactivo con sub-divisiones operativas: *Redes de Acceso y Aprovisionamiento* (Redes FTTH, Cabecera OLT, Soporte), *Telefonía*, *Grandes Cuentas* y *Próximamente más*.
-- **Perfil de Usuario en Tiempo Real:**
-  - Despliega en la cabecera superior del sidebar la tarjeta del ingeniero conectado (nombre, rol, iniciales y célula), con botón de cierre de sesión integrado.
+### Sidebar Institucional y Torre de Control (Stitch NOC)
+- **Navegación Plegable (17.5rem a 4.75rem):**
+  - Acordeón de departamentos con chevron giratorio e insignias de conteo en vivo.
+  - Tarjeta de sesión activa del ingeniero/coordinador (nombre, rol, iniciales y departamento).
+  - Conmutador de vista operativa, rendimiento y auditoría forense.
 
-### Bandeja de Correos Automatizados (Diseño Microsoft 365 / Outlook)
-- **Panel de Carpetas Estilo Outlook:**
-  - Filtros directos por categorías: *Bandeja de entrada*, *Sin asignar*, *En proceso*, *Pausados* y *Resueltos*.
-- **Lista Dividida de Mensajes:**
-  - Despliegue con remitente, asunto, extracto técnico, estado FSM y etiqueta de ponderación DERS (P1 a P5).
-- **Panel de Lectura Integrado:**
-  - Encabezado con detalles del remitente, hora de recepción, entidades telco extraídas de forma automática y botón de acción inmediata *Atender Ticket*.
+### Tablero de Gestión Operativa (dashboard.html)
+- **ScoreCards de Telemetría en Tiempo Real:**
+  - Estado de la cola global (pendientes, en progreso, en espera), casos críticos (P4/P5, Bridge) y SLA.
+- **Torre del Especialista y Mesa de Asignación:**
+  - Vista exclusiva para Coordinadores: Triage de tickets pendientes con asignación balanceada según saturación.
+  - Vista de Especialista: Mis tareas activas, cronómetro en vivo, botón de pausa técnica y resolución asistida.
+- **Auditoría Forense y Exportación:**
+  - Bitácora inmutable con sellado de tiempo y dirección IP.
+  - Generación de reportes ejecutivos en formato Excel (.xlsx vía streaming).
 
 ### Motor de Métricas y Ponderación por Puntos (DERS)
 - Asignación de puntos ponderados según la complejidad técnica de la tarea:

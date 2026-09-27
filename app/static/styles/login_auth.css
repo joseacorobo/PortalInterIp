@@ -1,0 +1,41 @@
+/* ==========================================================================
+   ARCHIVO: login_auth.css
+   REFERENCIA: Pantalla de Acceso y Autenticación Corporativa (login.html)
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Estructura y Fondo Oscuro Deep-Space de Telecomunicaciones (#04060d)
+   2. Escenario 3D de Malla de Nodos de Red (.network-scene, #networkCanvas)
+   3. Cajas de Entrada con Resaltado de Foco y Anillo Azul (.input-box)
+   4. Gradientes Radiales Atmosféricos de Iluminación Perimetral
+   5. Tarjeta Flotante de Credenciales con Efecto Glassmorphism
+   ========================================================================== */
+
+body, body.login-body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #04060d;
+}
+
+.input-box:focus-within {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   ESCENARIO 3D INTERACTIVO (MALLA NOC & NODES)
+   -------------------------------------------------------------------------- */
+.network-scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#networkCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}

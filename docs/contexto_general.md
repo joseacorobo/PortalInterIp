@@ -20,15 +20,12 @@ La plataforma refleja la organización real de la empresa y soporta dotación di
 
 ```mermaid
 graph TD
-    A["DEPARTAMENTO GENERAL: OPERACIONES IP"] --> B["DIVISIÓN: REDES DE ACCESO Y APROVISIONAMIENTO<br>(Alcance Activo FTTH & Infraestructura)"]
-    A --> C["DIVISIÓN: SERVICIOS Y CLIENTES<br>(Telefonía & Divisiones Corporativas)"]
-
-    B --> B1["Célula de Soporte FTTH<br>• Diagnóstico ONT / FiberHome / Huawei<br>• Aprovisionamiento y Reaprovisionamiento<br>• Modo Bridge / IP Certificada"]
-    B --> B2["Célula de Cabecera OLT<br>• Enlaces troncales y tarjetas de servicio<br>• Sustitución SFP y PortChannels 10G/20G<br>• Demonios OLT, VLANs y Whitelists"]
-
-    C --> C1["Célula de Telefonía VoIP / SIP<br>• Aprovisionamiento de líneas y dialplans<br>• Servidores SIP, MOS, jitter y latencia"]
-    C --> C2["Grandes Cuentas (Fase 3)<br>• Clientes corporativos y SLAs preferenciales"]
-    C --> C3["Redes WAN & Core (Fase 3)<br>• BGP, Core IP y backhaul nacional"]
+    A["DEPARTAMENTO GENERAL: OPERACIONES IP"] --> D1["1. Redes de Acceso y Aprovisionamiento<br>• Diagnóstico ONT / FiberHome / Huawei<br>• Aprovisionamiento FTTH y Cabecera OLT<br>• Modo Bridge / IP Certificada"]
+    A --> D2["2. Control de Tráfico y Redes Inalámbricas<br>• QoS, balanceo de carga de enlaces<br>• Telemetría de torres y radioenlaces"]
+    A --> D3["3. Seguridad Perimetral<br>• Reglas de firewall y mitigación DDoS<br>• Trazabilidad y filtrado de tráfico"]
+    A --> D4["4. Telefonía VoIP / SIP<br>• Aprovisionamiento de líneas y dialplans<br>• Servidores SIP, MOS, jitter y latencia"]
+    A --> D5["5. Redes WAN & Core<br>• Enrutamiento BGP y MPLS<br>• Backhaul y troncales IP de transporte"]
+    A --> D6["6. Grandes Clientes<br>• Clientes corporativos y enlaces dedicados<br>• SLAs de alta disponibilidad y contingencias"]
 ```
 
 ---

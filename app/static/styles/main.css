@@ -1,0 +1,17 @@
+/* ==========================================================================
+   ARCHIVO: main.css
+   REFERENCIA: Entrada Maestra del Sistema de Estilos del Portal Inter IP
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   Agrupa e importa de forma ordenada y modular todos los estilos del sistema:
+   1. theme_tokens.css       -> Variables, colores corporativos y temas claro/oscuro
+   2. snow_ui.css            -> Primitivas de UI, badges, botones y elevaciones
+   3. sidebar_navigation.css -> Menú lateral, colapso/expansión y acordeón
+   4. dashboard_layout.css   -> Grillas, scorecards KPI, tablas y microinteracciones
+   ========================================================================== */
+
+@import url("./theme_tokens.css");
+@import url("./snow_ui.css");
+@import url("./sidebar_navigation.css");
+@import url("./dashboard_layout.css");

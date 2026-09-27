@@ -1,0 +1,195 @@
+/* ==========================================================================
+   ARCHIVO: sidebar_navigation.css
+   REFERENCIA: Barra Lateral de Navegación y Control (Sidebar)
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Contenedor Principal del Sidebar (.sidebar-container)
+   2. Transición y Dimensionamiento de Modo Expandido (17.5rem) vs Colapsado (4.75rem)
+   3. Ocultamiento Inteligente de Etiquetas en Modo Colapsado (.sidebar-label-hide)
+   4. Píldoras de Navegación Interactivas (.sidebar-nav-pill, .active)
+   5. Acordeón Jerárquico de Casos y Tickets (#tickets-accordion-group, #tickets-submenu)
+   6. Botón de Conmutación/Colapso con Rotación de Icono (.sidebar-collapse-btn)
+   7. Tarjeta de Identidad de Usuario en Pie de Menú (.sidebar-user-info)
+   ========================================================================== */
+
+:root {
+    --sidebar-w-expanded: 17.5rem;   /* 280px */
+    --sidebar-w-collapsed: 4.75rem; /* 76px */
+    --sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-duration: 240ms;
+}
+
+/* --------------------------------------------------------------------------
+   1. CONTENEDOR PRINCIPAL
+   -------------------------------------------------------------------------- */
+.sidebar-container {
+    width: var(--sidebar-w-expanded);
+    min-width: var(--sidebar-w-expanded);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem;
+    height: 100vh;
+    user-select: none;
+    transition: width var(--sidebar-duration) var(--sidebar-ease),
+                min-width var(--sidebar-duration) var(--sidebar-ease),
+                padding var(--sidebar-duration) ease;
+    position: relative;
+    z-index: 30;
+    overflow-x: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   2. MODO COLAPSADO (MINI SIDEBAR)
+   -------------------------------------------------------------------------- */
+.sidebar-container.collapsed {
+    width: var(--sidebar-w-collapsed) !important;
+    min-width: var(--sidebar-w-collapsed) !important;
+    padding: 1rem 0.5rem !important;
+}
+
+.sidebar-container.collapsed .sidebar-label-hide {
+    display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-header-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.sidebar-container.collapsed .sidebar-brand-wrapper {
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+}
+
+.sidebar-container.collapsed .sidebar-logo-img {
+    height: 1.15rem;
+    max-width: 42px;
+}
+
+.sidebar-container.collapsed .sidebar-collapse-btn {
+    transform: rotate(180deg);
+}
+
+.sidebar-container.collapsed .sidebar-nav-pill {
+    justify-content: center !important;
+    padding: 0.625rem 0.25rem !important;
+    position: relative;
+}
+
+.sidebar-container.collapsed .sidebar-nav-pill span:not(.sidebar-badge-compact) {
+    display: none !important;
+}
+
+.sidebar-container.collapsed #nav-view-tickets {
+    justify-content: center !important;
+    padding: 0.625rem 0.25rem !important;
+}
+
+.sidebar-container.collapsed #nav-view-tickets .sidebar-ticket-main {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    gap: 0 !important;
+}
+
+.sidebar-container.collapsed #nav-view-tickets .sidebar-ticket-meta {
+    position: static !important;
+    margin: 0 !important;
+}
+
+.sidebar-container.collapsed #tickets-chevron {
+    display: none !important;
+}
+
+.sidebar-container.collapsed #tickets-submenu {
+    display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-user-info {
+    display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-user-card {
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. BOTÓN DE COLAPSO (CHEVRON INTERACTIVO)
+   -------------------------------------------------------------------------- */
+.sidebar-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease, transform var(--sidebar-duration) var(--sidebar-ease);
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   4. PÍLDORAS DE NAVEGACIÓN (.sidebar-nav-pill)
+   -------------------------------------------------------------------------- */
+.sidebar-nav-pill {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 140ms ease, color 140ms ease;
+    white-space: nowrap;
+}
+
+.sidebar-nav-pill:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.sidebar-nav-pill.active {
+    background-color: rgba(28, 88, 168, 0.35);
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(91, 155, 224, 0.3);
+}
+
+.sidebar-nav-pill.active i {
+    color: #7CB2EA;
+}
+
+/* --------------------------------------------------------------------------
+   5. BADGES COMPACTOS DENTRO DEL SIDEBAR
+   -------------------------------------------------------------------------- */
+.sidebar-badge-compact {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 0.25rem;
+    padding: 0.15rem 0.35rem;
+}

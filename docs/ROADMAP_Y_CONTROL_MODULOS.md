@@ -7,19 +7,16 @@ Este documento es la bitácora oficial del proyecto. Sirve como guía para segui
 
 ## 1. Estructura y Jerarquía Organizacional del Proyecto
 
-El sistema organiza las áreas técnicas en dos divisiones principales, reflejando la realidad operativa y permitiendo supervisión agregada o granular:
+El sistema organiza las áreas técnicas en 6 departamentos oficiales bajo integridad referencial relacional (`departamento_id`), permitiendo supervisión agregada o granular:
 
 ```mermaid
 graph TD
-    A["DEPARTAMENTO GENERAL: OPERACIONES IP"] --> B["DIVISIÓN: REDES DE ACCESO<br><b>(Alcance Activo FTTH & Infraestructura)</b>"]
-    A --> C["DIVISIÓN: SERVICIOS Y CLIENTES<br><b>(Telefonía & Otras Divisiones IP)</b>"]
-
-    B --> B1["Célula de Soporte FTTH"]
-    B --> B2["Célula de Cabecera OLT"]
-
-    C --> C1["Célula de Telefonía VoIP / SIP (Operativa)"]
-    C --> C2["Grandes Cuentas (Clientes Corporativos / Enlaces Dedicados) [Fase 3]"]
-    C --> C3["Redes WAN & Core (Core IP, BGP, Backhaul) [Fase 3]"]
+    A["DEPARTAMENTO GENERAL: OPERACIONES IP"] --> D1["1. Redes de Acceso y Aprovisionamiento (FTTH / OLT)"]
+    A --> D2["2. Control de Tráfico y Redes Inalámbricas"]
+    A --> D3["3. Seguridad Perimetral y Firewall"]
+    A --> D4["4. Telefonía VoIP / SIP"]
+    A --> D5["5. Redes WAN & Core IP"]
+    A --> D6["6. Grandes Clientes (Corporativo Dedicado)"]
 ```
 
 > **Nota sobre dotación de personal:** El número de personas por célula y área es **100% variable y dinámico**. La plataforma calcula todas las métricas, promedios y balance de saturación en tiempo real a partir del número de colaboradores activos registrados en base de datos, sin restricciones fijas.

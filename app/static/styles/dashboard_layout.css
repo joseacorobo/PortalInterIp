@@ -1,0 +1,169 @@
+/* ==========================================================================
+   ARCHIVO: dashboard_layout.css
+   REFERENCIA: Componentes, Cuadrículas y Vistas Operativas del Dashboard
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Keyframes de Animación y Microinteracciones (fadeInUp, pulseGlow)
+   2. Clases Utilitarias Interactivas (.interactive-card, .btn-press, .pulse-indicator)
+   3. Tarjetas de Scorecard y Contenedores de Gráficos (.dashboard-kpi-card, .dashboard-chart-card)
+   4. Tablas Corporativas de Telecomunicaciones (.table-corporate-metrics)
+   5. Botones Píldora de Filtrado Dinámico (.filter-pill-btn, .pill-active)
+   6. Modales y Telones de Fondo con Desenfoque (.modal-backdrop)
+   7. Estilos para Vistas de Métricas Jerárquicas y Leaderboard Técnico
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. KEYFRAMES DE ANIMACIÓN
+   -------------------------------------------------------------------------- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.35);
+        opacity: 0.6;
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-indicator {
+    animation: pulseGlow 1.8s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   2. MICROINTERACCIONES
+   -------------------------------------------------------------------------- */
+.interactive-card {
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.interactive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(28, 88, 168, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    border-color: #BFDBFE !important;
+}
+
+.btn-press {
+    transition: all 0.15s ease;
+}
+
+.btn-press:active {
+    transform: scale(0.96);
+}
+
+/* --------------------------------------------------------------------------
+   3. CONTENEDORES Y TARJETAS KPI
+   -------------------------------------------------------------------------- */
+.dashboard-kpi-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+
+.dashboard-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -2px rgba(16, 24, 40, 0.08);
+}
+
+.dashboard-chart-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* --------------------------------------------------------------------------
+   4. TABLAS CORPORATIVAS DE TELECOMUNICACIONES
+   -------------------------------------------------------------------------- */
+.table-corporate-metrics {
+    width: 100%;
+    text-align: left;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-corporate-metrics thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    background-color: #F8FAFC;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-corporate-metrics tbody td {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.8125rem;
+    color: var(--text);
+    border-bottom: 1px solid #EDF2F7;
+}
+
+html[data-theme="dark"] .table-corporate-metrics thead th {
+    background-color: #162238;
+    color: #93A1C0;
+    border-bottom-color: #233052;
+}
+
+html[data-theme="dark"] .table-corporate-metrics tbody td {
+    color: #EEF2FA;
+    border-bottom-color: #1B2740;
+}
+
+/* --------------------------------------------------------------------------
+   5. FILTROS PÍLDORA INTERACTIVOS
+   -------------------------------------------------------------------------- */
+.filter-pill-btn {
+    transition: all 0.18s ease;
+}
+
+.filter-pill-btn.pill-active {
+    background-color: #0056B3 !important;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 86, 179, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   6. BADGES SEMÁNTICOS
+   -------------------------------------------------------------------------- */
+.badge-kpi-normal {
+    background-color: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+}
+
+html[data-theme="dark"] .badge-kpi-normal {
+    background-color: rgba(5, 150, 105, 0.15);
+    color: #34D399;
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   7. MODALES Y TELÓN DE FONDO (BACKDROP)
+   -------------------------------------------------------------------------- */
+.modal-backdrop {
+    background-color: rgba(11, 19, 38, 0.65);
+    backdrop-filter: blur(4px);
+}

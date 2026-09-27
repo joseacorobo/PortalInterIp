@@ -1,0 +1,116 @@
+/* ==========================================================================
+   ARCHIVO: theme_tokens.css
+   REFERENCIA: Tokens Globales del Sistema de Diseño (Inter Telecomunicaciones)
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Variables CSS de Superficies y Paneles (--bg, --panel, --sidebar-bg)
+   2. Variables de Bordes y Separadores (--border, --border-2)
+   3. Escala Tipográfica y Colores de Texto (--text, --muted, --muted-2)
+   4. Paleta Oficial de Marca Inter (--brand #1C58A8, --brand-2 #2E74C9, --brand-tint #EAF2FC)
+   5. Paleta de Severidad y Criticidad NOC (--navy #0B3B78, --yellow #F4B400)
+   6. Tokens Específicos para Modo Oscuro (html[data-theme="dark"])
+   7. Resets Tipográficos Corporativos y Barra de Desplazamiento Personalizada
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS DE MODO CLARO (NATIVO / CORPORATIVO)
+   -------------------------------------------------------------------------- */
+:root {
+    /* Superficies y Paneles */
+    --bg: #F3F6FC;
+    --panel: #FFFFFF;
+    --sidebar-bg: #0B1326;
+    
+    /* Bordes y Contornos */
+    --border: #E4E9F3;
+    --border-2: #EEF2F8;
+    
+    /* Textos y Contrastes */
+    --text: #101828;
+    --muted: #5B6B89;
+    --muted-2: #98A3B8;
+    
+    /* Paleta Oficial Inter (Telecom Precision Analytics) */
+    --brand: #1C58A8;
+    --brand-2: #2E74C9;
+    --brand-tint: #EAF2FC;
+    
+    /* Criticidad Operativa / Prioridad DERS */
+    --navy: #0B3B78;
+    --navy-ink: #071F3F;
+    --yellow: #F4B400;
+    --yellow-tint: #FEF6E0;
+
+    /* Compatibilidad SnowUI */
+    --snow-bg: var(--bg);
+    --snow-sidebar: var(--sidebar-bg);
+    --snow-card: var(--panel);
+    --snow-border: var(--border);
+    --snow-text: var(--text);
+    --snow-muted: var(--muted);
+    --snow-blue: var(--brand);
+}
+
+/* --------------------------------------------------------------------------
+   2. TOKENS DE MODO OSCURO (DARK MODE - NOC MONITORING)
+   -------------------------------------------------------------------------- */
+html[data-theme="dark"] {
+    --bg: #0B1322;
+    --panel: #111B2E;
+    --sidebar-bg: #090F1C;
+    --border: #233052;
+    --border-2: #1B2740;
+    --text: #EEF2FA;
+    --muted: #93A1C0;
+    --muted-2: #5E6C8C;
+    --brand: #5B9BE0;
+    --brand-2: #7CB2EA;
+    --brand-tint: rgba(91, 155, 224, 0.14);
+    --navy: #8FB7E8;
+    --navy-ink: #DCE9FA;
+    --yellow: #F5C24D;
+    --yellow-tint: rgba(245, 194, 77, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   3. CONFIGURACIÓN BASE DEL CUERPO Y TIPOGRAFÍA
+   -------------------------------------------------------------------------- */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   4. BARRA DE DESPLAZAMIENTO PERSONALIZADA (CUSTOM SCROLLBAR)
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #2D3A58;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #475880;
+}
