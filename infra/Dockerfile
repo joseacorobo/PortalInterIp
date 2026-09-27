@@ -20,7 +20,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copiar código de la aplicación
 COPY app/ ./app/
-COPY server.py .
 
 # Crear directorios para persistencia de adjuntos y base de datos
 RUN mkdir -p /app/app/static/attachments
@@ -31,4 +30,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api/kpis || exit 1
 
-CMD ["python", "server.py"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

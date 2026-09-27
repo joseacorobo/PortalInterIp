@@ -1,5 +1,0 @@
-/* ==========================================================================
-   COMPATIBILIDAD RETROACTIVA: Redirigiendo a /static/styles/sidebar_navigation.css
-   Para nuevos desarrollos, editar directamente en: app/static/styles/
-   ========================================================================== */
-@import url("../styles/sidebar_navigation.css");

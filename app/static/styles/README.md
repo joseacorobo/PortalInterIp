@@ -33,8 +33,3 @@ Esta carpeta centraliza y modulariza todas las hojas de estilo del portal. Cada 
   ```html
   <link rel="stylesheet" href="/static/styles/login_auth.css">
   ```
-
----
-
-## 3. Compatibilidad Retroactiva (`app/static/css/`)
-Para garantizar que peticiones directas previas o recursos cacheados no fallen, los archivos en `app/static/css/` se mantienen como redireccionadores directos `@import` hacia `app/static/styles/`.

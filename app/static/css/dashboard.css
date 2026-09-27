@@ -1,5 +1,0 @@
-/* ==========================================================================
-   COMPATIBILIDAD RETROACTIVA: Redirigiendo a /static/styles/dashboard_layout.css
-   Para nuevos desarrollos, editar directamente en: app/static/styles/
-   ========================================================================== */
-@import url("../styles/dashboard_layout.css");
