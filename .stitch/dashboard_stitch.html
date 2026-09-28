@@ -1,0 +1,2581 @@
+
+
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inter | Operaciones IP - Centro de Operaciones de Red (NOC)</title>
+    <!-- Tailwind CSS with Forms and Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        inter: {
+                            50: '#F0F6FD',
+                            100: '#E1EDFB',
+                            200: '#B8DAF7',
+                            500: '#0056B3',
+                            600: '#004A9E',
+                            700: '#003D82',
+                            800: '#003066',
+                            900: '#002047',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- ============================================================== -->
+    <!-- ESTILOS OFICIALES DEL NOC (SISTEMA DE DISEÑO TELECOM PRECISION)-->
+    <!-- ============================================================== -->
+    <link rel="stylesheet" href="/static/styles/theme_tokens.css">
+    <link rel="stylesheet" href="/static/styles/snow_ui.css">
+    <link rel="stylesheet" href="/static/styles/sidebar_navigation.css">
+    <link rel="stylesheet" href="/static/styles/dashboard_layout.css">
+<style id="stitch-embedded-styles">
+/* ==========================================
+   theme_tokens.css
+   ========================================== */
+/* ==========================================================================
+   ARCHIVO: theme_tokens.css
+   REFERENCIA: Tokens Globales del Sistema de Diseño (Inter Telecomunicaciones)
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Variables CSS de Superficies y Paneles (--bg, --panel, --sidebar-bg)
+   2. Variables de Bordes y Separadores (--border, --border-2)
+   3. Escala Tipográfica y Colores de Texto (--text, --muted, --muted-2)
+   4. Paleta Oficial de Marca Inter (--brand #1C58A8, --brand-2 #2E74C9, --brand-tint #EAF2FC)
+   5. Paleta de Severidad y Criticidad NOC (--navy #0B3B78, --yellow #F4B400)
+   6. Tokens Específicos para Modo Oscuro (html[data-theme="dark"])
+   7. Resets Tipográficos Corporativos y Barra de Desplazamiento Personalizada
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS DE MODO CLARO (NATIVO / CORPORATIVO)
+   -------------------------------------------------------------------------- */
+:root {
+    /* Superficies y Paneles */
+    --bg: #F3F6FC;
+    --panel: #FFFFFF;
+    --sidebar-bg: #0B1326;
+    
+    /* Bordes y Contornos */
+    --border: #E4E9F3;
+    --border-2: #EEF2F8;
+    
+    /* Textos y Contrastes */
+    --text: #101828;
+    --muted: #5B6B89;
+    --muted-2: #98A3B8;
+    
+    /* Paleta Oficial Inter (Telecom Precision Analytics) */
+    --brand: #1C58A8;
+    --brand-2: #2E74C9;
+    --brand-tint: #EAF2FC;
+    
+    /* Criticidad Operativa / Prioridad DERS */
+    --navy: #0B3B78;
+    --navy-ink: #071F3F;
+    --yellow: #F4B400;
+    --yellow-tint: #FEF6E0;
+
+    /* Compatibilidad SnowUI */
+    --snow-bg: var(--bg);
+    --snow-sidebar: var(--sidebar-bg);
+    --snow-card: var(--panel);
+    --snow-border: var(--border);
+    --snow-text: var(--text);
+    --snow-muted: var(--muted);
+    --snow-blue: var(--brand);
+}
+
+/* --------------------------------------------------------------------------
+   2. TOKENS DE MODO OSCURO (DARK MODE - NOC MONITORING)
+   -------------------------------------------------------------------------- */
+html[data-theme="dark"] {
+    --bg: #0B1322;
+    --panel: #111B2E;
+    --sidebar-bg: #090F1C;
+    --border: #233052;
+    --border-2: #1B2740;
+    --text: #EEF2FA;
+    --muted: #93A1C0;
+    --muted-2: #5E6C8C;
+    --brand: #5B9BE0;
+    --brand-2: #7CB2EA;
+    --brand-tint: rgba(91, 155, 224, 0.14);
+    --navy: #8FB7E8;
+    --navy-ink: #DCE9FA;
+    --yellow: #F5C24D;
+    --yellow-tint: rgba(245, 194, 77, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   3. CONFIGURACIÓN BASE DEL CUERPO Y TIPOGRAFÍA
+   -------------------------------------------------------------------------- */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   4. BARRA DE DESPLAZAMIENTO PERSONALIZADA (CUSTOM SCROLLBAR)
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #2D3A58;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #475880;
+}
+
+
+/* ==========================================
+   snow_ui.css
+   ========================================== */
+/* ==========================================================================
+   ARCHIVO: snow_ui.css
+   REFERENCIA: Primitivas y Componentes Visuales del Sistema SnowUI / Stitch
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Tokens de Superficies y Elevaciones (Card Elevation, Glass Panels)
+   2. Insignias y Badges Semánticos de Severidad (.badge-success, .badge-warning, .badge-critical)
+   3. Barras de Progreso Dinámicas y Medidores SLA
+   4. Botones de Acción Rápida y Estados Hover/Focus
+   5. Tooltips Informativos y Clases de Ayuda Visual
+   ========================================================================== */
+
+/* ROOT DESIGN TOKENS (LIGHT MODE NATIVE AS PER STITCH) */
+:root {
+  /* Surfaces */
+  --bg:                       #F3F6FC;
+  --panel:                    #FFFFFF;
+  --sidebar-bg:               #FFFFFF;
+  
+  /* Borders */
+  --border:                   #E4E9F3;
+  --border-2:                 #EEF2F8;
+  
+  /* Text */
+  --text:                     #101828;
+  --muted:                    #5B6B89;
+  --muted-2:                  #98A3B8;
+  
+  /* Brand (Azul oficial del logo Inter) */
+  --brand:                    #1C58A8;
+  --brand-2:                  #2E74C9;
+  --brand-tint:               #EAF2FC;
+  
+  /* Navy (Severidad Alta/Critica) */
+  --navy:                     #0B3B78;
+  --navy-ink:                 #071F3F;
+  
+  /* Yellow / Amber (Severidad Moderada/Atencion) */
+  --yellow:                   #F4B400;
+  --yellow-tint:              #FEF6E0;
+
+  /* Legacy Aliases for Tailwind compat */
+  --snow-bg:                  var(--bg);
+  --snow-sidebar:             var(--sidebar-bg);
+  --snow-card:                var(--panel);
+  --snow-border:              var(--border);
+  --snow-text:                var(--text);
+  --snow-muted:               var(--muted);
+  --snow-subtle:              #F8FAFC;
+  --snow-hover:               var(--brand-tint);
+  --snow-input:               #FFFFFF;
+  --snow-scrollbar:           #CBD5E1;
+  --snow-scrollbar-hover:     #94A3B8;
+  --snow-blue:                var(--brand);
+  --snow-accent:              var(--brand-2);
+}
+
+/* DARK MODE TOKENS */
+html[data-theme="dark"] {
+  --bg:                       #0B1322;
+  --panel:                    #111B2E;
+  --sidebar-bg:               #0E1728;
+  --border:                   #233052;
+  --border-2:                 #1B2740;
+  --text:                     #EEF2FA;
+  --muted:                    #93A1C0;
+  --muted-2:                  #5E6C8C;
+  --brand:                    #5B9BE0;
+  --brand-2:                  #7CB2EA;
+  --brand-tint:               rgba(91, 155, 224, 0.14);
+  --navy:                     #8FB7E8;
+  --navy-ink:                 #DCE9FA;
+  --yellow:                   #F5C24D;
+  --yellow-tint:              rgba(245, 194, 77, 0.12);
+  --snow-subtle:              rgba(255, 255, 255, 0.03);
+  --snow-input:               rgba(30, 41, 59, 0.6);
+  --snow-scrollbar:           rgba(255, 255, 255, 0.1);
+  --snow-scrollbar-hover:     rgba(255, 255, 255, 0.2);
+}
+
+/* Global Font & Baseline */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-feature-settings: "tnum" 1, "zero" 1;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  letter-spacing: 0em;
+}
+
+h1, h2, h3, h4, h5, h6, .tabular-nums {
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.015em;
+}
+
+/* ============================================================== */
+/* BASE SURFACE AND TOKEN CLASSES                                  */
+/* ============================================================== */
+
+.bg-snow-bg { background-color: var(--snow-bg) !important; }
+.bg-snow-sidebar { background-color: var(--snow-sidebar) !important; }
+.bg-snow-card { 
+  background-color: var(--snow-card) !important; 
+  border: 1px solid var(--snow-border);
+}
+.border-snow-border { border-color: var(--snow-border) !important; }
+.text-snow-text { color: var(--snow-text) !important; }
+.text-snow-muted { color: var(--snow-muted) !important; }
+.bg-snow-subtle { background-color: var(--snow-subtle) !important; }
+.divide-snow-border > * + * { border-color: var(--snow-border) !important; }
+
+/* Elevations */
+.shadow-xs {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+.shadow-sm {
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+.shadow-stitch-card {
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.02);
+}
+
+/* ============================================================== */
+/* STITCH ANIMATIONS & MICRO-INTERACTIONS                         */
+/* ============================================================== */
+
+/* Entrada escalonada de tarjetas */
+@keyframes stitch-fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: stitch-fade-in-up 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+.delay-50 { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-250 { animation-delay: 250ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Microinteracción de Hover & Elevación */
+.hover-elevation {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
+}
+.hover-elevation:hover {
+  transform: translateY(-2px);
+  border-color: rgba(28, 88, 168, 0.35) !important;
+  box-shadow: 0 8px 24px -4px rgba(28, 88, 168, 0.08) !important;
+}
+
+/* Scrollbars limpios */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--snow-scrollbar);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--snow-scrollbar-hover);
+}
+
+/* ============================================================== */
+/* FORM CONTROLS & BOTONES                                        */
+/* ============================================================== */
+
+input, textarea, select {
+  background-color: var(--snow-input);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-tint);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted-2);
+}
+
+.btn-primary {
+  background-color: var(--brand) !important;
+  color: #FFFFFF !important;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.btn-primary:hover {
+  background-color: var(--brand-2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(28, 88, 168, 0.25);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF !important;
+  color: var(--text) !important;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border) !important;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background-color: var(--border-2) !important;
+}
+
+/* ============================================================== */
+/* BADGES Y CONTADORES DE SEVERIDAD (REGLA DE COLOR ESTRICTA)     */
+/* ============================================================== */
+
+.badge-p1 {
+  background-color: #EAF2FC;
+  color: #2E74C9;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p2 {
+  background-color: #E2E8F0;
+  color: #1C58A8;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p3 {
+  background-color: #FEF6E0;
+  color: #B45309;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p4 {
+  background-color: #0B3B78;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.badge-p5 {
+  background-color: #071F3F;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+/* Barras de Saturación DERS */
+.bar-ders-equilibrada {
+  background-color: var(--brand-2);
+}
+.bar-ders-moderada {
+  background-color: var(--yellow);
+}
+.bar-ders-alta {
+  background-color: var(--navy);
+}
+
+/* ============================================================== */
+/* DARK OVERRIDES EXCLUSIVOS PARA HTML[DATA-THEME="DARK"]         */
+/* ============================================================== */
+html[data-theme="dark"] .bg-white { 
+  background-color: var(--panel) !important; 
+}
+html[data-theme="dark"] .text-gray-900, 
+html[data-theme="dark"] .text-gray-800 { 
+  color: #FFFFFF !important; 
+}
+html[data-theme="dark"] .text-gray-700, 
+html[data-theme="dark"] .text-gray-600 { 
+  color: #E2E8F0 !important; 
+}
+html[data-theme="dark"] .text-gray-500 { 
+  color: #94A3B8 !important; 
+}
+html[data-theme="dark"] .border-gray-100, 
+html[data-theme="dark"] .border-gray-200 { 
+  border-color: var(--border) !important; 
+}
+
+
+/* ==========================================
+   sidebar_navigation.css
+   ========================================== */
+/* ==========================================================================
+   ARCHIVO: sidebar_navigation.css
+   REFERENCIA: Barra Lateral de Navegación y Control (Sidebar)
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Contenedor Principal del Sidebar (.sidebar-container)
+   2. Transición y Dimensionamiento de Modo Expandido (17.5rem) vs Colapsado (4.75rem)
+   3. Ocultamiento Inteligente de Etiquetas en Modo Colapsado (.sidebar-label-hide)
+   4. Píldoras de Navegación Interactivas (.sidebar-nav-pill, .active)
+   5. Acordeón Jerárquico de Casos y Tickets (#tickets-accordion-group, #tickets-submenu)
+   6. Botón de Conmutación/Colapso con Rotación de Icono (.sidebar-collapse-btn)
+   7. Tarjeta de Identidad de Usuario en Pie de Menú (.sidebar-user-info)
+   ========================================================================== */
+
+:root {
+    --sidebar-w-expanded: 17.5rem;   /* 280px */
+    --sidebar-w-collapsed: 4.75rem; /* 76px */
+    --sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-duration: 240ms;
+}
+
+/* --------------------------------------------------------------------------
+   1. CONTENEDOR PRINCIPAL
+   -------------------------------------------------------------------------- */
+.sidebar-container {
+    width: var(--sidebar-w-expanded);
+    min-width: var(--sidebar-w-expanded);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem;
+    height: 100vh;
+    user-select: none;
+    transition: width var(--sidebar-duration) var(--sidebar-ease),
+                min-width var(--sidebar-duration) var(--sidebar-ease),
+                padding var(--sidebar-duration) ease;
+    position: relative;
+    z-index: 30;
+    overflow-x: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   2. MODO COLAPSADO (MINI SIDEBAR)
+   -------------------------------------------------------------------------- */
+.sidebar-container.collapsed {
+    width: var(--sidebar-w-collapsed) !important;
+    min-width: var(--sidebar-w-collapsed) !important;
+    padding: 1rem 0.5rem !important;
+}
+
+.sidebar-container.collapsed .sidebar-label-hide {
+    display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-header-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.sidebar-container.collapsed .sidebar-brand-wrapper {
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+}
+
+.sidebar-container.collapsed .sidebar-logo-img {
+    height: 1.15rem;
+    max-width: 42px;
+}
+
+.sidebar-container.collapsed .sidebar-collapse-btn {
+    transform: rotate(180deg);
+}
+
+.sidebar-container.collapsed .sidebar-nav-pill {
+    justify-content: center !important;
+    padding: 0.625rem 0.25rem !important;
+    position: relative;
+}
+
+.sidebar-container.collapsed .sidebar-nav-pill span:not(.sidebar-badge-compact) {
+    display: none !important;
+}
+
+.sidebar-container.collapsed #nav-view-tickets {
+    justify-content: center !important;
+    padding: 0.625rem 0.25rem !important;
+}
+
+.sidebar-container.collapsed #nav-view-tickets .sidebar-ticket-main {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    gap: 0 !important;
+}
+
+.sidebar-container.collapsed #nav-view-tickets .sidebar-ticket-meta {
+    position: static !important;
+    margin: 0 !important;
+}
+
+.sidebar-container.collapsed #tickets-chevron {
+    display: none !important;
+}
+
+.sidebar-container.collapsed #tickets-submenu {
+    display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-user-info {
+    display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-user-card {
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. BOTÓN DE COLAPSO (CHEVRON INTERACTIVO)
+   -------------------------------------------------------------------------- */
+.sidebar-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease, transform var(--sidebar-duration) var(--sidebar-ease);
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   4. PÍLDORAS DE NAVEGACIÓN (.sidebar-nav-pill)
+   -------------------------------------------------------------------------- */
+.sidebar-nav-pill {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 140ms ease, color 140ms ease;
+    white-space: nowrap;
+}
+
+.sidebar-nav-pill:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.sidebar-nav-pill.active {
+    background-color: rgba(28, 88, 168, 0.35);
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(91, 155, 224, 0.3);
+}
+
+.sidebar-nav-pill.active i {
+    color: #7CB2EA;
+}
+
+/* --------------------------------------------------------------------------
+   5. BADGES COMPACTOS DENTRO DEL SIDEBAR
+   -------------------------------------------------------------------------- */
+.sidebar-badge-compact {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 0.25rem;
+    padding: 0.15rem 0.35rem;
+}
+
+
+/* ==========================================
+   dashboard_layout.css
+   ========================================== */
+/* ==========================================================================
+   ARCHIVO: dashboard_layout.css
+   REFERENCIA: Componentes, Cuadrículas y Vistas Operativas del Dashboard
+   SISTEMA: Telecom Precision Analytics (Stitch NOC Design System)
+   
+   CONTENIDO Y ALCANCE:
+   1. Keyframes de Animación y Microinteracciones (fadeInUp, pulseGlow)
+   2. Clases Utilitarias Interactivas (.interactive-card, .btn-press, .pulse-indicator)
+   3. Tarjetas de Scorecard y Contenedores de Gráficos (.dashboard-kpi-card, .dashboard-chart-card)
+   4. Tablas Corporativas de Telecomunicaciones (.table-corporate-metrics)
+   5. Botones Píldora de Filtrado Dinámico (.filter-pill-btn, .pill-active)
+   6. Modales y Telones de Fondo con Desenfoque (.modal-backdrop)
+   7. Estilos para Vistas de Métricas Jerárquicas y Leaderboard Técnico
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. KEYFRAMES DE ANIMACIÓN
+   -------------------------------------------------------------------------- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.35);
+        opacity: 0.6;
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-indicator {
+    animation: pulseGlow 1.8s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   2. MICROINTERACCIONES
+   -------------------------------------------------------------------------- */
+.interactive-card {
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.interactive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(28, 88, 168, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    border-color: #BFDBFE !important;
+}
+
+.btn-press {
+    transition: all 0.15s ease;
+}
+
+.btn-press:active {
+    transform: scale(0.96);
+}
+
+/* --------------------------------------------------------------------------
+   3. CONTENEDORES Y TARJETAS KPI
+   -------------------------------------------------------------------------- */
+.dashboard-kpi-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+
+.dashboard-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -2px rgba(16, 24, 40, 0.08);
+}
+
+.dashboard-chart-card {
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* --------------------------------------------------------------------------
+   4. TABLAS CORPORATIVAS DE TELECOMUNICACIONES
+   -------------------------------------------------------------------------- */
+.table-corporate-metrics {
+    width: 100%;
+    text-align: left;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-corporate-metrics thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    background-color: #F8FAFC;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-corporate-metrics tbody td {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.8125rem;
+    color: var(--text);
+    border-bottom: 1px solid #EDF2F7;
+}
+
+html[data-theme="dark"] .table-corporate-metrics thead th {
+    background-color: #162238;
+    color: #93A1C0;
+    border-bottom-color: #233052;
+}
+
+html[data-theme="dark"] .table-corporate-metrics tbody td {
+    color: #EEF2FA;
+    border-bottom-color: #1B2740;
+}
+
+/* --------------------------------------------------------------------------
+   5. FILTROS PÍLDORA INTERACTIVOS
+   -------------------------------------------------------------------------- */
+.filter-pill-btn {
+    transition: all 0.18s ease;
+}
+
+.filter-pill-btn.pill-active {
+    background-color: #0056B3 !important;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 86, 179, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   6. BADGES SEMÁNTICOS
+   -------------------------------------------------------------------------- */
+.badge-kpi-normal {
+    background-color: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+}
+
+html[data-theme="dark"] .badge-kpi-normal {
+    background-color: rgba(5, 150, 105, 0.15);
+    color: #34D399;
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   7. MODALES Y TELÓN DE FONDO (BACKDROP)
+   -------------------------------------------------------------------------- */
+.modal-backdrop {
+    background-color: rgba(11, 19, 38, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+</style>
+</head>
+
+<body class="flex h-screen overflow-hidden bg-[#F3F6FC]">
+
+    <!-- ============================================================== -->
+    <!-- 1. LEFT SIDEBAR                                               -->
+    <!-- ============================================================== -->
+    <aside id="main-sidebar" class="sidebar-container select-none z-30"
+        style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%); border-right: 1px solid rgba(255, 255, 255, 0.1);">
+        <!-- Top Brand & Collapse -->
+        <div
+            class="sidebar-header-top flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/10 transition-all">
+            <div class="sidebar-brand-wrapper flex items-center overflow-hidden py-1 px-1 transition-all">
+                <img src="data:image/png;base64,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" alt="Inter"
+                    class="sidebar-logo-img h-7.5 w-auto object-contain brightness-0 invert opacity-95 hover:opacity-100 transition-all drop-shadow-sm">
+            </div>
+        </div>
+        <!-- Grupo PANEL -->
+        <div class="flex-1 flex flex-col gap-2 overflow-y-auto">
+            <p class="text-[13px] font-bold uppercase tracking-wider text-white/50 px-2 mb-1 sidebar-label-hide">
+                Dashboard</p>
+            <div class="space-y-1">
+                <button onclick="switchDashboardTab('operativa')" id="nav-view-operativa"
+                    class="sidebar-nav-pill active btn-press" title="General">
+                    <i data-lucide="columns-3" class="w-4 h-4 shrink-0 text-[#7CB2EA]"></i>
+                    <span class="sidebar-label-hide">General</span>
+                </button>
+                
+                <button onclick="switchDashboardTab('rendimiento')" id="nav-view-rendimiento"
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press"
+                    title="Métricas">
+                    <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Métricas</span>
+                </button>
+                <button onclick="switchDashboardTab('auditoria')" id="nav-view-auditoria"
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press"
+                    title="Reportes y Auditoría">
+                    <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Reportes y Auditoría</span>
+                </button>
+                
+
+                <!-- Tickets Tablero Accordion -->
+                <div class="space-y-1" id="tickets-accordion-group">
+                    <button type="button" onclick="handleTicketsNavClick()" id="nav-view-tickets"
+                        class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white justify-between w-full btn-press"
+                        title="Tablero de Tickets">
+                        <div class="sidebar-ticket-main flex items-center gap-2 min-w-0 flex-1">
+                            <i data-lucide="ticket" class="w-4 h-4 shrink-0"></i>
+                            <span class="truncate sidebar-label-hide">Tablero de Tickets</span>
+                        </div>
+                        <div class="sidebar-ticket-meta flex items-center gap-1.5 shrink-0 ml-1">
+                            <span id="sidebar-inbox-badge"
+                                class="sidebar-badge-compact px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] border border-[#1C58A8]/60 shrink-0">14</span>
+                            <i data-lucide="chevron-down" id="tickets-chevron"
+                                class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 sidebar-label-hide"></i>
+                        </div>
+                    </button>
+                    <div id="tickets-submenu" class="pl-6 space-y-1 text-xs transition-all">
+                        <button type="button" onclick="switchDashboardTab('tickets')" id="nav-sub-asignacion"
+                            class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/80 hover:text-white transition text-[11px] text-left">
+                            <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#5B9BE0] shrink-0"></span><span
+                                    class="truncate">Asignación de Tickets</span>
+                            </span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/50 text-[#7CB2EA] shrink-0 ml-1"
+                                id="sub-badge-count">14</span>
+                        </button>
+                        <button type="button" onclick="switchDashboardTab('inbox')" id="nav-sub-generales"
+                            class="w-full flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-white/10 text-white/75 hover:text-white transition text-[11px] text-left">
+                            <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span><span
+                                    class="truncate">Consola M365</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="switchDashboardTab('configuracion')" id="nav-view-configuracion"
+                    class="sidebar-nav-pill hover:bg-white/10 text-white/75 hover:text-white btn-press"
+                    title="Configuración">
+                    <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-label-hide">Configuración</span>
+                </button>
+            </div>
+        </div>
+        <!-- Footer: Switch Tema & Live Ping -->
+        <div class="sidebar-footer pt-3 border-t border-white/10 space-y-2">
+            <div class="flex items-center justify-between px-2 text-[10px] text-gray-400 font-mono">
+                <span class="flex items-center gap-1.5" title="Servidor: Conectado">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                    <span class="sidebar-label-hide">Servidor: <span id="server-status-text">Conectado</span></span>
+                </span>
+                <span id="live-sync-indicator" class="sidebar-label-hide">Sync: 0s</span>
+            </div>
+        </div>
+    </aside>
+    <!-- ============================================================== -->
+    <!-- 2. MAIN CONTENT AREA                                          -->
+    <!-- ============================================================== -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-[white] dark:bg-[fbfbfb]">
+        <!-- Top Header Bar -->
+        <header class="h-12 px-6 flex items-center justify-between select-none z-20 border-b border-white/10"
+            style="background: rgba(11, 19, 38, 0.94); backdrop-filter: blur(16px) saturate(180%);">
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleSidebarCollapse()" id="btn-toggle-sidebar-header"
+                    class="p-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0 flex items-center justify-center mr-1"
+                    title="Minimizar / Expandir menú lateral (Ctrl+B)" aria-label="Minimizar panel lateral">
+                    <i data-lucide="panel-left" class="w-4 h-4"></i>
+                </button>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span class="text-xs font-semibold text-white tracking-wide">Operaciones IP — Inter</span>
+                    <span class="text-white/20">|</span>
+                    <span id="breadcrumb-view-name" class="text-xs text-[#94A3B8] font-medium">Vista Operativa</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1C58A8]/40 text-[#7CB2EA] border border-[#1C58A8]/50 shadow-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-indicator"></span>
+                    Turno Activo
+                </span>
+                <div class="relative flex items-center">
+                    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 text-white/50 pointer-events-none"></i>
+                    <input type="text" id="global-search-input" onkeyup="handleGlobalSearch(this.value)"
+                        placeholder="Buscar ticket o serial..."
+                        class="w-48 pl-8 pr-3 py-1 text-xs bg-white/5 rounded-lg text-white placeholder-white/50 border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] focus:w-60 transition-all">
+                </div>
+                <!-- Botón Nuevo Ticket / Asignar -->
+                <button type="button" onclick="openCreateTicketModal()"
+                    class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#0056B3] to-[#1C58A8] hover:brightness-110 active:scale-95 text-white text-xs font-semibold shadow-xs transition btn-press flex items-center gap-1.5 shrink-0 border border-white/20 cursor-pointer"
+                    title="Crear nuevo ticket o asignación técnica">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Nuevo Ticket / Asignar</span>
+                </button>
+                <!-- Boton Maximizar / Pantalla Completa Dashboard -->
+                <button type="button" onclick="toggleDashboardFullscreen()" id="btn-fullscreen-toggle"
+                    class="p-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition btn-press shrink-0 flex items-center justify-center"
+                    title="Maximizar / Pantalla completa del Dashboard" aria-label="Pantalla completa">
+                    <i data-lucide="maximize" id="fullscreen-icon" class="w-4 h-4"></i>
+                </button>
+                <!-- Perfil Usuario y Rol -->
+                <div
+                    class="flex items-center gap-2.5 p-1.5 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition cursor-pointer">
+                    <div id="sidebar-user-avatar"
+                        class="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1C58A8] to-[#0A254D] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                        AM</div>
+                    <div class="overflow-hidden">
+                        <p id="sidebar-user-name" class="font-semibold text-xs text-white truncate leading-tight">Adelis Mejia</p>
+                        <div class="flex items-center gap-1 mt-0.5">
+                            
+                            <span
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#1C58A8]/60 text-[#93C5FD] border border-[#3B82F6]/40 uppercase tracking-wider">
+                                <i data-lucide="shield-check" class="w-2.5 h-2.5"></i>
+                                <span>COORDINADOR</span>
+                            </span>
+                            
+                        </div>
+                    </div>
+                    <button type="button" onclick="logoutSession()"
+                        class="p-1 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer shrink-0 ml-1"
+                        title="Cerrar sesión">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Body with smooth padding -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+            <!-- ============================================================== -->
+            <!-- PESTAÑA 1: VISTA OPERATIVA (DISEÑO OFICIAL CON CASOS ACTIVOS)  -->
+            <!-- ============================================================== -->
+            <section id="tab-operativa" class="space-y-6">
+                <!-- Scorecards Principales (Macro - Estándar Telco Industrial) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <div
+                        class="bg-yellow-50 rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Tickets en Proceso</span>
+                            <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-700">
+                                <i data-lucide="ticket" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="flex-1 flex flex-col gap-2 overflow-y-auto">
+                                <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-proceso">25</span>
+                                <span class="text-[14px] text-slate-500 font-medium">en curso</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Tickets Realizados</span>
+                            <div
+                                class="w-6 h-6 rounded bg-emerald-50 flex items-center justify-center text-emerald-700">
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-completados">35</span>
+                            <span class="text-[14px] text-slate-500 font-medium">cerrados hoy</span>
+                        </div>
+                        <div
+                            class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[14px] text-emerald-700 font-medium">
+                            <span class="flex items-center gap-1 font-mono"><i data-lucide="trending-up"
+                                    class="w-3 h-3 text-emerald-600"></i> +14 vs turno previo</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Críticos sin Asignar</span>
+                            <div class="w-6 h-6 rounded bg-rose-50 flex items-center justify-center text-rose-700">
+                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-criticos">0</span>
+                            <span class="text-[14px] text-slate-500 font-medium">sin tomar</span>
+                        </div>
+                        <div
+                            class="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2 text-[14px] text-rose-700 font-medium     ">
+                            <span
+                                class="px-5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[12px] font-bold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Cola Normal
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-lg border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                        <div
+                            class="flex items-center justify-between text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            <span>Tiempo Primera Atención</span>
+                            <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-700">
+                                <i data-lucide="timer" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-sla-time">8.4</span>
+                            <span class="text-[14px] text-slate-500 font-medium">minutos prom.</span>
+                        </div>
+                        <div
+                            class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[14px] text-slate-600">
+                            <span>Objetivo SLA:</span>
+                            <span class="font-mono font-bold text-[#1C58A8]" id="op-kpi-sla-pct">99.4% a tiempo</span>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <!-- Mesa de Asignación y Control — Coordinador / Administrador -->
+                <div id="coordinator-triage-panel"
+                    class="dashboard-chart-card space-y-4 bg-white border border-slate-200 rounded-lg p-4 shadow-2xs">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-sm font-bold text-gray-900">CASOS ACTIVOS</h2>
+                                <span id="triage-area-badge"
+                                    class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área:
+                                    —</span>
+                            </div>
+                            <!--<p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y
+                                puntos DERS de tu departamento</p>-->
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <div
+                                class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs">
+                                <button type="button" id="btn-triage-subtab-assign"
+                                    onclick="switchTriageSubTab('assign')"
+                                    class="px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60">
+                                    <span>Actividad Actual</span>
+                                    <span id="triage-count-label"
+                                        class="text-[12px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">0</span>
+                                </button>
+                                <button type="button" id="btn-triage-subtab-verify"
+                                    onclick="switchTriageSubTab('verify')"
+                                    class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer flex items-center gap-1.5">
+                                    <span>Confirmar Ticket</span>
+                                    <span id="verify-count-label"
+                                        class="text-[12px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">0</span>
+                                </button>
+                            </div>
+                            <button type="button" onclick="refreshCoordinatorPanel()"
+                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                                <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
+                                <span>Actualizar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 1: POR ASIGNAR (TRIAGE) -->
+                    <div id="triage-assign-view" class="space-y-3">
+                        <div id="triage-empty-state"
+                            class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
+                            <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área.
+                                ¡Excelente trabajo!</p>
+                            <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos
+                                aparecerán aquí automáticamente.</p>
+                        </div>
+                        <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
+                            <table class="table-corporate-metrics min-w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="py-2.5 px-3">Ticket</th>
+                                        <th class="py-2.5 px-3">Requerimiento</th>
+                                        <th class="py-2.5 px-3">Parámetros</th>
+                                        <th class="py-2.5 px-3">Tarea / Tiempo Objetivo</th>
+                                        <th class="py-2.5 px-3">Espera</th>
+                                        <th class="py-2.5 px-3">Asignación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="triage-tickets-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 2: POR APROBAR DERS (VERIFICACIÓN DE CALIDAD) -->
+                    <div id="triage-verify-view" class="hidden space-y-3">
+                        <div id="verify-empty-state"
+                            class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-purple-200 bg-purple-50/30">
+                            <p class="text-sm font-bold text-purple-900">No hay casos pendientes de aprobación.</p>
+                            <p class="text-xs text-purple-700/80 mt-1">Cuando los operadores completen tareas técnicas,
+                                aparecerán aquí para tu validación y acreditación de puntos.</p>
+                        </div>
+                        <div id="verify-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
+                            <table class="table-corporate-metrics min-w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="py-2.5 px-3">Ticket</th>
+                                        <th class="py-2.5 px-3">Caso y Notas del Operador</th>
+                                        <th class="py-2.5 px-3">Especialista</th>
+                                        <th class="py-2.5 px-3">Tarea Técnica</th>
+                                        <th class="py-2.5 px-3">Puntos</th>
+                                        <th class="py-2.5 px-3">Duración</th>
+                                        <th class="py-2.5 px-3 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="verify-tickets-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+
+                <!-- Torre de Ejecución — Operador (Especialista) -->
+                <div id="operator-assignments-panel" class="dashboard-chart-card space-y-4 animate-fade-in-up"
+                    style="animation-delay: 220ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-sm font-bold text-gray-900">Mis Tareas Asignadas</h2>
+                                <span id="operator-assignments-count"
+                                    class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] border border-blue-100">0
+                                    tickets</span>
+                                <span id="operator-active-points-badge"
+                                    class="text-[10px] font-semibold text-gray-600">Carga Activa: 0 pts</span>
+                                <span id="sidebar-operator-badge"
+                                    class="hidden px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white">0</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-0.5">Casos asignados a ti — poner en proceso, pausar
+                                o resolver</p>
+                        </div>
+                        <button type="button" onclick="loadOperatorAssignments(true)"
+                            class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                            <i data-lucide="rotate-cw" id="icon-refresh-operator" class="w-3.5 h-3.5"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <button type="button" id="optab-all" onclick="setOperatorTaskFilter('all')"
+                            class="px-3 py-1.5 rounded-lg bg-white font-bold text-slate-900 shadow-2xs border border-slate-200/60">Todos
+                            (<span id="count-optab-all">0</span>)</button>
+                        <button type="button" id="optab-pending" onclick="setOperatorTaskFilter('pending_start')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Por iniciar (<span
+                                id="count-optab-pending">0</span>)</button>
+                        <button type="button" id="optab-progress" onclick="setOperatorTaskFilter('in_progress')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En proceso (<span
+                                id="count-optab-progress">0</span>)</button>
+                        <button type="button" id="optab-hold" onclick="setOperatorTaskFilter('on_hold')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">En espera (<span
+                                id="count-optab-hold">0</span>)</button>
+                        <button type="button" id="optab-completed" onclick="setOperatorTaskFilter('completed')"
+                            class="px-3 py-1.5 rounded-lg text-slate-600 font-medium">Cerrados (<span
+                                id="count-optab-completed">0</span>)</button>
+                        <input type="search" id="operator-task-search" oninput="filterOperatorAssignmentsLocal()"
+                            placeholder="Buscar ticket..."
+                            class="ml-auto text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 w-40 focus:ring-1 focus:ring-[#1C58A8]">
+                    </div>
+                    <div id="operator-empty-assignments"
+                        class="hidden py-10 px-4 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80">
+                        <p id="operator-empty-title" class="text-sm font-bold text-gray-800">¡Bandeja de Tareas al Día!
+                        </p>
+                        <p id="operator-empty-desc" class="text-xs text-gray-500 mt-1">No tienes tareas en esta
+                            categoría en este momento.</p>
+                    </div>
+                    <div id="operator-assignments-list" class="space-y-3"></div>
+                </div>
+
+                
+
+                
+                <!-- Carga de Trabajo Actual (Operadores en Vivo - Casos Activos) -->
+                <div class="dashboard-chart-card space-y-4 animate-fade-in-up" id="realtime-workload-section"
+                    style="animation-delay: 250ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 border-gray-200 gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs shrink-0">
+                                <i data-lucide="activity" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-nowrap">
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight whitespace-nowrap">Casos
+                                        Activos</h2>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-500/30 whitespace-nowrap shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span>
+                                        En Vivo
+                                    </span>
+                                    <span id="active-cases-count-badge"
+                                        class="text-[10px] text-gray-500 font-mono whitespace-nowrap shrink-0">Cargando...</span>
+                                </div>
+                                <p class="text-[11px] text-gray-500">Monitoreo de operadores y tickets en atención
+                                    inmediata</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs font-sans">
+                            <!-- Buscador en tiempo real de operador o ticket -->
+                            <div class="relative flex items-center">
+                                <i data-lucide="search"
+                                    class="w-3.5 h-3.5 absolute left-2.5 text-gray-400 pointer-events-none"></i>
+                                <input type="text" id="filter-active-cases-search"
+                                    oninput="filterActiveCasesLocal(this.value)"
+                                    placeholder="Buscar operador o ticket..."
+                                    class="w-36 sm:w-44 pl-8 pr-2.5 py-1 text-xs bg-white rounded-lg text-gray-800 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1C58A8] focus:w-52 transition-all shadow-2xs">
+                            </div>
+                            <!-- Filtro de Area -->
+                            <div
+                                class="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg border border-gray-200 text-gray-700 shadow-2xs hover:border-[#1C58A8]/40 transition">
+                                <i data-lucide="filter" class="w-3.5 h-3.5 text-[#1C58A8] shrink-0"></i>
+                                <label for="area-filter-select"
+                                    class="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Área:</label>
+                                <select id="area-filter-select" onchange="filterActiveCasesByArea(this.value)"
+                                    class="bg-transparent text-[11px] font-bold text-[#1C58A8] focus:outline-none cursor-pointer pr-1 border-0 p-0">
+                                    <option value="all">Todas las Áreas (General)</option>
+                                    <option value="ACCESO_APROV">Redes de Acceso</option>
+                                    <option value="TRAFICO_INALAMBRICO">Control de Tráfico y Wireless</option>
+                                    <option value="REDES_WAN">Redes WAN</option>
+                                    <option value="SEGURIDAD">Seguridad IP</option>
+                                    <option value="TELEFONIA">Telefonía VoIP</option>
+                                    <option value="GRANDES_CLIENTES">Grandes Clientes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Casos Activos de Operadores (Renderizado dinámico vía API) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="active-operators-grid">
+                        <div class="col-span-full py-8 text-center text-xs text-gray-400">
+                            <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto text-[#1C58A8] mb-2"></i>
+                            Cargando operadores y casos en atención inmediata...
+                        </div>
+                    </div>
+                </div>
+                
+            </section>
+
+            
+            <!-- ============================================================== -->
+            <!-- PESTAÑA 2: MÉTRICAS (DISEÑO OFICIAL CON RANKING Y CHARTS)      -->
+            <!-- ============================================================== -->
+            <section id="tab-rendimiento" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Curva de Puntos por Hora -->
+                    <div class="lg:col-span-2 dashboard-chart-card interactive-card">
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-1 border-b border-gray-100">
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Curva de Puntos por Hora
+                                        (Rendimiento)</h2>
+                                    <span
+                                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">En
+                                        Vivo</span>
+                                </div>
+                                <p class="text-xs text-gray-500">Evolución del esfuerzo acumulado en la jornada</p>
+                            </div>
+                            <div class="flex items-center gap-3 self-end sm:self-auto">
+                                <div
+                                    class="flex items-center px-2.5 py-1 rounded-lg bg-blue-50/60 border border-blue-200/60 text-xs font-mono text-[#1C58A8] font-bold">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#1C58A8] mr-1.5 pulse-indicator"></span>
+                                    <span id="metric-hourly-total">312 pts Totales</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="h-64 flex items-center justify-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200 p-2">
+                            <canvas id="chartHourlyDemo"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Complejidad P1-P5 -->
+                    <div class="dashboard-chart-card interactive-card">
+                        <h2 class="text-sm font-bold text-gray-900 mb-1">Distribución de Casos (P1 a P5)</h2>
+                        <p class="text-xs text-gray-500 mb-4">Proporción por criticidad técnica</p>
+                        <div class="h-56 flex items-center justify-center">
+                            <canvas id="chartWeightsDemo"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard Especialistas (Ranking de Carga de Trabajo Actual) -->
+                <div
+                    class="dashboard-chart-card space-y-4 bg-white border border-[#E4E9F3] rounded-xl p-5 shadow-sm interactive-card">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="flex items-center justify-center w-6 h-6 rounded-md bg-amber-50 text-amber-500 border border-amber-200 shadow-2xs">
+                                    <i data-lucide="award" class="w-4 h-4"></i>
+                                </span>
+                                <h3 class="text-sm font-bold text-gray-900 tracking-tight">Ranking de Carga de Trabajo
+                                    Actual (Top Especialistas)</h3>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1 pl-8">Escala de saturación operativa, puntos de jornada
+                                acumulados y balance de cuadrillas</p>
+                        </div>
+                        <div class="flex items-center gap-2.5 text-xs select-none self-end sm:self-auto">
+                            <span
+                                class="text-[11px] font-medium text-gray-500 px-2 py-0.5 rounded bg-gray-50 border border-gray-200">&lt;
+                                60 pts Balanceado</span>
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-500/30">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>60-80 pts Moderado
+                            </span>
+                            <span
+                                class="text-[11px] font-medium text-rose-700 px-2 py-0.5 rounded bg-rose-50 border border-rose-500/30">&gt;
+                                80 pts Sobrecarga</span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-lg border border-[#E4E9F3] bg-white shadow-2xs">
+                        <table class="table-corporate-metrics min-w-full text-left" id="table-ranking-specialists">
+                            <thead class="bg-[#F8FAFC] border-b border-[#E4E9F3]">
+                                <tr>
+                                    <th
+                                        class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-12">
+                                        POS.</th>
+                                    <th
+                                        class="py-2.5 px-3 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Especialista</th>
+                                    <th
+                                        class="py-2.5 px-3 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Área Técnica</th>
+                                    <th
+                                        class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Tickets</th>
+                                    <th
+                                        class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Puntos Acum.</th>
+                                    <th
+                                        class="py-2.5 px-4 text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider w-56">
+                                        Escala de Carga</th>
+                                    <th
+                                        class="py-2.5 px-3 text-right text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Tiempo Promedio de Solución</th>
+                                    <th
+                                        class="py-2.5 px-3.5 text-center text-[11px] font-bold text-[#5B6B89] uppercase tracking-wider">
+                                        Estado Operativo</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white text-xs" id="tbody-ranking-specialists">
+                                <tr>
+                                    <td colspan="8" class="py-8 text-center text-gray-400 text-xs">
+                                        <div class="inline-flex items-center gap-2">
+                                            <span
+                                                class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
+                                            <span>Sincronizando escalafón técnico y métricas de desempeño...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Distribución y Control Jerárquico de Carga de Trabajo -->
+                <div class="dashboard-chart-card bg-white border border-[#E4E9F3] rounded-xl p-6 shadow-sm relative overflow-hidden space-y-5"
+                    id="workload-hierarchy-section">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-sm font-bold text-gray-900 tracking-tight">Distribución y Control de
+                                    Carga de Trabajo</h2>
+                                <span id="hierarchy-active-badge"
+                                    class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Departamento
+                                    IP (General)</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">Métricas de puntos acumulados, volumen de tareas y
+                                saturación operativa por niveles jerárquicos</p>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs font-medium text-gray-600">
+                            <span class="inline-flex items-center gap-1.5"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-[#0B3B78]"></span>Balanceado (&lt;800 pts)</span>
+                            <span class="inline-flex items-center gap-1.5"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Moderado (800-1400 pts)</span>
+                            <span class="inline-flex items-center gap-1.5"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>Saturado (&gt;1400 pts)</span>
+                        </div>
+                    </div>
+
+                    <!-- Controles Jerárquicos Interactivos -->
+                    <div id="metrics-hierarchy-controls"
+                        class="flex flex-wrap items-center justify-between gap-3 p-3 bg-gray-50/80 rounded-xl border border-[#E4E9F3]">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <button type="button" id="btn-hierarchy-dept"
+                                onclick="if(window.handleDeptClick) window.handleDeptClick();"
+                                class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-2 bg-[#0056B3] text-white border border-[#0056B3] btn-press">
+                                <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                                <span>Departamento IP</span>
+                            </button>
+                            <div class="relative flex items-center">
+                                <label for="select-hierarchy-area"
+                                    class="text-[11px] font-semibold text-gray-500 mr-2">Área:</label>
+                                <select id="select-hierarchy-area"
+                                    onchange="if(window.handleAreaChange) window.handleAreaChange(this.value);"
+                                    class="appearance-none bg-white text-gray-800 text-xs font-semibold pl-2.5 pr-7 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] cursor-pointer shadow-2xs">
+                                    <option value="all">Todas las Áreas</option>
+                                    <option value="acceso">Redes de Acceso</option>
+                                    <option value="wan">Redes WAN</option>
+                                    <option value="grandes">Grandes Clientes</option>
+                                    <option value="trafico">Control de Tráfico</option>
+                                    <option value="seguridad">Seguridad</option>
+                                    <option value="telefonia">Telefonía</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="w-3 h-3 absolute right-2 pointer-events-none text-gray-400"></i>
+                            </div>
+                            <div class="relative flex items-center">
+                                <label for="select-hierarchy-operator"
+                                    class="text-[11px] font-semibold text-gray-500 mr-2">Operador:</label>
+                                <select id="select-hierarchy-operator"
+                                    onchange="if(window.handleOperatorChange) window.handleOperatorChange(this.value);"
+                                    class="appearance-none bg-white text-gray-800 text-xs font-semibold pl-2.5 pr-7 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#5B9BE0] cursor-pointer shadow-2xs max-w-[220px] truncate">
+                                    <option value="all">Todos los Operadores (IP General - Top)</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="w-3 h-3 absolute right-2 pointer-events-none text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div
+                            class="text-[11px] text-[#1C58A8] font-medium bg-[#EAF2FC] px-2.5 py-1 rounded-md border border-[#BFDBFE]">
+                            Filtro de Rendimiento activo
+                        </div>
+                    </div>
+
+                    <!-- Resumen de Contexto Dinámico -->
+                    <div id="workload-context-summary"
+                        class="flex flex-col sm:flex-row sm:items-center justify-between text-xs px-3.5 py-2 bg-blue-50/60 rounded-lg border border-blue-200/60 text-[#1C58A8] gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">Vista Activa:</span>
+                            <span id="workload-current-filter-label" class="font-medium text-gray-800">Consolidado
+                                General — Departamento IP (Todas las áreas y operadores)</span>
+                        </div>
+                        <div class="flex items-center gap-3 font-mono text-[11px]">
+                            <span>Total Tareas: <strong id="workload-total-tasks"
+                                    class="text-gray-900">842</strong></span>
+                            <span>·</span>
+                            <span>Tiempo Promedio de Solución: <strong id="workload-avg-mttr"
+                                    class="text-gray-900">31.5m</strong></span>
+                            <span>·</span>
+                            <span>Puntos Totales: <strong id="workload-total-pts" class="text-[#0B3B78]">3.210
+                                    pts</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Bars Rows Contenedor Dinámico -->
+                    <div class="relative pt-2 pb-6">
+                        <!-- Vertical Grid Lines -->
+                        <div class="absolute inset-0 left-28 right-6 top-2 bottom-6 pointer-events-none">
+                            <div class="w-full h-full flex justify-between border-b border-gray-200">
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="border-r border-gray-100 h-full"></div>
+                                <div class="h-full"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 relative z-10" id="workload-bars-container">
+                            <!-- Inyectado por JavaScript -->
+                        </div>
+
+                        <!-- X-Axis Labels Row -->
+                        <div
+                            class="flex items-center text-[11px] font-mono text-gray-500 pt-2 border-t border-gray-200 mt-2">
+                            <span class="w-28"></span>
+                            <div class="flex-1 flex justify-between mr-6 px-0.5">
+                                <span>0</span>
+                                <span>200</span>
+                                <span>400</span>
+                                <span>600</span>
+                                <span>800</span>
+                                <span>1.000</span>
+                                <span>1.200</span>
+                                <span>1.400</span>
+                                <span>1.600</span>
+                                <span>1.800</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- PESTAÑA 3: TABLERO DE TICKETS Y OPERADORES ACTIVOS             -->
+            <!-- ============================================================== -->
+            <section id="tab-tickets" class="space-y-6 hidden">
+                <!-- Tablero Title & Controls Bar -->
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-3">
+                    <div class="animate-fade-in-up" style="animation-delay: 50ms;">
+                        <div class="flex items-center gap-2">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-[#EAF2FC] text-[#1C58A8] flex items-center justify-center font-bold shadow-2xs">
+                                <i data-lucide="ticket" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-gray-900 tracking-tight">Tablero de Tickets y
+                                    Operadores Activos</h2>
+                                <p class="text-xs text-gray-500">Distribución en tiempo real por cuadrantes y áreas
+                                    técnicas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-2xs hover:border-[#1C58A8]/40 transition">
+                            <label for="filter-tablero-area" class="text-xs font-semibold text-gray-600">Área
+                                Técnica:</label>
+                            <select id="filter-tablero-area" onchange="filterAreaDropdown(this.value)"
+                                class="text-xs font-bold text-[#1C58A8] bg-transparent focus:outline-none cursor-pointer pr-2 border-0 p-0">
+                                <option value="all">Todas las Áreas</option>
+                                <option value="ACCESO_APROV">Redes de Acceso &amp; Aprov.</option>
+                                <option value="TRAFICO_INALAMBRICO">Tráfico e Inalámbricas</option>
+                                <option value="REDES_WAN">Redes WAN</option>
+                                <option value="SEGURIDAD">Seguridad de Red</option>
+                                <option value="TELEFONIA">Telefonía VoIP</option>
+                                <option value="GRANDES_CLIENTES">Grandes Clientes</option>
+                            </select>
+                        </div>
+                        <button onclick="openNewTicketModal()"
+                            class="px-3.5 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Nuevo Ticket</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 KPI Scorecards de Despacho -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 80ms;">
+                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
+                            <span>OPERADORES EN TURNO</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-indicator shadow-xs"></span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <span class="text-3xl font-extrabold text-gray-900 tracking-tight"
+                                id="kpi-total-ops">12</span>
+                            <span class="text-xs text-gray-500">especialistas</span>
+                        </div>
+                        <div class="mt-2 text-[11px] text-[#1C58A8] font-semibold flex items-center gap-1">
+                            <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i>
+                            100% de cuadrilla activa
+                        </div>
+                    </div>
+
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 130ms;">
+                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
+                            <span>DISPONIBLES</span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Libres</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <span class="text-3xl font-extrabold text-emerald-600 tracking-tight"
+                                id="kpi-avail-count">4</span>
+                            <span class="text-xs text-gray-500">listos para asignar</span>
+                        </div>
+                        <div class="mt-2 text-[11px] text-gray-500 font-medium">
+                            Tiempo promedio en cola: &lt; 2m
+                        </div>
+                    </div>
+
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 180ms;">
+                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
+                            <span>EN ATENCIÓN</span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200">En
+                                Curso</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <span class="text-3xl font-extrabold text-[#0B3B78] tracking-tight"
+                                id="kpi-in-progress-count">6</span>
+                            <span class="text-xs text-gray-500">con caso activo</span>
+                        </div>
+                        <div class="mt-2 text-[11px] text-gray-500 font-medium">
+                            2 con asignación secundaria
+                        </div>
+                    </div>
+
+                    <div class="dashboard-kpi-card flex flex-col justify-between interactive-card animate-fade-in-up"
+                        style="animation-delay: 230ms;">
+                        <div class="flex items-center justify-between text-xs font-semibold text-[#5B6B89]">
+                            <span>TICKETS EN ESPERA</span>
+                            <span
+                                class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300">Cola
+                                Viva</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <span class="text-3xl font-extrabold text-amber-600 tracking-tight"
+                                id="kpi-queue-count">14</span>
+                            <span class="text-xs text-gray-500">pendientes</span>
+                        </div>
+                        <div class="mt-2 text-[11px] text-rose-600 font-semibold flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            0 críticos sin asignar
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- SECCIÓN PRINCIPAL: TABLERO DE ASIGNACIONES PENDIENTES           -->
+                <!-- ============================================================== -->
+                <!-- Cola de Despacho Inmediato Card -->
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4 animate-fade-in-up"
+                    style="animation-delay: 280ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold border border-amber-200 shadow-2xs">
+                                <i data-lucide="inbox" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-gray-900">Cola de Despacho Inmediato (Tickets No
+                                        Asignados)</h3>
+                                    <span
+                                        class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-50 text-amber-800 border border-amber-200"
+                                        id="queue-badge-count">14 Tickets</span>
+                                </div>
+                                <p class="text-[11px] text-gray-500">Buffer de asignación prioritaria y balanceo de
+                                    carga en tiempo real</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="refreshDispatchQueue()"
+                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                                <i data-lucide="rotate-cw" id="refresh-spin-icon" class="w-3.5 h-3.5"></i>
+                                <span>Actualizar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg border border-gray-100">
+                        <table class="table-corporate-metrics min-w-full text-left" id="tickets-queue-table">
+                            <thead>
+                                <tr>
+                                    <th class="py-2.5 px-3">ID TICKET</th>
+                                    <th class="py-2.5 px-3">CLIENTE / ENTIDAD</th>
+                                    <th class="py-2.5 px-3">ASUNTO</th>
+                                    <th class="py-2.5 px-3">ÁREA</th>
+                                    <th class="py-2.5 px-3">PRIORIDAD</th>
+                                    <th class="py-2.5 px-3">DETALLES</th>
+                                    <th class="py-2.5 px-3 text-right">ACCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-xs" id="ticket-table-rows">
+                                <!-- Filas generadas por loadDispatchQueue / fetchLiveTickets -->
+                                <tr class="hidden" data-area="olt" data-ticket="#INC-4830">
+                                    <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4830</td>
+                                    <td class="py-2.5 px-3 font-medium text-gray-900">Banco Universal Corp</td>
+                                    <td class="py-2.5 px-3 text-gray-700">Caída enlace secundario MetroEthernet OLT-04
+                                    </td>
+                                    <td class="py-2.5 px-3 text-gray-600 font-medium">Cabecera OLT</td>
+                                    <td class="py-2.5 px-3">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-500/30 flex items-center gap-1 w-max">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>P1
+                                            - Crítico
+                                        </span>
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <button type="button"
+                                            onclick="openTicketDetail('#INC-4830', null, 'Banco Universal Corp', 'Caída enlace secundario MetroEthernet OLT-04', 'Cabecera OLT', 'P1 - Crítico')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                                            <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
+                                        </button>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right">
+                                        <button onclick="promptAssignTicket('#INC-4830', 'Cabecera OLT')"
+                                            class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar
+                                            Ahora</button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="ftth"
+                                    data-ticket="#INC-4831">
+                                    <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4831</td>
+                                    <td class="py-2.5 px-3 font-medium text-gray-900">Farmacias Saas Centro</td>
+                                    <td class="py-2.5 px-3 text-gray-700">Aprovisionamiento ONT módem bridge IP estática
+                                    </td>
+                                    <td class="py-2.5 px-3 text-gray-600 font-medium">Soporte FTTH</td>
+                                    <td class="py-2.5 px-3">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1C58A8] border border-blue-200 w-max">P3
+                                            - Estándar</span>
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <button type="button"
+                                            onclick="openTicketDetail('#INC-4831', null, 'Farmacias Saas Centro', 'Aprovisionamiento ONT módem bridge IP estática', 'Soporte FTTH', 'P3 - Estándar')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                                            <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
+                                        </button>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right">
+                                        <button onclick="promptAssignTicket('#INC-4831', 'Soporte FTTH')"
+                                            class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar
+                                            Ahora</button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/40 transition-colors" data-area="voip"
+                                    data-ticket="#INC-4832">
+                                    <td class="py-2.5 px-3 font-mono font-bold text-[#1C58A8]">#INC-4832</td>
+                                    <td class="py-2.5 px-3 font-medium text-gray-900">Call Center Altamira</td>
+                                    <td class="py-2.5 px-3 text-gray-700">Degradación audio RTP códec G729 canales 12 a
+                                        24</td>
+                                    <td class="py-2.5 px-3 text-gray-600 font-medium">Telefonía VoIP</td>
+                                    <td class="py-2.5 px-3">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 w-max">P2
+                                            - Alto</span>
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <button type="button"
+                                            onclick="openTicketDetail('#INC-4832', null, 'Call Center Altamira', 'Degradación audio RTP códec G729 canales 12 a 24', 'Telefonía VoIP', 'P2 - Alto')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-[#1C58A8] hover:text-[#1C58A8] transition shadow-2xs btn-press">
+                                            <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i>Abrir detalles
+                                        </button>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right">
+                                        <button onclick="promptAssignTicket('#INC-4832', 'Telefonía VoIP')"
+                                            class="px-3 py-1 rounded-md bg-[#0056B3] hover:bg-[#1C58A8] text-white text-[11px] font-bold shadow-2xs transition btn-press">Asignar
+                                            Ahora</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="queue-empty-state"
+                        class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-amber-200 bg-amber-50/30 mt-3">
+                        <p class="text-sm font-bold text-amber-900">No hay tickets pendientes de asignación</p>
+                        <p class="text-xs text-amber-800/70 mt-1">Tu mesa de triage está vacía — excelente balance del turno.</p>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- SECCIÓN AL FINAL: OPERADORES ACTIVOS EN TURNO                   -->
+                <!-- ============================================================== -->
+                <!-- Operadores Activos en Turno Card Container (Ubicado al final para posterior modificación) -->
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4 animate-fade-in-up"
+                    style="animation-delay: 340ms;">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-blue-50 text-[#1C58A8] flex items-center justify-center font-bold border border-blue-200 shadow-2xs">
+                                <i data-lucide="users" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-gray-900">Operadores Activos en Turno</h3>
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono font-bold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span>
+                                        12 Activos
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-gray-500">Estado de disponibilidad y carga instantánea para
+                                    asignación directa</p>
+                            </div>
+                        </div>
+                        <!-- Filter Pills -->
+                        <div
+                            class="flex items-center gap-1.5 overflow-x-auto text-[11px] p-0.5 bg-gray-100/70 rounded-lg border border-gray-200/80">
+                            <button onclick="filterOperatorsByPill('all', this)"
+                                class="filter-pill-btn pill-active px-3 py-1 rounded-md font-bold text-white transition btn-press"
+                                data-filter="all">Todas</button>
+                            <button onclick="filterOperatorsByPill('ACCESO_APROV', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="ACCESO_APROV">Acceso</button>
+                            <button onclick="filterOperatorsByPill('TRAFICO_INALAMBRICO', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="TRAFICO_INALAMBRICO">Tráfico</button>
+                            <button onclick="filterOperatorsByPill('REDES_WAN', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="REDES_WAN">WAN</button>
+                            <button onclick="filterOperatorsByPill('SEGURIDAD', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="SEGURIDAD">Seguridad</button>
+                            <button onclick="filterOperatorsByPill('TELEFONIA', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="TELEFONIA">Telefonía</button>
+                            <button onclick="filterOperatorsByPill('GRANDES_CLIENTES', this)"
+                                class="filter-pill-btn px-3 py-1 rounded-md font-semibold text-gray-600 hover:bg-white/80 transition btn-press"
+                                data-filter="GRANDES_CLIENTES">Grandes Clientes</button>
+                        </div>
+                    </div>
+
+                    <!-- Operator Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                        id="operators-grid-cards">
+                        <div
+                            class="col-span-full py-8 text-center text-gray-400 text-xs flex items-center justify-center gap-2">
+                            <span
+                                class="w-3.5 h-3.5 border-2 border-[#1C58A8] border-t-transparent rounded-full animate-spin"></span>
+                            <span>Sincronizando operadores en turno con el NOC...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+
+            <section id="tab-coordinacion" class="space-y-6 hidden"></section>
+
+            
+            <!-- ============================================================== -->
+            <!-- PESTAÑA 4: AUDITORÍA FORENSE                                  -->
+            <!-- ============================================================== -->
+            <section id="tab-auditoria" class="space-y-6 hidden">
+                <div class="dashboard-chart-card space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-bold text-gray-900">Bitácora Forense de Trazabilidad</h2>
+                            <p class="text-xs text-gray-500">Registro inmutable de inicio de sesión, tomas de tickets y
+                                resoluciones</p>
+                        </div>
+                        <button id="btn-export-excel-audit" onclick="downloadExcelReport()"
+                            class="px-3.5 py-1.5 rounded-lg bg-[#1C58A8] hover:bg-[#0056B3] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs btn-press">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Exportar Excel</span>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="table-corporate-metrics">
+                            <thead>
+                                <tr>
+                                    <th>Fecha / Hora</th>
+                                    <th>Especialista</th>
+                                    <th>Acción</th>
+                                    <th>Ticket / Entidad</th>
+                                    <th>Evidencia / Detalle Técnico</th>
+                                    <th class="text-right">IP</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100" id="audit-logs-tbody">
+                                <tr class="hidden hover:bg-blue-50/30 transition-colors" id="audit-placeholder-row">
+                                    <td class="font-mono text-xs text-gray-500">2026-03-30 11:42:15</td>
+                                    <td class="font-bold text-gray-900">José Corobo</td>
+                                    <td><span
+                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">TOMA_TICKET</span>
+                                    </td>
+                                    <td class="font-mono font-bold text-[#1C58A8]">#INC-4821</td>
+                                    <td class="text-xs text-gray-700">Desatasco de demonio OLT en Slot 3 PON 4</td>
+                                    <td class="text-right font-mono text-xs text-gray-400">10.20.4.12</td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/30 transition-colors">
+                                    <td class="font-mono text-xs text-gray-500">2026-03-30 11:35:00</td>
+                                    <td class="font-bold text-gray-900">Luis Gómez</td>
+                                    <td><span
+                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">CIERRE_TICKET</span>
+                                    </td>
+                                    <td class="font-mono font-bold text-[#1C58A8]">#INC-4811</td>
+                                    <td class="text-xs text-gray-700">Homologación confirmada con power meter -19.4 dBm
+                                    </td>
+                                    <td class="text-right font-mono text-xs text-gray-400">10.20.4.18</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+
+            <!-- ============================================================== -->
+            <!-- PESTAÑA 5: CONSOLA DE CORREOS / TICKETS (M365)               -->
+            <!-- ============================================================== -->
+            <section id="tab-inbox" class="space-y-4 hidden">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-md p-8 text-center space-y-3">
+                    <div
+                        class="w-12 h-12 rounded-full bg-blue-50 text-[#0056B3] mx-auto flex items-center justify-center font-bold">
+                        <i data-lucide="mail" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900">Consola de Mensajería M365 NOC</h3>
+                    <p class="text-xs text-gray-500 max-w-md mx-auto">Módulo sincronizado con Microsoft Exchange IP
+                        Services. Puedes gestionar los tickets directamente desde el Tablero de Tickets.</p>
+                    <button onclick="switchDashboardTab('tickets')"
+                        class="px-4 py-2 rounded-lg bg-[#0056B3] text-white text-xs font-bold hover:bg-[#1C58A8] transition btn-press inline-flex items-center gap-1.5">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        <span>Ir a Tablero de Tickets</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- PESTAÑA 6: CONFIGURACIÓN GENERAL                              -->
+            <!-- ============================================================== -->
+            <section id="tab-configuracion" class="space-y-4 hidden">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-3">
+                        <i data-lucide="settings" class="w-5 h-5 text-[#1C58A8]"></i>
+                        <h3 class="text-sm font-bold text-gray-900">Configuración Operativa del NOC</h3>
+                    </div>
+                    <p class="text-xs text-gray-600">Parámetros de conexión a OLTs, sincronización SNMP, y balanceo
+                        ponderado DERS.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <span class="font-bold text-gray-800">Servidor Core OLT Caracas</span>
+                            <p class="text-gray-500 font-mono mt-1">10.20.4.1 (Conectado / Ping: 4ms)</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <span class="font-bold text-gray-800">Buzón Exchange M365</span>
+                            <p class="text-gray-500 font-mono mt-1">operaciones.ip@inter.com.ve (Sincronizado)</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 1: DIAGNÓSTICO DETALLADO DE TICKET                       -->
+    <!-- ============================================================== -->
+    <div id="modal-ticket-details"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-xl w-full overflow-hidden animate-fade-in-up">
+            <div class="px-6 py-4 bg-[#0B1326] text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-[#0056B3] flex items-center justify-center">
+                        <i data-lucide="file-text" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-white tracking-wide" id="modal-ticket-id">#INC-4830</h3>
+                            <span
+                                class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                id="modal-ticket-prio">P1 - Crítico</span>
+                        </div>
+                        <p class="text-[11px] text-gray-300" id="modal-ticket-entity">Banco Universal Corp · Área:
+                            Cabecera OLT</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-ticket-details')"
+                    class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-xs">
+                <div>
+                    <h4 class="font-bold text-gray-900 text-sm mb-1" id="modal-ticket-subject">Caída enlace secundario
+                        MetroEthernet OLT-04</h4>
+                    <p class="text-gray-600 leading-relaxed" id="modal-ticket-desc">Falla detectada por telemetría SNMP
+                        a las 11:20:00. Picos de atenuación en enlace óptico y pérdida del 40% de tramas en interfaz
+                        LAG-02.</p>
+                </div>
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Serial ONT / PON</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="telemetry-serial">ZTEGC892A014</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Slot / Tarjeta</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="telemetry-slot">SLOT-04 · PON-08</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Nivel RX Óptico</span>
+                        <p class="font-mono font-bold text-amber-600 mt-0.5">-27.8 dBm (Alerta)</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Tiempo Restante</span>
+                        <p class="font-mono font-bold text-rose-600 mt-0.5">38 minutos</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Gateway Core</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5">190.75.0.1</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Estado de enlace</span>
+                        <p class="font-bold text-rose-600 mt-0.5 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 pulse-indicator"></span>DEGRADADO
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-[#0056B3]">
+                    <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                    <span>Este ticket califica para despacho automático inmediato hacia especialistas
+                        disponibles.</span>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <button onclick="closeModal('modal-ticket-details')"
+                    class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
+                    Cerrar
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="takeTicketDirectly()"
+                        class="px-3.5 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-800 hover:border-[#1C58A8] text-xs font-bold transition shadow-2xs btn-press">
+                        Tomar yo mismo
+                    </button>
+                    <button onclick="quickAssignFromModal()"
+                        class="px-4 py-1.5 rounded-lg bg-[#0056B3] hover:bg-[#1C58A8] text-white text-xs font-bold shadow-xs transition btn-press">
+                        Asignar a Especialista
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 2: ASIGNACIÓN MANUAL DE TICKET                           -->
+    <!-- ============================================================== -->
+    <div id="modal-assign-picker" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+            <div class="px-5 py-3.5 bg-[#1C58A8] text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
+                    <h3 class="text-sm font-bold">Despacho de Caso</h3>
+                </div>
+                <button onclick="closeModal('modal-assign-picker')" class="text-white/80 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-3.5 text-xs">
+                <p class="text-gray-600">Selecciona el operador disponible para transferir <span
+                        class="font-bold text-[#1C58A8]" id="assign-target-ticket-label">#INC-4830</span>:</p>
+                <div class="space-y-2 max-h-72 overflow-y-auto" id="assign-operators-list">
+                    <!-- Dinámicamente poblado por initLiveBackendData -->
+                </div>
+            </div>
+            <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
+                <button onclick="closeModal('modal-assign-picker')"
+                    class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold btn-press">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 3: CREAR TICKET O ASIGNACIÓN TÉCNICA (LIQUID-GLASS iOS 27)-->
+    <!-- ============================================================== -->
+    <div id="modal-new-ticket"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4 transition-all duration-300"
+        style="background: rgba(4, 9, 21, 0.76); backdrop-filter: blur(28px) saturate(200%); -webkit-backdrop-filter: blur(28px) saturate(200%);">
+
+        <!-- Liquid Glass Card Container -->
+        <div class="relative w-full max-w-xl rounded-3xl overflow-hidden animate-fade-in-up border border-white/20 transition-all duration-300"
+            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(11, 20, 42, 0.88); backdrop-filter: blur(40px) saturate(220%); -webkit-backdrop-filter: blur(40px) saturate(220%); box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.85), 0 0 50px -10px rgba(28, 88, 168, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);">
+
+            <!-- Specular Top Light Bar (iOS 27 Liquid Glow Reflection) -->
+            <div
+                class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-[#7CB2EA] to-transparent opacity-80 rounded-full blur-[0.5px]">
+            </div>
+            <div
+                class="absolute -top-16 left-1/2 -translate-x-1/2 w-72 h-24 bg-[#1C58A8]/30 rounded-full blur-3xl pointer-events-none">
+            </div>
+
+            <!-- Modal Header -->
+            <div class="px-6 pt-6 pb-3 relative z-10">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1C58A8]/80 to-[#0A254D] border border-white/25 text-[#7CB2EA] flex items-center justify-center shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_20px_-4px_rgba(28,88,168,0.5)]">
+                            <i data-lucide="ticket" class="w-5 h-5 text-[#93C5FD]"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                                <span>Crear Ticket o Asignación Técnica</span>
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#1C58A8]/40 text-[#93C5FD] border border-white/15">NOC
+                                    IP</span>
+                            </h3>
+                            <p class="text-[11px] text-slate-300/80 mt-0.5 font-normal">
+                                Registro con numeración consecutiva autogenerada y validación de SLA DERS
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeCreateTicketModal()"
+                        class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-slate-300 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs backdrop-blur-md"
+                        aria-label="Cerrar modal">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Autogenerated ID Banner (Liquid Frosted Glass Pill) -->
+            <div
+                class="mx-6 my-2 p-3.5 rounded-2xl bg-gradient-to-r from-[#1C58A8]/25 via-[#2E74C9]/15 to-white/5 border border-white/15 flex items-center justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md relative z-10">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 text-[#7CB2EA] flex items-center justify-center shrink-0 border border-white/15 shadow-inner">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-[#93C5FD]"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-white tracking-tight">ID Consecutivo Autogenerado</h4>
+                        <p class="text-[11px] text-[#93C5FD]/80">Numeración oficial protegida contra duplicidad</p>
+                    </div>
+                </div>
+                <div
+                    class="px-3.5 py-1.5 bg-black/30 border border-white/20 rounded-xl text-xs font-bold font-mono text-[#93C5FD] shadow-inner tracking-wider backdrop-blur-md">
+                    #INC-(Automático)
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="create-ticket-form" onsubmit="handleCreateTicketSubmit(event)"
+                class="px-6 pb-6 pt-2 space-y-3.5 text-xs relative z-10">
+                <!-- Row 1: Área y Tarea Técnica -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-depto">
+                            Área / Departamento <span class="text-rose-400">*</span>
+                        </label>
+                        <select id="new-ticket-depto" onchange="onNewTicketDeptoChange(this.value)"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
+                            <option value="" class="bg-slate-900 text-white">Cargando áreas...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-task">
+                            Tarea Técnica (DERS)
+                        </label>
+                        <select id="new-ticket-task"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
+                            <option value="" class="bg-slate-900 text-white">-- Tarea Técnica Sugerida por Defecto --
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 2: Asunto / Incidencia -->
+                <div>
+                    <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-subject">
+                        Asunto / Incidencia <span class="text-rose-400">*</span>
+                    </label>
+                    <input type="text" id="new-ticket-subject" required
+                        placeholder="Ej. Caída de enlace troncal BGP / Falla de sincronismo ONT"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white placeholder-slate-400/70 bg-white/5 focus:bg-white/10 outline-none transition shadow-inner backdrop-blur-md">
+                </div>
+
+                <!-- Row 3: Abonado y Nodo -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-subscriber">
+                            Abonado / Contrato (Opcional)
+                        </label>
+                        <input type="text" id="new-ticket-subscriber" placeholder="Ej. CLI-CORP-5501"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white placeholder-slate-400/70 bg-white/5 focus:bg-white/10 outline-none transition shadow-inner backdrop-blur-md">
+                    </div>
+                    <div>
+                        <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-node">
+                            Nodo / Enlace / OLT (Opcional)
+                        </label>
+                        <input type="text" id="new-ticket-node" placeholder="Ej. OLT-CHACAO-01"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white placeholder-slate-400/70 bg-white/5 focus:bg-white/10 outline-none transition shadow-inner backdrop-blur-md">
+                    </div>
+                </div>
+
+                <!-- Row 4: Descripción Técnica / Notas -->
+                <div>
+                    <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-body">
+                        Descripción Técnica / Notas
+                    </label>
+                    <textarea id="new-ticket-body" rows="3"
+                        placeholder="Detalles de la falla, sintomatología, nivel de atenuación óptica o reporte del cliente..."
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white placeholder-slate-400/70 bg-white/5 focus:bg-white/10 outline-none transition shadow-inner backdrop-blur-md resize-none"></textarea>
+                </div>
+
+                <!-- Row 5: Designar a Operador -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-slate-200 font-semibold" for="new-ticket-operator">
+                            Designar a Operador Técnico
+                        </label>
+                        <span class="text-[11px] text-slate-400 font-normal">
+                            Opcional (si no se selecciona, queda en cola Pendiente de despacho)
+                        </span>
+                    </div>
+                    <select id="new-ticket-operator"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
+                        <option value="" class="bg-slate-900 text-white">-- Sin Asignar (Dejar en cola Pendiente de
+                            despacho) --</option>
+                    </select>
+                </div>
+
+                <!-- Row 6: Footer Acciones -->
+                <div class="flex justify-end items-center gap-3 pt-3 border-t border-white/10">
+                    <button type="button" onclick="closeCreateTicketModal()"
+                        class="px-5 py-2.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-semibold backdrop-blur-md btn-press transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-create-ticket-submit"
+                        class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#1C58A8] via-[#2E74C9] to-[#0056B3] hover:brightness-110 text-white text-xs font-bold transition shadow-[0_10px_25px_-5px_rgba(28,88,168,0.6),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/25 flex items-center gap-2 btn-press cursor-pointer active:scale-95">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Crear y Despachar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- ============================================================== -->
+    <!-- MODAL: RESOLUCIÓN RÁPIDA DE TICKET (OPERADOR)                  -->
+    <!-- ============================================================== -->
+    <div id="modalQuickResolveTicket"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+            <div class="px-5 py-3.5 bg-emerald-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <h3 class="text-sm font-bold">Resolver Tarea Técnica</h3>
+                </div>
+                <button type="button" onclick="closeQuickResolveModal()" class="text-white/80 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form onsubmit="handleQuickResolveSubmit(event)" class="p-5 space-y-3.5 text-xs">
+                <input type="hidden" id="quick-resolve-ticket-id">
+
+                <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span id="quick-resolve-code" class="font-mono font-bold text-xs text-[#1C58A8]">#INC-</span>
+                        <span id="quick-resolve-ders"
+                            class="px-2 py-0.5 rounded bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100">+2
+                            pts</span>
+                    </div>
+                    <p id="quick-resolve-subject" class="font-semibold text-gray-900 text-xs truncate"></p>
+                    <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
+                        <span>Tarea: <strong id="quick-resolve-task" class="text-gray-700"></strong></span>
+                        <span>Tiempo: <strong id="quick-resolve-timer"
+                                class="font-mono text-emerald-700">00:00</strong></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Notas de Diagnóstico y Resolución <span
+                            class="text-rose-500">*</span></label>
+                    <textarea id="quick-resolve-notes" required rows="3"
+                        placeholder="Describe brevemente la solución técnica aplicada (ej: OLT sincronizada, potencia normalizada, prueba ok)..."
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 text-xs"></textarea>
+                </div>
+
+                <div
+                    class="p-2.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-[11px] flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4 shrink-0 text-purple-600"></i>
+                    <span>Al enviar, el ticket pasará a <strong>Por Verificar</strong> para que el Coordinador valide
+                        los puntos DERS.</span>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                    <button type="button" onclick="closeQuickResolveModal()"
+                        class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit" id="btn-quick-resolve-submit"
+                        class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                        <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                        <span>Confirmar y Resolver</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: APROBACIÓN Y VERIFICACIÓN DERS (COORDINADOR)             -->
+    <!-- ============================================================== -->
+    <div id="modalVerifyTicket" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full overflow-hidden animate-fade-in-up">
+            <div class="px-5 py-3.5 bg-purple-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-check" class="w-4 h-4"></i>
+                    <h3 class="text-sm font-bold">Verificación y Cierre Definitivo</h3>
+                </div>
+                <button type="button" onclick="closeVerifyModal()" class="text-white/80 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form onsubmit="submitCoordinatorVerification(event)" class="p-5 space-y-3.5 text-xs">
+                <input type="hidden" id="verify-ticket-id">
+
+                <div class="p-3 rounded-lg bg-purple-50/50 border border-purple-200 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span id="verify-ticket-code" class="font-mono font-bold text-xs text-purple-900">#INC-</span>
+                        <span id="verify-duration" class="font-mono text-[11px] font-semibold text-purple-700">15 min
+                            netos</span>
+                    </div>
+                    <div class="text-[11px] text-gray-700">
+                        Especialista: <strong id="verify-operator-name" class="text-gray-900"></strong>
+                    </div>
+                    <div class="text-[11px] text-gray-700">
+                        Tarea: <strong id="verify-task-name" class="text-gray-900"></strong>
+                    </div>
+                    <div class="text-[11px] text-gray-600 bg-white p-2 rounded border border-purple-100 mt-1">
+                        <span class="font-semibold text-gray-700 block text-[10px] uppercase">Notas del
+                            Especialista:</span>
+                        <p id="verify-operator-notes" class="italic mt-0.5 text-gray-800"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Puntos a Acreditar</label>
+                        <input type="number" id="verify-points-input" min="1" max="10" value="2" required
+                            class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs font-bold text-purple-900">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Decisión</label>
+                        <div
+                            class="px-3 py-1.5 bg-emerald-50 text-emerald-800 font-bold rounded-lg border border-emerald-200 text-xs flex items-center gap-1">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            <span>Aprobar Cierre</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Notas de Auditoría / Coordinación</label>
+                    <textarea id="verify-coord-notes" rows="2" placeholder="Observaciones de calidad (opcional)..."
+                        class="w-full px-3 py-1.5 rounded-lg border border-gray-300 focus:ring-1 focus:ring-purple-600 focus:border-purple-600 text-xs"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                    <button type="button" onclick="closeVerifyModal()"
+                        class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold btn-press">Cancelar</button>
+                    <button type="submit" id="btn-submit-verification"
+                        class="px-4 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-bold transition shadow-xs flex items-center gap-1.5 btn-press">
+                        <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                        <span>Acreditar Puntos y Cerrar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: FICHA TÉCNICA Y WORKSPACE DE TICKET                     -->
+    <!-- ============================================================== -->
+    <div id="modalTicketWorkspace"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-2xl w-full overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-[#0B1326] text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-[#0056B3] flex items-center justify-center shadow-xs">
+                        <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-white font-mono tracking-wide" id="ws-ticket-code">#INC-
+                            </h3>
+                            <span id="ws-ticket-status-badge"
+                                class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#1C58A8] border border-blue-200">En
+                                Atención</span>
+                            <span id="ws-ticket-source-badge"
+                                class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-gray-300">Correo</span>
+                        </div>
+                        <p class="text-[11px] text-gray-300 mt-0.5" id="ws-ticket-sender">cliente@inter.com.ve</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-white font-mono text-xs">
+                        <i data-lucide="timer" class="w-3.5 h-3.5 text-blue-300"></i>
+                        <span id="ws-live-timer">00:00:00</span>
+                    </div>
+                    <button type="button" onclick="closeWorkspaceModal()"
+                        class="text-gray-400 hover:text-white transition p-1 rounded-md hover:bg-white/10">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Body -->
+            <div class="p-6 space-y-4 overflow-y-auto text-xs">
+                <!-- Subject -->
+                <div>
+                    <h4 class="font-bold text-gray-900 text-sm mb-1" id="ws-ticket-subject"></h4>
+                    <div id="ws-bridge-alert"
+                        class="hidden mb-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                        <span>Configuración de Modo Bridge requerida — IP Certificada</span>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto"
+                        id="ws-ticket-body"></div>
+                </div>
+
+                <!-- Telemetry Grid -->
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#F8FAFC] p-3.5 rounded-lg border border-gray-200">
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Abonado</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-subscriber">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Serial PON</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-serial">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Nodo OLT</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-node">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Slot / Tarjeta</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-slotpon">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Dirección MAC</span>
+                        <p class="font-mono font-bold text-gray-800 mt-0.5" id="ws-param-mac">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 uppercase font-semibold">Puntos DERS</span>
+                        <p class="font-mono font-bold text-[#1C58A8] mt-0.5" id="ws-param-points-badge">+2 pts</p>
+                    </div>
+                </div>
+
+                <div
+                    class="text-[11px] text-gray-600 flex items-center justify-between p-2 rounded bg-blue-50 border border-blue-100">
+                    <span>Tarea sugerida: <strong id="ws-param-taskname" class="text-[#1C58A8]"></strong></span>
+                    <span>Meta: <strong class="text-gray-800">Resolución con Telemetría</strong></span>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between shrink-0">
+                <button type="button" onclick="closeWorkspaceModal()"
+                    class="px-3.5 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 text-xs font-semibold transition btn-press">
+                    Cerrar
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="togglePauseTicket()"
+                        class="px-3.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold transition flex items-center gap-1 btn-press">
+                        <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
+                        <span id="btn-pause-text">Pausar (En Espera)</span>
+                    </button>
+                    <button type="button"
+                        onclick="closeWorkspaceModal(); if(currentOpenTicket) openQuickResolveModal(currentOpenTicket.id);"
+                        class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1 btn-press">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                        <span>Resolver Caso</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legacy / Aux Modals Stubs -->
+    <div id="modalParserTester" class="hidden"></div>
+    <div id="modalReportsAudit" class="hidden"></div>
+    <div id="modalMailWorkerConfig" class="hidden"></div>
+
+    <!-- ============================================================== -->
+    <!-- TOAST NOTIFICATION POPUP                                       -->
+    <!-- ============================================================== -->
+    <div id="toast-container"
+        class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+    <div id="toast-notification"
+        class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-900 text-white shadow-2xl border border-gray-700 text-xs">
+        <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center"
+            id="toast-icon">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+        </div>
+        <span id="toast-message" class="font-medium">Acción completada con éxito</span>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- JAVASCRIPT CONTROLLERS Y LÓGICA DE NEGOCIO                     -->
+    <!-- ============================================================== -->
+    <script>
+        window.currentUserId = 2;
+        window.currentUser = {
+            id: 2,
+            name: "Adelis Mejia",
+            role: "COORDINADOR",
+            area: "Redes de acceso y aprovisionamiento",
+            avatar: "AM",
+            departamento_id: 1
+        };
+        window.currentUserRole = "COORDINADOR";
+        window.isCoordinator = true;
+        window.currentUserName = "Adelis Mejia";
+        window.currentUserDepartment = "";
+    </script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+
+</html>
