@@ -5672,6 +5672,66 @@ async function handleCreateTicketSubmit(event) {
     }
 }
 
+// =============================================================
+// INICIALIZACIÓN DEL PANEL DE COORDINACIÓN (ROLE GUARD)
+// =============================================================
+
+/**
+ * Verifica el rol del usuario y, si es COORDINADOR o ADMINISTRADOR,
+ * muestra el panel de triage, inicia la carga de datos y arranca el polling.
+ * @param {Object} user - Objeto de usuario proveniente de /api/auth/me
+ */
+function checkCoordinatorRoleAndInitTriage(user) {
+    const isCoord = user && (user.role === 'COORDINADOR' || user.role === 'ADMINISTRADOR');
+    window.isCoordinator = isCoord;
+
+    const triagePanel = document.getElementById('coordinator-triage-panel');
+
+    // Mostrar/ocultar el panel de coordinación según el rol
+    if (triagePanel) {
+        if (isCoord) {
+            triagePanel.classList.remove('hidden');
+        } else {
+            triagePanel.classList.add('hidden');
+        }
+    }
+
+    // Ocultar/mostrar tabs del header según el rol
+    const tabBtnRendimiento = document.getElementById('tab-btn-rendimiento');
+    const tabBtnAuditoria = document.getElementById('tab-btn-auditoria');
+    const tabBtnCoordinacion = document.getElementById('tab-btn-coordinacion');
+    const navViewRendimiento = document.getElementById('nav-view-rendimiento');
+    const navViewAuditoria = document.getElementById('nav-view-auditoria');
+
+    if (!isCoord) {
+        if (tabBtnRendimiento) tabBtnRendimiento.classList.add('hidden');
+        if (tabBtnAuditoria) tabBtnAuditoria.classList.add('hidden');
+        if (tabBtnCoordinacion) tabBtnCoordinacion.classList.add('hidden');
+        if (navViewRendimiento) navViewRendimiento.classList.add('hidden');
+        if (navViewAuditoria) navViewAuditoria.classList.add('hidden');
+    } else {
+        if (tabBtnRendimiento) tabBtnRendimiento.classList.remove('hidden');
+        if (tabBtnAuditoria) tabBtnAuditoria.classList.remove('hidden');
+        if (navViewRendimiento) navViewRendimiento.classList.remove('hidden');
+        if (navViewAuditoria) navViewAuditoria.classList.remove('hidden');
+    }
+
+    if (isCoord) {
+        // Cargar datos inmediatamente
+        loadCoordinatorTriage();
+        loadCoordinatorVerifications();
+
+        // Arrancar polling del triage (cada 30 segundos)
+        if (window._triagePollingInterval) {
+            clearInterval(window._triagePollingInterval);
+        }
+        window._triagePollingInterval = setInterval(() => {
+            loadCoordinatorTriage();
+            loadCoordinatorVerifications();
+        }, 30000);
+    }
+}
+
 // Exportar funciones globales
 window.showToast = showToast;
 window.checkCoordinatorRoleAndInitTriage = checkCoordinatorRoleAndInitTriage;
