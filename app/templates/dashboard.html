@@ -15,6 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -31,6 +32,7 @@
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     }
                 }
             }
@@ -236,80 +238,72 @@
             <section id="tab-operativa" class="space-y-6">
                 <!-- Scorecards Principales (Macro - Estándar Telco Industrial) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                    <div
-                        class="bg-white rounded-lg border-l-4 border-l-[#F4B400] border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
-                        <div
-                            class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <!-- KPI 1: En Proceso -->
+                    <div class="bg-white rounded-xl border border-slate-200/90 border-l-4 border-l-[#F4B400] p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                             <span>Tickets en Proceso</span>
-                            <div class="w-6 h-6 rounded bg-[#FEF6E0] flex items-center justify-center">
-                                <i data-lucide="ticket" class="w-3.5 h-3.5 text-[#B45309]"></i>
+                            <div class="w-7 h-7 rounded-lg bg-[#FEF6E0] border border-amber-200/60 flex items-center justify-center text-[#B45309]">
+                                <i data-lucide="ticket" class="w-4 h-4"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2 mt-1">
-                            <span class="flex-1 flex flex-col gap-2">
-                                <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-proceso">25</span>
-                                <span class="text-[11px] text-slate-500 font-medium">en curso</span>
-                            </span>
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-proceso">0</span>
+                            <span class="text-xs text-slate-500 font-medium">en curso</span>
+                        </div>
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-amber-800 font-medium">
+                            <span class="flex items-center gap-1.5 font-mono"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Guardia activa</span>
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white rounded-lg border-l-4 border-l-emerald-500 border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
-                        <div
-                            class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <!-- KPI 2: Realizados -->
+                    <div class="bg-white rounded-xl border border-slate-200/90 border-l-4 border-l-emerald-500 p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                             <span>Tickets Realizados</span>
-                            <div class="w-6 h-6 rounded bg-emerald-50 flex items-center justify-center">
-                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-emerald-600">
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2 mt-1">
-                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-completados">35</span>
-                            <span class="text-[11px] text-slate-500 font-medium">cerrados hoy</span>
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-completados">0</span>
+                            <span class="text-xs text-slate-500 font-medium">cerrados hoy</span>
                         </div>
-                        <div
-                            class="mt-2.5 pt-2 border-t border-[#E4E9F3] flex items-center justify-between text-[11px] text-emerald-700 font-medium">
-                            <span class="flex items-center gap-1 font-mono"><i data-lucide="trending-up"
-                                    class="w-3 h-3 text-emerald-600"></i> +14 vs turno previo</span>
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-700 font-medium">
+                            <span class="flex items-center gap-1 font-mono"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-600"></i> +14 vs turno previo</span>
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white rounded-lg border-l-4 border-l-rose-500 border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
-                        <div
-                            class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <!-- KPI 3: Críticos sin Asignar -->
+                    <div class="bg-white rounded-xl border border-slate-200/90 border-l-4 border-l-rose-500 p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                             <span>Críticos sin Asignar</span>
-                            <div class="w-6 h-6 rounded bg-rose-50 flex items-center justify-center">
-                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600"></i>
+                            <div class="w-7 h-7 rounded-lg bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-600">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2 mt-1">
                             <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-criticos">0</span>
-                            <span class="text-[11px] text-slate-500 font-medium">sin tomar</span>
+                            <span class="text-xs text-slate-500 font-medium">sin tomar</span>
                         </div>
-                        <div
-                            class="mt-2.5 pt-2 border-t border-[#E4E9F3] flex items-center gap-2">
-                            <span
-                                class="px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[11px] font-bold flex items-center gap-1">
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2 text-xs font-medium">
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[11px] font-bold flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Cola Normal
                             </span>
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white rounded-lg border-l-4 border-l-[#1C58A8] border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
-                        <div
-                            class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <!-- KPI 4: Tiempo SLA -->
+                    <div class="bg-white rounded-xl border border-slate-200/90 border-l-4 border-l-[#1C58A8] p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                             <span>Tiempo Primera Atención</span>
-                            <div class="w-6 h-6 rounded bg-[#EAF2FC] flex items-center justify-center">
-                                <i data-lucide="timer" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
+                            <div class="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200/60 flex items-center justify-center text-[#1C58A8]">
+                                <i data-lucide="timer" class="w-4 h-4"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2 mt-1">
-                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-sla-time">8.4</span>
-                            <span class="text-[11px] text-slate-500 font-medium">minutos prom.</span>
+                            <span class="text-2xl font-black font-mono text-slate-900" id="op-kpi-sla-time">0</span>
+                            <span class="text-xs text-slate-500 font-medium">minutos prom.</span>
                         </div>
-                        <div
-                            class="mt-2.5 pt-2 border-t border-[#E4E9F3] flex items-center justify-between text-[11px] text-slate-600">
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
                             <span>Objetivo SLA:</span>
                             <span class="font-mono font-bold text-[#1C58A8]" id="op-kpi-sla-pct">99.4% a tiempo</span>
                         </div>
@@ -319,38 +313,38 @@
                 {% if is_coordinator %}
                 <!-- Mesa de Asignación y Control — Coordinador / Administrador -->
                 <div id="coordinator-triage-panel"
-                    class="dashboard-chart-card space-y-4 bg-white border border-slate-200 rounded-lg p-4 shadow-2xs">
+                    class="dashboard-chart-card space-y-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h2 class="text-sm font-bold text-gray-900">MESA DE DESPACHO ÁGIL</h2>
+                                <h2 class="text-sm font-black text-[#101828] tracking-tight">MESA DE DESPACHO ÁGIL</h2>
                                 <span id="triage-area-badge"
-                                    class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área:
+                                    class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área:
                                     —</span>
                             </div>
-                            <p class="text-[11px] text-gray-500 mt-0.5">Control de saturación por guardia, filtrado por sub-área y despacho inteligente en 1-clic</p>
+                            <p class="text-xs text-[#5B6B89] mt-0.5 font-normal">Control de saturación por guardia, balance DERS y despacho inteligente en 1-clic</p>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <div
-                                class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs">
+                                class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
                                 <button type="button" id="btn-triage-subtab-assign"
                                     onclick="switchTriageSubTab('assign')"
-                                    class="px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60">
+                                    class="px-3 py-1.5 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/80">
                                     <span>Por Despachar</span>
                                     <span id="triage-count-label"
-                                        class="text-[12px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">0</span>
+                                        class="text-[11px] font-bold bg-amber-100 text-amber-900 px-2 py-0.2 rounded-full border border-amber-200">0</span>
                                 </button>
                                 <button type="button" id="btn-triage-subtab-verify"
                                     onclick="switchTriageSubTab('verify')"
-                                    class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer flex items-center gap-1.5">
+                                    class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5">
                                     <span>Confirmar DERS</span>
                                     <span id="verify-count-label"
-                                        class="text-[12px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">0</span>
+                                        class="text-[11px] font-bold bg-purple-100 text-purple-900 px-2 py-0.2 rounded-full border border-purple-200">0</span>
                                 </button>
                             </div>
                             <button type="button" onclick="refreshCoordinatorPanel()"
-                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press cursor-pointer">
+                                class="text-xs font-semibold text-[#1C58A8] hover:bg-blue-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 btn-press cursor-pointer border border-blue-200/70 shadow-2xs">
                                 <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
                                 <span>Actualizar</span>
                             </button>
@@ -358,81 +352,75 @@
                     </div>
 
                     <!-- VISTA 1: POR ASIGNAR (TRIAGE ÁGIL) -->
-                    <div id="triage-assign-view" class="space-y-3.5">
+                    <div id="triage-assign-view" class="space-y-4">
                         
                         <!-- FASE 1: TIRA DE SATURACIÓN DE CUADRILLA / GUARDIA -->
-                        <div class="bg-[#EAF2FC] p-3 rounded-xl border border-[#BFDBFE]">
-                            <div class="flex items-center justify-between mb-2 px-0.5">
+                        <div class="bg-[#F0F6FD] p-3 rounded-xl border border-[#C5DCFA] shadow-2xs">
+                            <div class="flex items-center justify-between mb-2 px-1">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="activity" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
-                                    <span class="text-[11px] font-bold text-[#0B3B78] uppercase tracking-wider">Guardia Activa &amp; Balance DERS</span>
-                                    <span class="text-[10px] text-[#5B6B89] hidden sm:inline">(Puntos acumulados en casos en progreso)</span>
+                                    <div class="w-5 h-5 rounded bg-blue-100/90 flex items-center justify-center text-[#1C58A8]">
+                                        <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#0B3B78] uppercase tracking-wider">Guardia Activa &amp; Balance DERS</span>
+                                    <span class="text-[11px] text-[#5B6B89] hidden sm:inline">(Puntos acumulados en casos en progreso)</span>
                                 </div>
-                                <div class="flex items-center gap-3 text-[10px] font-semibold">
-                                    <span class="inline-flex items-center gap-1 text-emerald-700"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Disp (&lt;4 pts)</span>
-                                    <span class="inline-flex items-center gap-1 text-[#1C58A8]"><span class="w-2 h-2 rounded-full bg-[#1C58A8]"></span> Normal (4-8)</span>
-                                    <span class="inline-flex items-center gap-1 text-rose-700"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Alta (&gt;8)</span>
+                                <div class="flex items-center gap-3 text-xs font-medium">
+                                    <span class="inline-flex items-center gap-1.5 text-emerald-800 font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs"></span> Disp (&lt;4 pts)</span>
+                                    <span class="inline-flex items-center gap-1.5 text-[#1C58A8] font-semibold"><span class="w-2 h-2 rounded-full bg-[#1C58A8] shadow-xs"></span> Normal (4-8)</span>
+                                    <span class="inline-flex items-center gap-1.5 text-rose-800 font-semibold"><span class="w-2 h-2 rounded-full bg-rose-500 shadow-xs"></span> Alta (&gt;8)</span>
                                 </div>
                             </div>
                             <div id="squad-saturation-strip" class="squad-strip-container">
                                 <!-- Inyectado dinámicamente con píldoras de especialistas -->
-                                <div class="text-[11px] text-[#5B6B89] py-1 px-2 italic">Cargando disponibilidad de cuadrilla...</div>
+                                <div class="text-xs text-slate-500 py-1.5 px-2 italic">Cargando disponibilidad de cuadrilla...</div>
                             </div>
                         </div>
 
                         <!-- FASE 2: BARRA DE CONTROL, SWITCH SEGMENTADO Y MULTICANAL -->
-                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-2 border-t border-[#E4E9F3]">
-                            <div class="flex items-center gap-2 flex-wrap">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1 border-t border-slate-100">
+                            <div class="flex items-center gap-2.5 flex-wrap">
                                 <!-- Segmented Subarea Switch -->
-                                <div class="subarea-segmented">
+                                <div class="subarea-segmented bg-[#F1F5F9] p-0.5 rounded-lg border border-slate-200">
                                     <button type="button" class="subarea-segmented-btn active cursor-pointer" id="btn-subarea-todos" onclick="filterTriageBySubarea('TODOS')">
                                         <span>Todos</span>
-                                        <span id="badge-count-todos" class="text-[10px] font-bold px-1.5 py-0.5 bg-[#1C58A8] text-white rounded-full">0</span>
+                                        <span id="badge-count-todos" class="text-[10px] font-bold px-1.5 py-0.2 bg-slate-200 text-slate-800 rounded-full">0</span>
                                     </button>
                                     <button type="button" class="subarea-segmented-btn cursor-pointer" id="btn-subarea-cabecera" onclick="filterTriageBySubarea('CABECERA')">
-                                        <i data-lucide="cpu" class="w-3 h-3 text-indigo-600"></i>
+                                        <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-600"></i>
                                         <span>Cabecera BNG/815</span>
-                                        <span id="badge-count-cabecera" class="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">0</span>
+                                        <span id="badge-count-cabecera" class="text-[10px] font-bold px-1.5 py-0.2 bg-indigo-100 text-indigo-800 rounded-full">0</span>
                                     </button>
                                     <button type="button" class="subarea-segmented-btn cursor-pointer" id="btn-subarea-ftth" onclick="filterTriageBySubarea('SOPORTE_FTTH')">
-                                        <i data-lucide="wifi" class="w-3 h-3 text-[#1C58A8]"></i>
+                                        <i data-lucide="wifi" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
                                         <span>Soporte FTTH</span>
-                                        <span id="badge-count-ftth" class="text-[10px] font-bold px-1.5 py-0.5 bg-[#EAF2FC] text-[#1C58A8] rounded-full">0</span>
+                                        <span id="badge-count-ftth" class="text-[10px] font-bold px-1.5 py-0.2 bg-blue-100 text-blue-800 rounded-full">0</span>
                                     </button>
                                 </div>
 
                                 <!-- Filtros Rápidos por Canal de Origen -->
                                 <div class="flex items-center gap-1.5">
-                                    <button type="button"
-                                        class="filter-pill-btn badge-channel badge-channel-m365 px-2.5 py-1 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
-                                        id="btn-filter-canal-m365" onclick="filterTriageByCanal('M365_CORREO')">
-                                        <i data-lucide="mail" class="w-3 h-3"></i>
+                                    <button type="button" class="filter-pill-btn badge-channel badge-channel-m365 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-200 bg-[#EFF6FF] text-[#1D4ED8] hover:bg-blue-100 transition cursor-pointer flex items-center gap-1.5 shadow-2xs" id="btn-filter-canal-m365" onclick="filterTriageByCanal('M365_CORREO')">
+                                        <i data-lucide="mail" class="w-3.5 h-3.5"></i>
                                         <span>M365</span>
-                                        <span id="count-canal-m365" class="font-bold">0</span>
+                                        <span id="count-canal-m365" class="font-bold text-[#1C58A8] bg-white px-1.5 py-0.2 rounded-full border border-blue-200 text-[10px]">0</span>
                                     </button>
-                                    <button type="button"
-                                        class="filter-pill-btn badge-channel badge-channel-call px-2.5 py-1 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
-                                        id="btn-filter-canal-call" onclick="filterTriageByCanal('LLAMADA_TERRENO')">
-                                        <i data-lucide="phone" class="w-3 h-3"></i>
+                                    <button type="button" class="filter-pill-btn badge-channel badge-channel-call px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-200 bg-[#F0FDF4] text-[#15803D] hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1.5 shadow-2xs" id="btn-filter-canal-call" onclick="filterTriageByCanal('LLAMADA_TERRENO')">
+                                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
                                         <span>Terreno</span>
-                                        <span id="count-canal-call" class="font-bold">0</span>
+                                        <span id="count-canal-call" class="font-bold text-emerald-700 bg-white px-1.5 py-0.2 rounded-full border border-emerald-200 text-[10px]">0</span>
                                     </button>
-                                    <button type="button"
-                                        class="filter-pill-btn badge-channel badge-channel-alert px-2.5 py-1 rounded-md text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
-                                        id="btn-filter-canal-alert" onclick="filterTriageByCanal('ALERTA_MONITOREO')">
-                                        <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+                                    <button type="button" class="filter-pill-btn badge-channel badge-channel-alert px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 bg-[#FEF3C7] text-[#B45309] hover:bg-amber-100 transition cursor-pointer flex items-center gap-1.5 shadow-2xs" id="btn-filter-canal-alert" onclick="filterTriageByCanal('ALERTA_MONITOREO')">
+                                        <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
                                         <span>Alerta</span>
-                                        <span id="count-canal-alert" class="font-bold">0</span>
+                                        <span id="count-canal-alert" class="font-bold text-amber-700 bg-white px-1.5 py-0.2 rounded-full border border-amber-200 text-[10px]">0</span>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Buscador en Vivo -->
-                            <div class="relative min-w-[220px] max-w-sm w-full">
-                                <input type="text" id="triage-live-search" oninput="handleTriageSearch(this.value)"
-                                    placeholder="Buscar ticket, OLT, abonado, nodo..."
-                                    class="w-full text-xs py-1.5 pl-8 pr-2.5 rounded-lg border border-[#E4E9F3] bg-white text-[#101828] placeholder-[#98A3B8] focus:outline-none focus:ring-1 focus:ring-[#1C58A8]">
-                                <i data-lucide="search" class="w-3.5 h-3.5 text-[#98A3B8] absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                            <div class="relative min-w-[240px] max-w-sm w-full">
+                                <input type="text" id="triage-live-search" oninput="handleTriageSearch(this.value)" placeholder="Buscar ticket, OLT, abonado, nodo..." class="w-full text-xs py-1.5 pl-8 pr-3 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1C58A8] focus:ring-2 focus:ring-[#1C58A8]/20 transition-all shadow-2xs">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                             </div>
                         </div>
 
@@ -442,19 +430,19 @@
                             <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes con los filtros seleccionados.</p>
                             <p class="text-xs text-emerald-700/80 mt-1">La cola está al día. Los nuevos casos que ingresen por M365, terreno o monitoreo aparecerán aquí automáticamente.</p>
                         </div>
-                        <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-[#E4E9F3]">
+                        <div id="triage-table-container" class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-2xs">
                             <table class="table-corporate-metrics min-w-full text-left">
                                 <thead>
-                                    <tr>
-                                        <th class="py-2.5 px-3">Ticket &amp; Origen</th>
-                                        <th class="py-2.5 px-3">Requerimiento &amp; Sub-área</th>
-                                        <th class="py-2.5 px-3">Parámetros Telco</th>
-                                        <th class="py-2.5 px-3">Complejidad DERS</th>
-                                        <th class="py-2.5 px-3">Espera</th>
-                                        <th class="py-2.5 px-3 text-right" style="border-left: 2px solid #1C58A8;">Despacho Sugerido 1-Clic</th>
+                                    <tr class="bg-slate-50/90 border-b border-slate-200 text-slate-600">
+                                        <th class="py-2.5 px-3 font-bold text-[11px] uppercase tracking-wider text-slate-600">Ticket &amp; Origen</th>
+                                        <th class="py-2.5 px-3 font-bold text-[11px] uppercase tracking-wider text-slate-600">Requerimiento &amp; Sub-área</th>
+                                        <th class="py-2.5 px-3 font-bold text-[11px] uppercase tracking-wider text-slate-600">Parámetros Telco</th>
+                                        <th class="py-2.5 px-3 font-bold text-[11px] uppercase tracking-wider text-slate-600">Complejidad DERS</th>
+                                        <th class="py-2.5 px-3 font-bold text-[11px] uppercase tracking-wider text-slate-600">Espera</th>
+                                        <th class="py-2.5 px-3 font-bold text-[11px] uppercase tracking-wider text-slate-600 text-right">Despacho Sugerido 1-Clic</th>
                                     </tr>
                                 </thead>
-                                <tbody id="triage-tickets-tbody"></tbody>
+                                <tbody id="triage-tickets-tbody" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>

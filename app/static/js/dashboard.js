@@ -3690,15 +3690,17 @@ window.currentTriageOperators = [];
 
 function getPriorityBadgeClass(p) {
     const pri = (p || '').toUpperCase();
-    if (pri === 'P1' || pri === 'P2') return 'bg-slate-100 text-slate-700 border border-slate-300 font-mono';
-    if (pri === 'P3') return 'bg-amber-50 text-amber-800 border border-amber-300 font-mono';
+    if (pri === 'P1') return 'bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold';
+    if (pri === 'P2') return 'bg-slate-100 text-slate-700 border border-slate-300 font-mono font-bold';
+    if (pri === 'P3') return 'bg-amber-50 text-amber-800 border border-amber-300 font-mono font-bold';
     if (pri === 'P4' || pri === 'P5') return 'bg-rose-50 text-rose-700 border border-rose-300 font-mono font-bold';
-    return 'bg-slate-100 text-slate-700 border border-slate-300 font-mono';
+    return 'bg-slate-100 text-slate-700 border border-slate-300 font-mono font-bold';
 }
 
 function getPriorityBarClass(p) {
     const pri = (p || '').toUpperCase();
-    if (pri === 'P1' || pri === 'P2') return 'bg-slate-400';
+    if (pri === 'P1') return 'bg-blue-500';
+    if (pri === 'P2') return 'bg-slate-400';
     if (pri === 'P3') return 'bg-amber-500';
     if (pri === 'P4' || pri === 'P5') return 'bg-rose-600';
     return 'bg-slate-400';
@@ -3762,7 +3764,7 @@ function renderSquadSaturationStrip(operators) {
     if (!strip) return;
 
     if (!operators || operators.length === 0) {
-        strip.innerHTML = '<div class="text-[11px] text-slate-400 py-1 px-2 italic">No hay especialistas activos en este turno.</div>';
+        strip.innerHTML = '<div class="text-xs text-slate-500 py-1.5 px-2 italic">No hay especialistas activos en este turno.</div>';
         return;
     }
 
@@ -3776,16 +3778,16 @@ function renderSquadSaturationStrip(operators) {
         const avatar = escapeHtml(op.avatar || op.name.substring(0, 2).toUpperCase());
 
         return `
-        <div class="squad-pill ${isSelected ? 'active' : ''} cursor-pointer" onclick="toggleOperatorFilter(${op.id})" title="${escapeHtml(op.name)}: ${pts} puntos activos (${op.saturation_level || 'Disponible'}). Clic para filtrar tickets sugeridos.">
-            <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-[10px] font-bold flex items-center justify-center shrink-0">
+        <div class="squad-pill ${isSelected ? 'active' : ''} cursor-pointer shadow-2xs" onclick="toggleOperatorFilter(${op.id})" title="${escapeHtml(op.name)}: ${pts} puntos activos (${op.saturation_level || 'Disponible'}). Clic para filtrar tickets sugeridos.">
+            <span class="w-6 h-6 rounded-full bg-[#1C58A8] text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-2xs">
                 ${avatar}
             </span>
             <div class="flex flex-col">
-                <div class="flex items-center gap-1 leading-none">
-                    <span class="truncate max-w-[85px]">${escapeHtml(shortName)}</span>
-                    <span class="font-mono text-[10px] text-slate-500 font-bold">(${pts} pts)</span>
+                <div class="flex items-center gap-1.5 leading-none">
+                    <span class="truncate max-w-[90px] font-bold text-[#101828] text-xs">${escapeHtml(shortName)}</span>
+                    <span class="font-mono text-[10px] text-[#5B6B89] font-bold">(${pts} pts)</span>
                 </div>
-                <div class="squad-pill-bar mt-1">
+                <div class="squad-pill-bar mt-1 bg-slate-200">
                     <div class="squad-pill-fill" style="width: ${fillPct}%; background-color: ${satColor};"></div>
                 </div>
             </div>
@@ -3993,14 +3995,14 @@ function renderTriageRow(t) {
     }
 
     return `
-    <tr id="triage-row-${t.id}" class="hover:bg-slate-50/70 dark:hover:bg-slate-850/50 transition-colors relative group border-b border-slate-100 dark:border-slate-800">
+    <tr id="triage-row-${t.id}" class="hover:bg-blue-50/40 transition-colors relative group border-b border-slate-100">
         <!-- Columna 1: Ticket & Origen -->
         <td class="py-3 px-3 align-middle whitespace-nowrap">
             <div class="flex items-center gap-2">
                 <span class="w-1.5 h-9 rounded-full ${pBarColor} shrink-0" title="Prioridad ${p}"></span>
                 <div class="flex flex-col">
                     <div class="flex items-center gap-1.5">
-                        <button onclick="openTicketFastDetail(${t.id})" class="font-mono text-xs font-bold text-[#1C58A8] dark:text-blue-400 hover:underline cursor-pointer" title="Inspeccionar caso">
+                        <button onclick="openTicketFastDetail(${t.id})" class="font-mono text-xs font-bold text-[#1C58A8] hover:underline cursor-pointer" title="Inspeccionar caso">
                             #${escapeHtml(t.ticket_code || t.id)}
                         </button>
                     </div>
@@ -4017,13 +4019,13 @@ function renderTriageRow(t) {
         <!-- Columna 2: Requerimiento & Sub-área -->
         <td class="py-3 px-3 align-middle max-w-[280px]">
             <div class="flex flex-col">
-                <div class="flex items-center gap-1.5 mb-0.5">
+                <div class="flex items-center gap-1.5 mb-1">
                     ${subBadge}
                 </div>
-                <span class="font-semibold text-slate-800 dark:text-slate-100 text-xs line-clamp-1 truncate" title="${safeSubject}">
+                <span class="font-bold text-[#101828] text-xs line-clamp-1 truncate" title="${safeSubject}">
                     ${safeSubject}
                 </span>
-                <span class="text-slate-400 text-[10px] truncate mt-0.5" title="${safeSender}">
+                <span class="text-[#5B6B89] text-[11px] font-medium truncate mt-0.5" title="${safeSender}">
                     De: ${safeSender}
                 </span>
             </div>
@@ -4032,9 +4034,9 @@ function renderTriageRow(t) {
         <!-- Columna 3: Parámetros Telco -->
         <td class="py-3 px-3 align-middle whitespace-nowrap">
             <div class="flex flex-col text-xs font-mono">
-                <span class="text-slate-800 dark:text-slate-200 font-semibold">${safeNode}</span>
-                <span class="text-slate-500 dark:text-slate-400 text-[11px]">${safeSubscriber}</span>
-                ${techDetails ? `<span class="text-slate-400 dark:text-slate-500 text-[10px] truncate max-w-[190px]" title="${techDetails}">${techDetails}</span>` : ''}
+                <span class="text-[#101828] font-bold">${safeNode}</span>
+                <span class="text-[#1C58A8] font-bold text-[11px]">${safeSubscriber}</span>
+                ${techDetails ? `<span class="text-[#475569] font-medium text-[10px] truncate max-w-[190px]" title="${techDetails}">${techDetails}</span>` : ''}
             </div>
         </td>
 
@@ -4042,16 +4044,16 @@ function renderTriageRow(t) {
         <td class="py-3 px-3 align-middle whitespace-nowrap">
             <div class="flex flex-col">
                 <div class="flex items-center gap-1.5">
-                    <span class="font-medium text-slate-800 dark:text-slate-200 text-xs truncate max-w-[150px]" title="${taskName}">${taskName}</span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-blue-50 dark:bg-blue-950 text-[#1C58A8] dark:text-blue-300 font-mono text-[10px] font-bold border border-blue-100/80 dark:border-blue-900">+${points} pts</span>
+                    <span class="font-semibold text-[#101828] text-xs truncate max-w-[150px]" title="${taskName}">${taskName}</span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-[#EAF2FC] text-[#1C58A8] font-mono text-[10px] font-bold border border-[#BFDBFE]">+${points} pts</span>
                 </div>
-                <span class="text-[10px] text-slate-400 mt-0.5">SLA: <strong>${t.sla_minutes || 30}m</strong></span>
+                <span class="text-[11px] text-[#5B6B89] mt-0.5 font-medium">SLA: <strong class="text-[#101828] font-bold">${t.sla_minutes || 30}m</strong></span>
             </div>
         </td>
 
         <!-- Columna 5: Espera -->
         <td class="py-3 px-3 align-middle whitespace-nowrap">
-            <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">${waitTime}</span>
+            <span class="font-mono text-xs font-bold text-[#101828]">${waitTime}</span>
         </td>
 
         <!-- Columna 6: Despacho Sugerido 1-Clic -->

@@ -92,12 +92,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Variante accentuada para el panel de coordinación */
-#coordinator-triage-panel {
-    border-left: 3px solid var(--brand);
-    border-left-color: #1C58A8;
-}
-
 /* --------------------------------------------------------------------------
    4. TABLAS CORPORATIVAS DE TELECOMUNICACIONES
    -------------------------------------------------------------------------- */
@@ -113,10 +107,10 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--brand);
-    background-color: var(--brand-tint);
+    color: var(--muted);
+    background-color: #F8FAFC;
     padding: 0.75rem 0.85rem;
-    border-bottom: 2px solid #BFDBFE;
+    border-bottom: 1px solid var(--border);
 }
 
 .table-corporate-metrics tbody td {
@@ -151,12 +145,22 @@ html[data-theme="dark"] .table-corporate-metrics tbody td {
     box-shadow: 0 2px 4px rgba(0, 86, 179, 0.25);
 }
 
-/* Cuando badge-channel es pill-active, se intensifica su propio color sin Override blanco */
-.filter-pill-btn.badge-channel.pill-active {
-    filter: brightness(0.88) saturate(1.3);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-    font-weight: 700;
-    transform: scale(1.02);
+.filter-pill-btn.badge-channel-m365.pill-active {
+    background-color: #1D4ED8 !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
+}
+
+.filter-pill-btn.badge-channel-call.pill-active {
+    background-color: #15803D !important;
+    color: #FFFFFF !important;
+    border-color: #15803D !important;
+}
+
+.filter-pill-btn.badge-channel-alert.pill-active {
+    background-color: #B45309 !important;
+    color: #FFFFFF !important;
+    border-color: #B45309 !important;
 }
 
 /* --------------------------------------------------------------------------
