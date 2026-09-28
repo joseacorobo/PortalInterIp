@@ -186,6 +186,38 @@ def run_tests():
     assert len(logs) > 0, "Debe haber registros de auditoría"
     print(f"  -> PASSED: {len(logs)} registros forenses recuperados exitosamente.")
 
+    # -------------------------------------------------------------
+    # Test 7: Despacho Ágil Multicanal y Subáreas (Cabecera vs FTTH)
+    # -------------------------------------------------------------
+    print("\n[TEST 7] Despacho Ágil Multicanal y Segmentación de Sub-área")
+    # 7.1 Creación de ticket con canal LLAMADA_TERRENO y subarea CABECERA
+    res_crear_cab = client.post("/api/tickets/create", json={
+        "subject": "Falla LACP en Core BNG NE815 troncal MetroEthernet",
+        "canal_origen": "LLAMADA_TERRENO",
+        "subarea": "CABECERA"
+    })
+    assert res_crear_cab.status_code == 200, f"Error creando ticket cabecera: {res_crear_cab.text}"
+    ticket_cab = res_crear_cab.json()
+    assert ticket_cab["subarea"] == "CABECERA"
+    assert ticket_cab["canal_origen"] == "LLAMADA_TERRENO"
+    print(f"  -> PASSED: Ticket #{ticket_cab['ticket_code']} creado como CABECERA via LLAMADA_TERRENO.")
+
+    # 7.2 Filtrado por sub-área CABECERA en unassigned
+    res_filtro_cab = client.get("/api/tickets/unassigned?subarea=CABECERA")
+    assert res_filtro_cab.status_code == 200
+    tickets_cab = res_filtro_cab.json()
+    assert len(tickets_cab) > 0
+    assert all(t.get("subarea") == "CABECERA" for t in tickets_cab)
+    print(f"  -> PASSED: Filtro ?subarea=CABECERA retorna {len(tickets_cab)} casos exclusivos de Cabecera.")
+
+    # 7.3 Verificación de algoritmo de operador sugerido (menor carga DERS activa)
+    first_ticket = tickets_cab[0]
+    assert "suggested_operator" in first_ticket
+    assert first_ticket["suggested_operator"] is not None
+    sug_op = first_ticket["suggested_operator"]
+    assert "id" in sug_op and "name" in sug_op and "active_points" in sug_op
+    print(f"  -> PASSED: Operador sugerido anexado con éxito: {sug_op['name']} ({sug_op['active_points']} pts, {sug_op['saturation_level']}).")
+
     print("\n" + "=" * 70)
     print("TODAS LAS PRUEBAS AUTOMATIZADAS PASARON EXITOSAMENTE (100% SUCCESS)")
     print("=" * 70)

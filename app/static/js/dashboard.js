@@ -3743,6 +3743,199 @@ function buildOperatorOptions(operators) {
     return html;
 }
 
+// ==========================================================================
+// SISTEMA DE DESPACHO ÁGIL Y TRIAGE DE 4 FASES (COORDINACIÓN)
+// ==========================================================================
+
+window.triageFilter = {
+    subarea: 'TODOS',
+    canal: 'TODOS',
+    operatorId: null,
+    search: ''
+};
+window.allTriageTickets = [];
+window.currentTriageOperators = [];
+window.activeFastDetailTicket = null;
+
+function renderSquadSaturationStrip(operators) {
+    const strip = document.getElementById("squad-saturation-strip");
+    if (!strip) return;
+
+    if (!operators || operators.length === 0) {
+        strip.innerHTML = '<div class="text-[11px] text-slate-400 py-1 px-2 italic">No hay especialistas activos en este turno.</div>';
+        return;
+    }
+
+    strip.innerHTML = operators.map(op => {
+        const isSelected = window.triageFilter.operatorId === op.id;
+        const pts = op.active_points || 0;
+        const maxPts = 25;
+        const fillPct = Math.min(100, Math.round((pts / maxPts) * 100));
+        const satColor = op.saturation_color || (pts < 4 ? '#10B981' : pts <= 8 ? '#1C58A8' : '#EF4444');
+        const shortName = op.name.split(' ')[0] + (op.name.split(' ')[1] ? ' ' + op.name.split(' ')[1][0] + '.' : '');
+        const avatar = escapeHtml(op.avatar || op.name.substring(0, 2).toUpperCase());
+
+        return `
+        <div class="squad-pill ${isSelected ? 'active' : ''} cursor-pointer" onclick="toggleOperatorFilter(${op.id})" title="${escapeHtml(op.name)}: ${pts} puntos activos (${op.saturation_level || 'Disponible'}). Clic para filtrar tickets sugeridos.">
+            <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-[10px] font-bold flex items-center justify-center shrink-0">
+                ${avatar}
+            </span>
+            <div class="flex flex-col">
+                <div class="flex items-center gap-1 leading-none">
+                    <span class="truncate max-w-[85px]">${escapeHtml(shortName)}</span>
+                    <span class="font-mono text-[10px] text-slate-500 font-bold">(${pts} pts)</span>
+                </div>
+                <div class="squad-pill-bar mt-1">
+                    <div class="squad-pill-fill" style="width: ${fillPct}%; background-color: ${satColor};"></div>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+function filterTriageBySubarea(subarea) {
+    window.triageFilter.subarea = subarea || 'TODOS';
+
+    const btnTodos = document.getElementById("btn-subarea-todos");
+    const btnCab = document.getElementById("btn-subarea-cabecera");
+    const btnFtth = document.getElementById("btn-subarea-ftth");
+
+    if (btnTodos) btnTodos.classList.toggle("active", window.triageFilter.subarea === 'TODOS');
+    if (btnCab) btnCab.classList.toggle("active", window.triageFilter.subarea === 'CABECERA');
+    if (btnFtth) btnFtth.classList.toggle("active", window.triageFilter.subarea === 'SOPORTE_FTTH');
+
+    applyTriageFilters();
+}
+
+function filterTriageByCanal(canal) {
+    if (window.triageFilter.canal === canal) {
+        window.triageFilter.canal = 'TODOS';
+    } else {
+        window.triageFilter.canal = canal;
+    }
+
+    const btnM365 = document.getElementById("btn-filter-canal-m365");
+    const btnCall = document.getElementById("btn-filter-canal-call");
+    const btnAlert = document.getElementById("btn-filter-canal-alert");
+
+    if (btnM365) btnM365.classList.toggle("pill-active", window.triageFilter.canal === 'M365_CORREO');
+    if (btnCall) btnCall.classList.toggle("pill-active", window.triageFilter.canal === 'LLAMADA_TERRENO');
+    if (btnAlert) btnAlert.classList.toggle("pill-active", window.triageFilter.canal === 'ALERTA_MONITOREO');
+
+    applyTriageFilters();
+}
+
+function handleTriageSearch(query) {
+    window.triageFilter.search = (query || '').toLowerCase().trim();
+    applyTriageFilters();
+}
+
+function toggleOperatorFilter(opId) {
+    if (window.triageFilter.operatorId === opId) {
+        window.triageFilter.operatorId = null;
+    } else {
+        window.triageFilter.operatorId = opId;
+    }
+    renderSquadSaturationStrip(window.currentTriageOperators || []);
+    applyTriageFilters();
+}
+
+function applyTriageFilters() {
+    const tbody = document.getElementById("triage-tickets-tbody");
+    const container = document.getElementById("triage-table-container");
+    const emptyState = document.getElementById("triage-empty-state");
+    const countLabel = document.getElementById("triage-count-label");
+
+    if (!tbody) return;
+
+    const all = window.allTriageTickets || [];
+
+    // Calcular contadores globales de subarea y canal
+    let cntTodos = all.length;
+    let cntCab = 0;
+    let cntFtth = 0;
+    let cntM365 = 0;
+    let cntCall = 0;
+    let cntAlert = 0;
+
+    all.forEach(t => {
+        const sub = (t.subarea || 'SOPORTE_FTTH').toUpperCase();
+        if (sub === 'CABECERA') cntCab++;
+        else cntFtth++;
+
+        const can = (t.canal_origen || 'M365_CORREO').toUpperCase();
+        if (can === 'LLAMADA_TERRENO') cntCall++;
+        else if (can === 'ALERTA_MONITOREO') cntAlert++;
+        else cntM365++;
+    });
+
+    const elTodos = document.getElementById("badge-count-todos");
+    const elCab = document.getElementById("badge-count-cabecera");
+    const elFtth = document.getElementById("badge-count-ftth");
+    const elM365 = document.getElementById("count-canal-m365");
+    const elCall = document.getElementById("count-canal-call");
+    const elAlert = document.getElementById("count-canal-alert");
+
+    if (elTodos) elTodos.textContent = cntTodos;
+    if (elCab) elCab.textContent = cntCab;
+    if (elFtth) elFtth.textContent = cntFtth;
+    if (elM365) elM365.textContent = cntM365;
+    if (elCall) elCall.textContent = cntCall;
+    if (elAlert) elAlert.textContent = cntAlert;
+
+    // Aplicar filtros activos
+    const filtered = all.filter(t => {
+        if (window.triageFilter.subarea !== 'TODOS') {
+            const sub = (t.subarea || 'SOPORTE_FTTH').toUpperCase();
+            if (window.triageFilter.subarea === 'CABECERA' && sub !== 'CABECERA') return false;
+            if (window.triageFilter.subarea === 'SOPORTE_FTTH' && sub === 'CABECERA') return false;
+        }
+
+        if (window.triageFilter.canal !== 'TODOS') {
+            const can = (t.canal_origen || 'M365_CORREO').toUpperCase();
+            if (can !== window.triageFilter.canal) return false;
+        }
+
+        if (window.triageFilter.operatorId) {
+            const sug = t.suggested_operator;
+            if (!sug || sug.id !== window.triageFilter.operatorId) return false;
+        }
+
+        if (window.triageFilter.search) {
+            const q = window.triageFilter.search;
+            const fullStr = [
+                t.ticket_code,
+                t.subject,
+                t.subscriber_code,
+                t.node_name,
+                t.serial_pon,
+                t.mac_address,
+                t.full_body
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            if (!fullStr.includes(q)) return false;
+        }
+
+        return true;
+    });
+
+    if (countLabel) {
+        countLabel.textContent = filtered.length === 1 ? "1 caso en espera" : `${filtered.length} casos en espera`;
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        if (container) container.classList.add("hidden");
+        if (emptyState) emptyState.classList.remove("hidden");
+    } else {
+        if (container) container.classList.remove("hidden");
+        if (emptyState) emptyState.classList.add("hidden");
+        tbody.innerHTML = filtered.map(t => renderTriageRow(t)).join('');
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
 function renderTriageRow(t) {
     const p = (t.priority || 'P3').toUpperCase();
     const pBadgeClass = getPriorityBadgeClass(p);
@@ -3754,106 +3947,331 @@ function renderTriageRow(t) {
     const safeSubscriber = escapeHtml(t.subscriber_code || 'Abonado');
     const techDetails = [t.slot_pon, t.serial_pon, t.mac_address].filter(Boolean).map(escapeHtml).join(' • ');
     const points = t.suggested_points || 1;
-    const taskName = escapeHtml(t.suggested_task_name || 'Incidencia de Área');
-    const sla = t.sla_minutes || 30;
+    const taskName = escapeHtml(t.suggested_task_name || 'Operación Estándar');
     const waitTime = calcWaitTime(t.fecha_creacion || t.created_at);
-    const opOptions = buildOperatorOptions(window.currentTriageOperators || []);
+
+    // Canal de origen
+    const canal = (t.canal_origen || 'M365_CORREO').toUpperCase();
+    let canalBadge = `<span class="badge-channel badge-channel-m365">✉️ M365</span>`;
+    if (canal === 'LLAMADA_TERRENO') {
+        canalBadge = `<span class="badge-channel badge-channel-call">📞 Terreno</span>`;
+    } else if (canal === 'ALERTA_MONITOREO') {
+        canalBadge = `<span class="badge-channel badge-channel-alert">🚨 Alerta</span>`;
+    }
+
+    // Sub-área
+    const sub = (t.subarea || 'SOPORTE_FTTH').toUpperCase();
+    const subBadge = sub === 'CABECERA'
+        ? `<span class="badge-subarea-cabecera">⚙️ Cabecera</span>`
+        : `<span class="badge-subarea-ftth">🌐 Soporte FTTH</span>`;
+
+    // Operador Sugerido para 1-clic
+    const sugOp = t.suggested_operator || (window.currentTriageOperators && window.currentTriageOperators[0]) || null;
+    let dispatchBtnHtml = '';
+    if (sugOp) {
+        const shortName = sugOp.name.split(' ')[0];
+        dispatchBtnHtml = `
+        <div class="flex items-center justify-end gap-1.5">
+            <button type="button" onclick="assignTriageTicketDirect(${t.id}, ${sugOp.id})" id="btn-quick-${t.id}" class="btn-quick-dispatch cursor-pointer" title="Despacho en 1-clic a ${escapeHtml(sugOp.name)} (${sugOp.active_points} pts activos)">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>Despachar a ${escapeHtml(shortName)} (${sugOp.active_points} pts)</span>
+            </button>
+            <button type="button" onclick="openTicketFastDetail(${t.id})" class="btn-inspect-ticket cursor-pointer" title="Inspección técnica detallada y reasignación">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+            </button>
+        </div>
+        `;
+    } else {
+        dispatchBtnHtml = `
+        <div class="flex items-center justify-end gap-1.5">
+            <button type="button" onclick="openTicketFastDetail(${t.id})" class="btn-quick-dispatch cursor-pointer bg-slate-700 hover:bg-slate-800">
+                <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                <span>Asignar</span>
+            </button>
+        </div>
+        `;
+    }
 
     return `
-    <tr id="triage-row-${t.id}" class="hover:bg-slate-50/70 transition-colors relative group border-b border-slate-100">
-        <td class="py-3.5 pl-4 pr-3 align-middle">
-            <div class="flex items-center gap-2.5">
-                <span class="w-1.5 h-9 rounded-full ${pBarColor} shrink-0" title="Severidad ${p}"></span>
+    <tr id="triage-row-${t.id}" class="hover:bg-slate-50/70 dark:hover:bg-slate-850/50 transition-colors relative group border-b border-slate-100 dark:border-slate-800">
+        <!-- Columna 1: Ticket & Origen -->
+        <td class="py-3 px-3 align-middle whitespace-nowrap">
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-9 rounded-full ${pBarColor} shrink-0" title="Prioridad ${p}"></span>
                 <div class="flex flex-col">
-                    <button onclick="openTicketWorkspace ? openTicketWorkspace(${t.id}) : openTicketFromWorkload(${t.id})" class="font-mono text-xs font-bold text-[#1C58A8] hover:text-[#154687] text-left transition cursor-pointer" title="Ver detalles del ticket">
-                        #${escapeHtml(t.ticket_code || t.id)}
-                    </button>
-                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold ${pBadgeClass} mt-1 w-fit">
-                        ${p} ${pSeverity}
-                    </span>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openTicketFastDetail(${t.id})" class="font-mono text-xs font-bold text-[#1C58A8] dark:text-blue-400 hover:underline cursor-pointer" title="Inspeccionar caso">
+                            #${escapeHtml(t.ticket_code || t.id)}
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1 mt-1">
+                        ${canalBadge}
+                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold ${pBadgeClass}">
+                            ${p}
+                        </span>
+                    </div>
                 </div>
             </div>
         </td>
-        <td class="py-3.5 px-3 align-middle max-w-[260px]">
+
+        <!-- Columna 2: Requerimiento & Sub-área -->
+        <td class="py-3 px-3 align-middle max-w-[280px]">
             <div class="flex flex-col">
-                <span class="font-semibold text-slate-800 text-xs line-clamp-1 truncate" title="${safeSubject}">
+                <div class="flex items-center gap-1.5 mb-0.5">
+                    ${subBadge}
+                </div>
+                <span class="font-semibold text-slate-800 dark:text-slate-100 text-xs line-clamp-1 truncate" title="${safeSubject}">
                     ${safeSubject}
                 </span>
-                <div class="flex items-center gap-1.5 text-slate-400 text-[11px] mt-0.5" title="${safeSender}">
-                    <i data-lucide="mail" class="w-3 h-3 text-slate-400"></i>
-                    <span class="truncate"><span class="font-medium text-slate-500">De:</span> ${safeSender}</span>
-                </div>
+                <span class="text-slate-400 text-[10px] truncate mt-0.5" title="${safeSender}">
+                    De: ${safeSender}
+                </span>
             </div>
         </td>
-        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+
+        <!-- Columna 3: Parámetros Telco -->
+        <td class="py-3 px-3 align-middle whitespace-nowrap">
             <div class="flex flex-col text-xs font-mono">
-                <span class="text-slate-800 font-semibold">${safeNode}</span>
-                <span class="text-slate-400 text-[11px]">${safeSubscriber}</span>
-                ${techDetails ? `<span class="text-slate-500 text-[10px] mt-0.5 truncate max-w-[190px]" title="${techDetails}">${techDetails}</span>` : ''}
+                <span class="text-slate-800 dark:text-slate-200 font-semibold">${safeNode}</span>
+                <span class="text-slate-500 dark:text-slate-400 text-[11px]">${safeSubscriber}</span>
+                ${techDetails ? `<span class="text-slate-400 dark:text-slate-500 text-[10px] truncate max-w-[190px]" title="${techDetails}">${techDetails}</span>` : ''}
             </div>
         </td>
-        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+
+        <!-- Columna 4: Complejidad DERS -->
+        <td class="py-3 px-3 align-middle whitespace-nowrap">
             <div class="flex flex-col">
                 <div class="flex items-center gap-1.5">
-                    <span class="font-medium text-slate-800 text-xs truncate max-w-[160px]" title="${taskName}">${taskName}</span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-blue-50 text-[#1C58A8] font-mono text-[10px] font-bold border border-blue-100/80">+${points} pts</span>
+                    <span class="font-medium text-slate-800 dark:text-slate-200 text-xs truncate max-w-[150px]" title="${taskName}">${taskName}</span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-blue-50 dark:bg-blue-950 text-[#1C58A8] dark:text-blue-300 font-mono text-[10px] font-bold border border-blue-100/80 dark:border-blue-900">+${points} pts</span>
                 </div>
-                <span class="text-[10px] text-slate-400 mt-0.5">Objetivo: <strong>${sla}m</strong></span>
+                <span class="text-[10px] text-slate-400 mt-0.5">SLA: <strong>${t.sla_minutes || 30}m</strong></span>
             </div>
         </td>
-        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
-            <span class="font-mono text-xs font-bold text-slate-700">${waitTime}</span>
+
+        <!-- Columna 5: Espera -->
+        <td class="py-3 px-3 align-middle whitespace-nowrap">
+            <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">${waitTime}</span>
         </td>
-        <td class="py-3.5 pl-3 pr-4 align-middle whitespace-nowrap">
-            <!-- Selector de Asignación Sutil y Minimalista (Stitch Design) -->
-            <div class="flex items-center gap-2">
-                <div class="relative flex-1 min-w-[200px] max-w-[240px]">
-                    <select id="select-operator-${t.id}" data-ticket-id="${t.id}" class="select-operator w-full appearance-none bg-slate-50/80 hover:bg-slate-100/70 focus:bg-white border border-slate-200/90 text-slate-800 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:border-[#1C58A8] focus:ring-2 focus:ring-blue-100/60 transition cursor-pointer font-medium shadow-2xs">
-                        ${opOptions}
-                    </select>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                </div>
-                <button id="btn-assign-${t.id}" onclick="assignTriageTicket(${t.id})" disabled class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1C58A8] hover:bg-[#154687] text-white text-xs font-semibold shadow-xs hover:shadow transition duration-150 active:scale-95 cursor-pointer shrink-0 opacity-50 cursor-not-allowed" type="button" title="Asignar caso al especialista seleccionado">
-                    <i data-lucide="send" class="w-3 h-3"></i>
-                    <span>Asignar</span>
-                </button>
-            </div>
+
+        <!-- Columna 6: Despacho Sugerido 1-Clic -->
+        <td class="py-3 px-3 align-middle text-right whitespace-nowrap">
+            ${dispatchBtnHtml}
         </td>
     </tr>
     `;
 }
 
-function checkCoordinatorRoleAndInitTriage(user) {
-    const triagePanel = document.getElementById("coordinator-triage-panel");
-    const tabBtnCoordinacion = document.getElementById("tab-btn-coordinacion");
-    const navViewCoordinacion = document.getElementById("nav-view-coordinacion");
+// --------------------------------------------------------------------------
+// ASIGNACIÓN DIRECTA 1-CLIC (SPEED DISPATCH)
+// --------------------------------------------------------------------------
+async function assignTriageTicketDirect(ticketId, operatorId) {
+    if (!ticketId || !operatorId) return;
 
-    const isCoordinator = user && (user.role === 'COORDINADOR' || user.role === 'ADMINISTRADOR');
-    if (isCoordinator) {
-        if (triagePanel) triagePanel.classList.remove("hidden");
-        if (tabBtnCoordinacion) tabBtnCoordinacion.classList.remove("hidden");
-        if (navViewCoordinacion) navViewCoordinacion.classList.remove("hidden");
-        const areaBadge = document.getElementById("triage-area-badge");
-        if (areaBadge && user.area) {
-            areaBadge.textContent = "Área: " + user.area;
+    const btn = document.getElementById(`btn-quick-${ticketId}`);
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Despachando...</span>`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/assign`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                operador_id: parseInt(operatorId, 10),
+                coordinador_id: window.currentUser ? window.currentUser.id : null,
+                notas: "Despacho Ágil 1-Clic por Coordinador de Guardia"
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // Animación de salida ágil de la fila
+            const row = document.getElementById(`triage-row-${ticketId}`);
+            if (row) {
+                row.style.transition = "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+                row.style.transform = "translateX(40px)";
+                row.style.opacity = "0";
+                row.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+                setTimeout(() => {
+                    row.remove();
+                    // Eliminar del array en memoria
+                    window.allTriageTickets = (window.allTriageTickets || []).filter(x => x.id !== ticketId);
+                    applyTriageFilters();
+                }, 300);
+            }
+
+            if (typeof showToast === 'function') {
+                showToast(data.message || `Ticket #${ticketId} despachado exitosamente`, "success");
+            }
+
+            // Refrescar disponibilidad de operadores y monitores
+            refreshTriageOperators();
+            if (typeof loadCurrentWorkload === 'function') loadCurrentWorkload();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+        } else {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                if (window.lucide) lucide.createIcons();
+            }
+            if (typeof showToast === 'function') {
+                showToast(data.error || "No se pudo despachar el ticket.", "error");
+            }
         }
-        loadCoordinatorTriage();
-        if (typeof loadCoordinatorVerifications === 'function') {
-            loadCoordinatorVerifications();
+    } catch (e) {
+        console.error("Error en despacho 1-clic:", e);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            if (window.lucide) lucide.createIcons();
         }
-    } else {
-        if (triagePanel) triagePanel.classList.add("hidden");
-        if (tabBtnCoordinacion) tabBtnCoordinacion.classList.add("hidden");
-        if (navViewCoordinacion) navViewCoordinacion.classList.add("hidden");
+        if (typeof showToast === 'function') {
+            showToast("Error de conexión al despachar caso.", "error");
+        }
     }
 }
 
+// --------------------------------------------------------------------------
+// MODAL FASE 4: INSPECCIÓN RÁPIDA Y REASIGNACIÓN
+// --------------------------------------------------------------------------
+function openTicketFastDetail(ticketId) {
+    const t = (window.allTriageTickets || []).find(x => x.id === ticketId);
+    if (!t) return;
+
+    window.activeFastDetailTicket = t;
+    const modal = document.getElementById("modalTicketFastDetail");
+    if (!modal) return;
+
+    // Header
+    const codeEl = document.getElementById("fast-modal-code");
+    const subjEl = document.getElementById("fast-modal-subject");
+    const origBadge = document.getElementById("fast-modal-origin-badge");
+    const subBadge = document.getElementById("fast-modal-subarea-badge");
+
+    if (codeEl) codeEl.textContent = '#' + (t.ticket_code || t.id);
+    if (subjEl) subjEl.textContent = t.subject || 'Sin asunto';
+
+    const canal = (t.canal_origen || 'M365_CORREO').toUpperCase();
+    if (origBadge) {
+        if (canal === 'LLAMADA_TERRENO') {
+            origBadge.className = 'badge-channel badge-channel-call';
+            origBadge.textContent = '📞 Terreno';
+        } else if (canal === 'ALERTA_MONITOREO') {
+            origBadge.className = 'badge-channel badge-channel-alert';
+            origBadge.textContent = '🚨 Alerta';
+        } else {
+            origBadge.className = 'badge-channel badge-channel-m365';
+            origBadge.textContent = '✉️ M365';
+        }
+    }
+
+    const sub = (t.subarea || 'SOPORTE_FTTH').toUpperCase();
+    if (subBadge) {
+        if (sub === 'CABECERA') {
+            subBadge.className = 'badge-subarea-cabecera';
+            subBadge.textContent = '⚙️ Cabecera BNG/815';
+        } else {
+            subBadge.className = 'badge-subarea-ftth';
+            subBadge.textContent = '🌐 Soporte FTTH';
+        }
+    }
+
+    // Parámetros Telco
+    const pSub = document.getElementById("fast-modal-param-sub");
+    const pNode = document.getElementById("fast-modal-param-node");
+    const pSerial = document.getElementById("fast-modal-param-serial");
+    const pPts = document.getElementById("fast-modal-param-points");
+
+    if (pSub) pSub.textContent = t.subscriber_code || 'N/A';
+    if (pNode) pNode.textContent = t.node_name || 'N/A';
+    if (pSerial) pSerial.textContent = [t.serial_pon, t.mac_address].filter(Boolean).join(' / ') || 'Consultar OLT';
+    if (pPts) pPts.textContent = `+${t.suggested_points || 1} pts (${t.suggested_task_name || 'Estándar'})`;
+
+    // Cuerpo
+    const bodyEl = document.getElementById("fast-modal-body");
+    const senderEl = document.getElementById("fast-modal-sender");
+    if (bodyEl) bodyEl.textContent = t.full_body || t.subject || 'Sin contenido registrado.';
+    if (senderEl) senderEl.textContent = `De: ${t.sender_email || 'Operaciones'}`;
+
+    // Alerta contextual
+    const alertBox = document.getElementById("fast-modal-alert-box");
+    const alertTitle = document.getElementById("fast-modal-alert-title");
+    const alertText = document.getElementById("fast-modal-alert-text");
+    const bodyLower = (t.full_body || '' + t.subject || '').toLowerCase();
+
+    if (alertBox) {
+        if (bodyLower.includes("bridge") || bodyLower.includes("puente")) {
+            alertBox.className = "p-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 flex items-start gap-2.5";
+            if (alertTitle) alertTitle.textContent = "⚠️ Precaución Técnica: Configuración Modo Bridge";
+            if (alertText) alertText.textContent = "Validar que la VLAN de servicio esté aprovisionada en el puerto LAN de la ONT sin DHCP activo para evitar bucles L2 en la OLT.";
+            alertBox.classList.remove("hidden");
+        } else if (sub === 'CABECERA' || bodyLower.includes("bng") || bodyLower.includes("815") || bodyLower.includes("portchannel")) {
+            alertBox.className = "p-3 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 flex items-start gap-2.5";
+            if (alertTitle) alertTitle.textContent = "⚙️ Requerimiento de Cabecera / Core de Acceso";
+            if (alertText) alertText.textContent = "Este caso afecta elementos troncales (BNG, NE815 o CGNAT). Asignar a un especialista de Cabecera con permisos de configuración Core.";
+            alertBox.classList.remove("hidden");
+        } else {
+            alertBox.classList.add("hidden");
+        }
+    }
+
+    // Select de Operadores
+    const sel = document.getElementById("fast-modal-operator-select");
+    const chip = document.getElementById("fast-modal-suggested-chip");
+    const ops = window.currentTriageOperators || [];
+
+    if (sel) {
+        sel.innerHTML = ops.map(op => {
+            const isSug = t.suggested_operator && t.suggested_operator.id === op.id;
+            return `<option value="${op.id}" ${isSug ? 'selected' : ''}>${escapeHtml(op.name)} (${op.active_points} pts • ${op.saturation_level || 'Disponible'})</option>`;
+        }).join('');
+    }
+
+    if (chip) {
+        if (t.suggested_operator) {
+            chip.textContent = `Sugerido: ${t.suggested_operator.name.split(' ')[0]} (${t.suggested_operator.active_points} pts)`;
+        } else if (ops.length > 0) {
+            chip.textContent = `Sugerido: ${ops[0].name.split(' ')[0]} (${ops[0].active_points} pts)`;
+        } else {
+            chip.textContent = `Sin operadores en guardia`;
+        }
+    }
+
+    modal.classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeTicketFastDetailModal() {
+    const modal = document.getElementById("modalTicketFastDetail");
+    if (modal) modal.classList.add("hidden");
+    window.activeFastDetailTicket = null;
+}
+
+async function confirmFastModalDispatch() {
+    if (!window.activeFastDetailTicket) return;
+    const ticketId = window.activeFastDetailTicket.id;
+    const sel = document.getElementById("fast-modal-operator-select");
+    if (!sel || !sel.value) {
+        if (typeof showToast === 'function') showToast("Seleccione un operador para despachar", "warning");
+        return;
+    }
+    const opId = parseInt(sel.value, 10);
+    closeTicketFastDetailModal();
+    await assignTriageTicketDirect(ticketId, opId);
+}
+
+// --------------------------------------------------------------------------
+// CARGA PRINCIPAL DEL PANEL DE COORDINACIÓN
+// --------------------------------------------------------------------------
 async function loadCoordinatorTriage() {
     const panel = document.getElementById("coordinator-triage-panel");
     const tbody = document.getElementById("triage-tickets-tbody");
-    const container = document.getElementById("triage-table-container");
-    const emptyState = document.getElementById("triage-empty-state");
-    const countLabel = document.getElementById("triage-count-label");
     const areaBadge = document.getElementById("triage-area-badge");
     const refreshIcon = document.getElementById("icon-refresh-triage");
 
@@ -3873,20 +4291,23 @@ async function loadCoordinatorTriage() {
     if (refreshIcon) refreshIcon.classList.add("animate-spin");
 
     try {
-        // 1. Obtener operadores disponibles del área ordenados por menor carga
         const deptoParam = user.departamento_id ? `&departamento_id=${user.departamento_id}` : '';
+
+        // 1. Obtener disponibilidad de cuadrilla
         const opsUrl = `/api/operators/availability?area=${encodeURIComponent(area)}${deptoParam}`;
         const opsRes = await fetch(opsUrl, { credentials: 'include' });
         if (opsRes.ok) {
             window.currentTriageOperators = await opsRes.json();
+            renderSquadSaturationStrip(window.currentTriageOperators);
         } else {
             window.currentTriageOperators = [];
+            renderSquadSaturationStrip([]);
         }
 
-        // 2. Obtener tickets pendientes no asignados del área
+        // 2. Obtener tickets sin asignar
         const ticketsUrl = `/api/tickets/unassigned?area=${encodeURIComponent(area)}${deptoParam}`;
         const tRes = await fetch(ticketsUrl, { credentials: 'include' });
-        
+
         if (!tRes.ok) {
             const errData = await tRes.json().catch(() => ({}));
             tbody.innerHTML = `
@@ -3904,34 +4325,19 @@ async function loadCoordinatorTriage() {
         }
 
         const tickets = await tRes.json();
+        window.allTriageTickets = tickets || [];
+        applyTriageFilters();
 
-        if (!tickets || tickets.length === 0) {
-            tbody.innerHTML = '';
-            if (container) container.classList.add("hidden");
-            if (emptyState) emptyState.classList.remove("hidden");
-            if (countLabel) countLabel.textContent = "0 casos pendientes";
-        } else {
-            if (container) container.classList.remove("hidden");
-            if (emptyState) emptyState.classList.add("hidden");
-            if (countLabel) {
-                countLabel.textContent = tickets.length === 1 ? "1 caso en espera" : `${tickets.length} casos en espera`;
-            }
-
-            tbody.innerHTML = tickets.map(t => renderTriageRow(t)).join('');
-            if (window.lucide) lucide.createIcons();
-            wireTriageAssignButtons();
-        }
-
-        // Sincronizar Módulo de Asignación Rápida
+        // Sincronizar Módulo de Asignación Rápida legacy si existe
         if (typeof populateQuickAssignControls === 'function') {
             populateQuickAssignControls(tickets || [], window.currentTriageOperators || []);
         }
     } catch (e) {
-        console.error("Error cargando Mesa de Asignación:", e);
+        console.error("Error cargando Mesa de Despacho:", e);
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="py-6 text-center text-rose-600 text-xs">
-                    Error de conexión al cargar la Mesa de Asignación.
+                    Error de conexión al cargar la Mesa de Despacho.
                 </td>
             </tr>
         `;
@@ -3946,145 +4352,28 @@ async function refreshTriageOperators() {
     const user = window.currentUser;
     if (!user || !user.area) return;
     try {
-        const opsUrl = `/api/operators/availability?area=${encodeURIComponent(user.area)}`;
-        const res = await fetch(opsUrl);
+        const deptoParam = user.departamento_id ? `&departamento_id=${user.departamento_id}` : '';
+        const opsUrl = `/api/operators/availability?area=${encodeURIComponent(user.area)}${deptoParam}`;
+        const res = await fetch(opsUrl, { credentials: 'include' });
         if (res.ok) {
             window.currentTriageOperators = await res.json();
-            const selects = document.querySelectorAll("#triage-tickets-tbody select.select-operator, #triage-tickets-tbody select[id^='select-operator-'], #triage-tickets-tbody select[id^='triage-op-']");
-            selects.forEach(sel => {
-                const currentVal = sel.value;
-                sel.innerHTML = buildOperatorOptions(window.currentTriageOperators);
-                if (currentVal) sel.value = currentVal;
-            });
+            renderSquadSaturationStrip(window.currentTriageOperators);
         }
     } catch (e) {
         console.error("Error refreshing triage operators:", e);
     }
 }
 
-async function assignTriageTicket(ticketId) {
-    const selectEl = document.getElementById(`select-operator-${ticketId}`)
-                  || document.getElementById(`triage-op-${ticketId}`)
-                  || document.getElementById("select-operator");
-    if (!selectEl) return;
-
-    const opId = selectEl.value;
-    if (!opId) {
-        showToast("Seleccione un especialista para asignar el caso", "warning");
-        selectEl.focus();
-        return;
-    }
-
-    const btn = document.getElementById(`btn-assign-${ticketId}`);
-    const originalBtnHtml = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path></svg> Asignando...`;
-    }
-
-    try {
-        const res = await fetch(`/api/tickets/${ticketId}/assign`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                operador_id: parseInt(opId, 10),
-                coordinador_id: window.currentUser ? window.currentUser.id : null,
-                notas: "Asignado desde Mesa de Asignación (Triage)"
-            })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            // Eliminar la fila de la tabla visualmente mediante manipulación del DOM con animación
-            const row = document.getElementById(`triage-row-${ticketId}`);
-            if (row) {
-                row.style.transition = "all 0.35s ease-out";
-                row.style.transform = "translateX(30px)";
-                row.style.opacity = "0";
-                row.style.backgroundColor = "#ecfdf5";
-                setTimeout(() => {
-                    row.remove();
-                    checkTriageTableEmpty();
-                }, 350);
-            }
-
-            showToast(data.message || `Ticket #${ticketId} asignado exitosamente`, "success");
-
-            // Refrescar lista de operadores disponibles (para actualizar sus puntos en los otros selects)
-            refreshTriageOperators();
-
-            // Refrescar monitores operativos del dashboard si están presentes
-            if (typeof loadCurrentWorkload === 'function') {
-                loadCurrentWorkload();
-            }
-            if (typeof loadDashboardData === 'function') {
-                loadDashboardData();
-            }
-            if (typeof loadInbox === 'function') {
-                loadInbox();
-            }
-            if (typeof loadDispatchQueue === 'function') {
-                loadDispatchQueue();
-            }
-        } else {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalBtnHtml;
-            }
-            showToast(data.error || "No se pudo asignar el ticket.", "error");
-        }
-    } catch (e) {
-        console.error("Error asignando ticket:", e);
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = originalBtnHtml;
-        }
-        showToast("Error de conexión al asignar el ticket.", "error");
-    }
-}
-
-function wireTriageAssignButtons() {
-    document.querySelectorAll('#triage-tickets-tbody select.select-operator[data-ticket-id]').forEach(sel => {
-        const tid = sel.getAttribute('data-ticket-id');
-        const btn = document.getElementById(`btn-assign-${tid}`);
-        if (!btn || sel.dataset.wired === '1') return;
-        sel.dataset.wired = '1';
-        const syncDisabled = () => {
-            const hasOp = !!sel.value;
-            btn.disabled = !hasOp;
-            btn.classList.toggle('opacity-50', !hasOp);
-            btn.classList.toggle('cursor-not-allowed', !hasOp);
-        };
-        syncDisabled();
-        sel.addEventListener('change', syncDisabled);
-    });
-}
-
-function checkTriageTableEmpty() {
-    const tbody = document.getElementById("triage-tickets-tbody");
-    const container = document.getElementById("triage-table-container");
-    const emptyState = document.getElementById("triage-empty-state");
-    const countLabel = document.getElementById("triage-count-label");
-
-    if (!tbody) return;
-    const remainingRows = tbody.querySelectorAll("tr[id^='triage-row-']");
-    const count = remainingRows.length;
-
-    if (countLabel) {
-        countLabel.textContent = count === 1 ? "1 caso en espera" : `${count} casos en espera`;
-    }
-
-    if (count === 0) {
-        if (container) container.classList.add("hidden");
-        if (emptyState) emptyState.classList.remove("hidden");
-        if (countLabel) countLabel.textContent = "0 casos pendientes";
-    } else {
-        if (container) container.classList.remove("hidden");
-        if (emptyState) emptyState.classList.add("hidden");
-    }
-}
+// Exportar funciones a window para invocaciones inline desde HTML
+window.loadCoordinatorTriage = loadCoordinatorTriage;
+window.filterTriageBySubarea = filterTriageBySubarea;
+window.filterTriageByCanal = filterTriageByCanal;
+window.handleTriageSearch = handleTriageSearch;
+window.toggleOperatorFilter = toggleOperatorFilter;
+window.assignTriageTicketDirect = assignTriageTicketDirect;
+window.openTicketFastDetail = openTicketFastDetail;
+window.closeTicketFastDetailModal = closeTicketFastDetailModal;
+window.confirmFastModalDispatch = confirmFastModalDispatch;
 
 // =============================================================
 // VERIFICACIÓN DE CALIDAD Y PUNTOS DERS (COORDINADOR)
@@ -5321,12 +5610,17 @@ async function handleCreateTicketSubmit(event) {
         return;
     }
 
+    const channelSelect = document.getElementById("new-ticket-channel");
+    const subareaSelect = document.getElementById("new-ticket-subarea");
+
     const payload = {
         subject: subject,
         body_text: bodyInput ? bodyInput.value.trim() : "",
         departamento_id: deptoSelect && deptoSelect.value ? parseInt(deptoSelect.value, 10) : null,
         task_type_id: taskSelect && taskSelect.value ? parseInt(taskSelect.value, 10) : null,
         operador_id: opSelect && opSelect.value ? parseInt(opSelect.value, 10) : null,
+        canal_origen: channelSelect ? channelSelect.value : "M365_CORREO",
+        subarea: subareaSelect ? subareaSelect.value : "SOPORTE_FTTH",
         subscriber_code: subscriberInput ? subscriberInput.value.trim() : null,
         node_name: nodeInput ? nodeInput.value.trim() : null
     };

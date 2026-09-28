@@ -842,11 +842,18 @@ def get_authenticated_coordinator(request: Request = None, user_id_param: Option
 
 
 @app.get("/api/tickets/unassigned")
-def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional[str] = None, request: Request = None):
+def get_unassigned_tickets(
+    departamento_id: Optional[int] = None,
+    area: Optional[str] = None,
+    subarea: Optional[str] = None,
+    canal: Optional[str] = None,
+    request: Request = None
+):
     """
     Retorna ÚNICAMENTE los tickets de la tabla email_tickets donde departamento_id coincida
     con el del coordinador autenticado y el status sea 'PENDIENTE'.
-    Utiliza claves foráneas relacionales (departamento_id), NO el campo de texto 'area'.
+    Soporta filtros opcionales de subarea ('CABECERA' o 'SOPORTE_FTTH') y canal_origen ('M365_CORREO', 'LLAMADA_TERRENO', 'ALERTA_MONITOREO').
+    Adjunta el 'suggested_operator' de guardia con menor carga activa de puntos DERS.
     """
     user, coordinator_depto_id = get_authenticated_coordinator(request, explicit_depto_id=departamento_id)
     if not user:
@@ -890,11 +897,67 @@ def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional
     conn = get_db()
     cur = conn.cursor()
 
-    # FILTRADO ESTRICTO POR CLAVE FORÁNEA: departamento_id y status = 'PENDIENTE'
+    # 1. Obtener operador sugerido de menor carga del departamento
     cur.execute("""
+    SELECT u.id, u.name, u.email, u.role, u.area, u.avatar, u.shift, u.status, u.departamento_id
+    FROM users u
+    WHERE u.departamento_id = ?
+      AND (UPPER(u.role) IN ('ESPECIALISTA', 'OPERADOR') OR UPPER(u.role) NOT IN ('ADMINISTRADOR', 'COORDINADOR'))
+      AND u.status = 'Activo'
+    ORDER BY u.name ASC
+    """, (coordinator_depto_id,))
+    dept_operators = [dict(r) for r in cur.fetchall()]
+
+    operator_workloads = []
+    for op in dept_operators:
+        op_id = op["id"]
+        cur.execute("""
+        SELECT COUNT(et.id) as cnt, COALESCE(SUM(tt.points), 0) as total_pts
+        FROM email_tickets et
+        LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
+        WHERE (et.operador_id = ? OR et.claimed_by_user_id = ?)
+          AND UPPER(et.status) IN ('EN PROGRESO', 'EN ESPERA', 'ASIGNADO')
+        """, (op_id, op_id))
+        w_row = cur.fetchone()
+        cnt = w_row["cnt"] if w_row else 0
+        pts = (w_row["total_pts"] if w_row else 0) or 0
+        
+        if pts == 0:
+            sat_label = "Disponible"
+            sat_color = "#10B981"
+        elif pts <= 4:
+            sat_label = "Baja Carga"
+            sat_color = "#1C58A8"
+        elif pts <= 8:
+            sat_label = "Carga Moderada"
+            sat_color = "#F59E0B"
+        else:
+            sat_label = "Sobrecarga"
+            sat_color = "#EF4444"
+
+        operator_workloads.append({
+            "id": op["id"],
+            "name": op["name"],
+            "avatar": op["avatar"] or op["name"][:2].upper(),
+            "role": op["role"],
+            "shift": op.get("shift") or "Guardia Regular",
+            "active_tickets_count": cnt,
+            "active_points": pts,
+            "saturation_level": sat_label,
+            "saturation_color": sat_color
+        })
+
+    # Ordenar por menor puntos activos, luego menor cantidad de tickets, luego nombre
+    operator_workloads.sort(key=lambda x: (x["active_points"], x["active_tickets_count"], x["name"]))
+    suggested_operator = operator_workloads[0] if operator_workloads else None
+
+    # 2. Construir consulta con filtros de subarea y canal
+    query = """
     SELECT et.id, et.ticket_code, et.sender_email, et.subject, et.full_body, et.area,
            et.departamento_id, COALESCE(d.nombre, et.area) as departamento_nombre,
            COALESCE(d.codigo, 'ACCESO_APROV') as departamento_codigo,
+           COALESCE(et.subarea, 'SOPORTE_FTTH') as subarea,
+           COALESCE(et.canal_origen, 'M365_CORREO') as canal_origen,
            et.subscriber_code, et.serial_pon, et.node_name, et.slot_pon, et.mac_address,
            et.status, et.claimed_by_user_id, et.operador_id,
            tt.name as suggested_task_name, tt.points as suggested_points, tt.id as suggested_task_id, tt.code as task_code,
@@ -906,15 +969,32 @@ def get_unassigned_tickets(departamento_id: Optional[int] = None, area: Optional
     LEFT JOIN task_types tt ON et.suggested_task_type_id = tt.id
     WHERE et.departamento_id = ?
       AND UPPER(et.status) = 'PENDIENTE'
-    ORDER BY et.created_at DESC
-    """, (coordinator_depto_id,))
+    """
+    params = [coordinator_depto_id]
 
+    if subarea and subarea.upper() != "TODOS":
+        sub_val = subarea.upper().strip()
+        if sub_val == "CABECERA":
+            query += " AND UPPER(COALESCE(et.subarea, 'SOPORTE_FTTH')) = 'CABECERA'"
+        elif sub_val in ("FTTH", "SOPORTE_FTTH"):
+            query += " AND UPPER(COALESCE(et.subarea, 'SOPORTE_FTTH')) = 'SOPORTE_FTTH'"
+
+    if canal and canal.upper() != "TODOS":
+        canal_val = canal.upper().strip()
+        query += " AND UPPER(COALESCE(et.canal_origen, 'M365_CORREO')) = ?"
+        params.append(canal_val)
+
+    query += " ORDER BY et.created_at DESC"
+
+    cur.execute(query, tuple(params))
     rows = cur.fetchall()
+
     tickets = []
     for r in rows:
         t = dict(r)
         pts = t.get("suggested_points") or 1
         t["priority"] = "P5" if pts >= 8 else "P4" if pts >= 5 else "P3" if pts >= 3 else "P2" if pts >= 2 else "P1"
+        t["suggested_operator"] = suggested_operator
         tickets.append(t)
 
     conn.close()
@@ -1053,6 +1133,8 @@ class CreateTicketPayload(BaseModel):
     body_text: Optional[str] = ""
     departamento_id: Optional[int] = None
     area: Optional[str] = None
+    subarea: Optional[str] = None
+    canal_origen: Optional[str] = "M365_CORREO"
     subscriber_code: Optional[str] = None
     node_name: Optional[str] = None
     serial_pon: Optional[str] = None
@@ -1067,6 +1149,7 @@ class CreateTicketPayload(BaseModel):
 def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
     """
     Crea un ticket nuevo con código/ID autogenerado automáticamente (INC-XXXXX).
+    Soporta asignación multicanal (M365_CORREO, LLAMADA_TERRENO, ALERTA_MONITOREO) y subárea (CABECERA o SOPORTE_FTTH).
     Si se proporciona un operador_id, el ticket se asigna inmediatamente (estado 'ASIGNADO').
     Si no, queda en estado 'PENDIENTE' para despacho por el Coordinador de área.
     """
@@ -1105,12 +1188,23 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
     d_row = cur.fetchone()
     depto_nombre = d_row[0] if d_row else (payload.area or "Redes de acceso y aprovisionamiento")
 
-    # Determinar origen según el rol del creador
+    # Determinar subárea y canal de origen
+    canal_origen = payload.canal_origen or "M365_CORREO"
+    if canal_origen not in ("M365_CORREO", "LLAMADA_TERRENO", "ALERTA_MONITOREO"):
+        canal_origen = "M365_CORREO"
+
+    subarea = payload.subarea
+    if not subarea:
+        parsed_telco = TelcoEmailParser.parse(payload.subject, payload.body_text or "")
+        subarea = parsed_telco.get("subarea", "SOPORTE_FTTH")
+    subarea = "CABECERA" if subarea.upper() == "CABECERA" else "SOPORTE_FTTH"
+
+    # Determinar origen según el rol del creador y canal
     if caller_role in ("ESPECIALISTA", "OPERADOR"):
-        ticket_source = "MANUAL_OPERADOR"
+        ticket_source = "MANUAL_OPERADOR" if canal_origen == "LLAMADA_TERRENO" else canal_origen
         default_sender = caller.get("email") or "operaciones@inter.com.ve"
     else:
-        ticket_source = "MANUAL_COORDINADOR"
+        ticket_source = "MANUAL_COORDINADOR" if canal_origen == "LLAMADA_TERRENO" else canal_origen
         default_sender = caller.get("email") or "coordinacion@inter.com.ve"
 
     # 3. Resolver operador si se especificó asignación directa
@@ -1134,9 +1228,10 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
     cur.execute("""
     INSERT INTO email_tickets (
         ticket_code, sender_email, subject, full_body, area, departamento_id,
+        subarea, canal_origen,
         subscriber_code, serial_pon, node_name, mac_address, suggested_task_type_id,
         operador_id, claimed_by_user_id, status, source, created_at, fecha_creacion
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         ticket_code,
         payload.sender_email or default_sender,
@@ -1144,6 +1239,8 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
         payload.body_text or payload.subject.strip(),
         depto_nombre,
         depto_id,
+        subarea,
+        canal_origen,
         payload.subscriber_code or "N/A",
         payload.serial_pon or "N/A",
         payload.node_name or "N/A",
@@ -1160,9 +1257,9 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
 
     # 5. Insertar historial de estado
     if operador_id:
-        nota = f"Ticket creado por {caller_name} ({caller_role}) y asignado a {op_name}"
+        nota = f"Ticket creado por {caller_name} ({caller_role}) y asignado a {op_name} via {canal_origen}"
     else:
-        nota = f"Ticket creado por {caller_name} ({caller_role}) en estado Pendiente para despacho"
+        nota = f"Ticket creado por {caller_name} ({caller_role}) en estado Pendiente para despacho [{subarea} / {canal_origen}]"
 
     cur.execute("""
     INSERT INTO ticket_historial_estados (
@@ -1191,6 +1288,8 @@ def create_ticket_endpoint(request: Request, payload: CreateTicketPayload):
         "ticket_code": ticket_code,
         "departamento_id": depto_id,
         "departamento_nombre": depto_nombre,
+        "subarea": subarea,
+        "canal_origen": canal_origen,
         "operador_id": operador_id,
         "operador_nombre": op_name,
         "estado": status,

@@ -37,7 +37,8 @@ class TelcoEmailParser:
     POWER_PATTERN = re.compile(r'([-+]?\d{1,2}(?:\.\d{1,2})?)\s*(?:dBm|dbm|dB)', re.IGNORECASE)
 
     @classmethod
-    def parse(cls, text: str) -> dict:
+    def parse(cls, text: str, body: str = "") -> dict:
+        full_content = f"{text}\n{body}".strip() if body else (text or "").strip()
         result = {
             "subscriber_code": None,
             "permisor": None,
@@ -58,9 +59,11 @@ class TelcoEmailParser:
             "suggested_points": 2,
             "is_bridge": False,
             "is_critical": False,
+            "subarea": "SOPORTE_FTTH",
             "matched_keywords": []
         }
         
+        text = full_content
         lower_text = text.lower()
         
         # --- 1. EXTRACCIÓN DE SERIAL PON (12 Caracteres) ---
@@ -248,4 +251,13 @@ class TelcoEmailParser:
                 result["suggested_points"] = 1
                 result["matched_keywords"].append("Aprovisionamiento / Acceso")
             
+        # --- 8. DETECCIÓN DE SUB-ÁREA (Cabecera BNG/NE815 vs Soporte FTTH) ---
+        if any(k in lower_text for k in [
+            "bng", "ne815", "815", "cx600", "cgnat", "pool ip", "portchannel",
+            "tarjeta controladora", "gcob", "olt central", "hswa", "uplink", "cabecera"
+        ]):
+            result["subarea"] = "CABECERA"
+        else:
+            result["subarea"] = "SOPORTE_FTTH"
+
         return result

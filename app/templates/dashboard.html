@@ -315,9 +315,7 @@
                             <span class="font-mono font-bold text-[#1C58A8]" id="op-kpi-sla-pct">99.4% a tiempo</span>
                         </div>
                     </div>
-                </div>
-
-                {% if is_coordinator %}
+                   {% if is_coordinator %}
                 <!-- Mesa de Asignación y Control — Coordinador / Administrador -->
                 <div id="coordinator-triage-panel"
                     class="dashboard-chart-card space-y-4 bg-white border border-slate-200 rounded-lg p-4 shadow-2xs">
@@ -325,13 +323,12 @@
                         class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h2 class="text-sm font-bold text-gray-900">CASOS ACTIVOS</h2>
+                                <h2 class="text-sm font-bold text-gray-900">MESA DE DESPACHO ÁGIL</h2>
                                 <span id="triage-area-badge"
                                     class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF2FC] text-[#1C58A8] border border-[#BFDBFE]">Área:
                                     —</span>
                             </div>
-                            <!--<p class="text-[11px] text-gray-500 mt-0.5">Asignación de casos y validación de calidad y
-                                puntos DERS de tu departamento</p>-->
+                            <p class="text-[11px] text-gray-500 mt-0.5">Control de saturación por guardia, filtrado por sub-área y despacho inteligente en 1-clic</p>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <div
@@ -339,45 +336,110 @@
                                 <button type="button" id="btn-triage-subtab-assign"
                                     onclick="switchTriageSubTab('assign')"
                                     class="px-3 py-1 rounded-md bg-white font-bold text-slate-900 shadow-2xs text-xs transition cursor-pointer flex items-center gap-1.5 border border-slate-200/60">
-                                    <span>Actividad Actual</span>
+                                    <span>Por Despachar</span>
                                     <span id="triage-count-label"
                                         class="text-[12px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full">0</span>
                                 </button>
                                 <button type="button" id="btn-triage-subtab-verify"
                                     onclick="switchTriageSubTab('verify')"
                                     class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer flex items-center gap-1.5">
-                                    <span>Confirmar Ticket</span>
+                                    <span>Confirmar DERS</span>
                                     <span id="verify-count-label"
                                         class="text-[12px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">0</span>
                                 </button>
                             </div>
                             <button type="button" onclick="refreshCoordinatorPanel()"
-                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press">
+                                class="text-[11px] font-semibold text-[#1C58A8] hover:bg-blue-50 px-2.5 py-1 rounded-md transition flex items-center gap-1 btn-press cursor-pointer">
                                 <i data-lucide="rotate-cw" id="icon-refresh-triage" class="w-3.5 h-3.5"></i>
                                 <span>Actualizar</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- VISTA 1: POR ASIGNAR (TRIAGE) -->
-                    <div id="triage-assign-view" class="space-y-3">
+                    <!-- VISTA 1: POR ASIGNAR (TRIAGE ÁGIL) -->
+                    <div id="triage-assign-view" class="space-y-3.5">
+                        
+                        <!-- FASE 1: TIRA DE SATURACIÓN DE CUADRILLA / GUARDIA -->
+                        <div class="bg-slate-50/80 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                            <div class="flex items-center justify-between mb-1.5 px-1">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="activity" class="w-3.5 h-3.5 text-[#1C58A8] dark:text-blue-400"></i>
+                                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Guardia Activa & Balance DERS</span>
+                                    <span class="text-[10px] text-slate-400 hidden sm:inline">(Puntos acumulados en casos en progreso)</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-[10px]">
+                                    <span class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Disp (&lt;4 pts)</span>
+                                    <span class="inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 font-semibold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Normal (4-8)</span>
+                                    <span class="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-semibold"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Alta (&gt;8)</span>
+                                </div>
+                            </div>
+                            <div id="squad-saturation-strip" class="squad-strip-container">
+                                <!-- Inyectado dinámicamente con píldoras de especialistas -->
+                                <div class="text-[11px] text-slate-400 py-1 px-2 italic">Cargando disponibilidad de cuadrilla...</div>
+                            </div>
+                        </div>
+
+                        <!-- FASE 2: BARRA DE CONTROL, SWITCH SEGMENTADO Y MULTICANAL -->
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Segmented Subarea Switch -->
+                                <div class="subarea-segmented">
+                                    <button type="button" class="subarea-segmented-btn active cursor-pointer" id="btn-subarea-todos" onclick="filterTriageBySubarea('TODOS')">
+                                        <span>Todos</span>
+                                        <span id="badge-count-todos" class="text-[10px] font-bold px-1.5 py-0.2 bg-slate-200 dark:bg-slate-700 rounded-full">0</span>
+                                    </button>
+                                    <button type="button" class="subarea-segmented-btn cursor-pointer" id="btn-subarea-cabecera" onclick="filterTriageBySubarea('CABECERA')">
+                                        <i data-lucide="cpu" class="w-3 h-3 text-indigo-600 dark:text-indigo-400"></i>
+                                        <span>Cabecera BNG/815</span>
+                                        <span id="badge-count-cabecera" class="text-[10px] font-bold px-1.5 py-0.2 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 rounded-full">0</span>
+                                    </button>
+                                    <button type="button" class="subarea-segmented-btn cursor-pointer" id="btn-subarea-ftth" onclick="filterTriageBySubarea('SOPORTE_FTTH')">
+                                        <i data-lucide="wifi" class="w-3 h-3 text-blue-600 dark:text-blue-400"></i>
+                                        <span>Soporte FTTH</span>
+                                        <span id="badge-count-ftth" class="text-[10px] font-bold px-1.5 py-0.2 bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 rounded-full">0</span>
+                                    </button>
+                                </div>
+
+                                <!-- Filtros Rápidos por Canal de Origen -->
+                                <div class="flex items-center gap-1">
+                                    <button type="button" class="filter-pill-btn px-2.5 py-1 rounded-md text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-blue-400 transition cursor-pointer flex items-center gap-1" id="btn-filter-canal-m365" onclick="filterTriageByCanal('M365_CORREO')">
+                                        <span>✉️ M365</span>
+                                        <span id="count-canal-m365" class="font-bold text-[#1C58A8]">0</span>
+                                    </button>
+                                    <button type="button" class="filter-pill-btn px-2.5 py-1 rounded-md text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-400 transition cursor-pointer flex items-center gap-1" id="btn-filter-canal-call" onclick="filterTriageByCanal('LLAMADA_TERRENO')">
+                                        <span>📞 Terreno</span>
+                                        <span id="count-canal-call" class="font-bold text-emerald-600">0</span>
+                                    </button>
+                                    <button type="button" class="filter-pill-btn px-2.5 py-1 rounded-md text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-amber-400 transition cursor-pointer flex items-center gap-1" id="btn-filter-canal-alert" onclick="filterTriageByCanal('ALERTA_MONITOREO')">
+                                        <span>🚨 Alerta</span>
+                                        <span id="count-canal-alert" class="font-bold text-amber-600">0</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Buscador en Vivo -->
+                            <div class="relative min-w-[220px] max-w-sm w-full">
+                                <input type="text" id="triage-live-search" oninput="handleTriageSearch(this.value)" placeholder="Buscar ticket, OLT, abonado, nodo..." class="w-full text-xs py-1.5 pl-8 pr-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#1C58A8]">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                            </div>
+                        </div>
+
+                        <!-- FASE 3: TABLA ÁGIL DE DESPACHO -->
                         <div id="triage-empty-state"
                             class="hidden py-8 px-4 text-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40">
-                            <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes en tu área.
-                                ¡Excelente trabajo!</p>
-                            <p class="text-xs text-emerald-700/80 mt-1">La cola de triage está al día. Los nuevos casos
-                                aparecerán aquí automáticamente.</p>
+                            <p class="text-sm font-bold text-emerald-800">No hay tickets pendientes con los filtros seleccionados.</p>
+                            <p class="text-xs text-emerald-700/80 mt-1">La cola está al día. Los nuevos casos que ingresen por M365, terreno o monitoreo aparecerán aquí automáticamente.</p>
                         </div>
                         <div id="triage-table-container" class="overflow-x-auto rounded-lg border border-gray-100">
                             <table class="table-corporate-metrics min-w-full text-left">
                                 <thead>
                                     <tr>
-                                        <th class="py-2.5 px-3">Ticket</th>
-                                        <th class="py-2.5 px-3">Requerimiento</th>
-                                        <th class="py-2.5 px-3">Parámetros</th>
-                                        <th class="py-2.5 px-3">Tarea / Tiempo Objetivo</th>
+                                        <th class="py-2.5 px-3">Ticket & Origen</th>
+                                        <th class="py-2.5 px-3">Requerimiento & Sub-área</th>
+                                        <th class="py-2.5 px-3">Parámetros Telco</th>
+                                        <th class="py-2.5 px-3">Complejidad DERS</th>
                                         <th class="py-2.5 px-3">Espera</th>
-                                        <th class="py-2.5 px-3">Asignación</th>
+                                        <th class="py-2.5 px-3 text-right">Despacho Sugerido 1-Clic</th>
                                     </tr>
                                 </thead>
                                 <tbody id="triage-tickets-tbody"></tbody>
@@ -1529,6 +1591,31 @@
                     </div>
                 </div>
 
+                <!-- Row 1.5: Canal de Origen y Sub-área Operativa -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-channel">
+                            Canal de Origen <span class="text-rose-400">*</span>
+                        </label>
+                        <select id="new-ticket-channel"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
+                            <option value="M365_CORREO" class="bg-slate-900 text-white">✉️ Correo M365 (Bandeja Operaciones)</option>
+                            <option value="LLAMADA_TERRENO" class="bg-slate-900 text-white">📞 Llamada / Terreno (Cuadrilla / Guardia)</option>
+                            <option value="ALERTA_MONITOREO" class="bg-slate-900 text-white">🚨 Alerta Monitoreo (NMS / Zabbix)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-subarea">
+                            Sub-área Especializada
+                        </label>
+                        <select id="new-ticket-subarea"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-white/15 focus:border-[#7CB2EA] focus:ring-1 focus:ring-[#7CB2EA] text-xs text-white bg-slate-900/80 font-medium outline-none transition shadow-inner backdrop-blur-md cursor-pointer">
+                            <option value="SOPORTE_FTTH" class="bg-slate-900 text-white">🌐 Soporte FTTH (ONT, Bridge, Perfiles)</option>
+                            <option value="CABECERA" class="bg-slate-900 text-white">⚙️ Cabecera (BNG, NE815, CX600, CGNAT)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Row 2: Asunto / Incidencia -->
                 <div>
                     <label class="block text-slate-200 font-semibold mb-1" for="new-ticket-subject">
@@ -1841,6 +1928,117 @@
                         <span>Resolver Caso</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL FASE 4: INSPECCIÓN RÁPIDA Y DESPACHO DE TICKET           -->
+    <!-- ============================================================== -->
+    <div id="modalTicketFastDetail"
+        class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full overflow-hidden animate-fade-in-up">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-[#0B142A] text-white flex items-center justify-between border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1C58A8] to-[#003D82] flex items-center justify-center text-blue-300 font-bold text-sm shadow-inner">
+                        <i data-lucide="zap" class="w-5 h-5 text-amber-400"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-sm text-white" id="fast-modal-code">#INC-00000</span>
+                            <span id="fast-modal-origin-badge" class="badge-channel badge-channel-m365">✉️ M365</span>
+                            <span id="fast-modal-subarea-badge" class="badge-subarea-ftth">Soporte FTTH</span>
+                        </div>
+                        <p class="text-xs text-slate-300 line-clamp-1 mt-0.5" id="fast-modal-subject">Asunto del ticket...</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTicketFastDetailModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+                <!-- Alerta Contextual (Modo Bridge o Cabecera) -->
+                <div id="fast-modal-alert-box" class="hidden p-3 rounded-xl border flex items-start gap-2.5">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5" id="fast-modal-alert-icon"></i>
+                    <div>
+                        <h4 class="font-bold text-xs" id="fast-modal-alert-title">Advertencia Operativa</h4>
+                        <p class="text-[11px] mt-0.5" id="fast-modal-alert-text">Detalles de validación técnica preventiva...</p>
+                    </div>
+                </div>
+
+                <!-- Parámetros Telco Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Abonado</span>
+                        <p class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs mt-0.5" id="fast-modal-param-sub">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Nodo / OLT</span>
+                        <p class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs mt-0.5" id="fast-modal-param-node">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Serial PON / MAC</span>
+                        <p class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs mt-0.5" id="fast-modal-param-serial">—</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Complejidad DERS</span>
+                        <p class="font-mono font-bold text-[#1C58A8] dark:text-blue-400 text-xs mt-0.5" id="fast-modal-param-points">—</p>
+                    </div>
+                </div>
+
+                <!-- Detalle del Contenido / Cuerpo -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Registro Técnico / Cuerpo de la Solicitud</span>
+                        <span class="text-[10px] text-slate-400" id="fast-modal-sender">De: operaciones@inter.com.ve</span>
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto text-xs font-mono" id="fast-modal-body">
+                        Cargando información...
+                    </div>
+                </div>
+
+                <!-- Asignación Rápida -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50/40 dark:from-slate-800/80 dark:to-slate-800/40 p-4 rounded-xl border border-blue-200/70 dark:border-slate-700 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="award" class="w-3.5 h-3.5 text-[#1C58A8]"></i>
+                                <span>Especialista Recomendado (Menor Carga)</span>
+                            </span>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sugerido automáticamente por guardia activa y balance de puntos DERS</p>
+                        </div>
+                        <div id="fast-modal-suggested-chip" class="px-2.5 py-1 rounded-full text-xs font-bold bg-white dark:bg-slate-900 text-[#1C58A8] dark:text-blue-300 border border-blue-200 dark:border-slate-700 shadow-2xs">
+                            —
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Asignar a Especialista:
+                            </label>
+                            <select id="fast-modal-operator-select" class="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#1C58A8]">
+                                <option value="">-- Seleccionar operador --</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" id="btn-fast-modal-confirm-dispatch" onclick="confirmFastModalDispatch()" class="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-[#1C58A8] via-[#0056B3] to-[#004A9E] hover:brightness-110 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer btn-press">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span>Despachar Caso Ahora</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-3 bg-slate-50 dark:bg-slate-850 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                <button type="button" onclick="closeTicketFastDetailModal()" class="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
+                    Cerrar Vista
+                </button>
             </div>
         </div>
     </div>

@@ -167,3 +167,289 @@ html[data-theme="dark"] .badge-kpi-normal {
     background-color: rgba(11, 19, 38, 0.65);
     backdrop-filter: blur(4px);
 }
+
+/* --------------------------------------------------------------------------
+   8. SISTEMA DE DESPACHO ÁGIL Y SATURACIÓN DE CUADRILLA
+   -------------------------------------------------------------------------- */
+.squad-strip-container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    overflow-x: auto;
+    padding: 0.4rem 0.2rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
+}
+
+.squad-strip-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.squad-strip-container::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.25);
+    border-radius: 4px;
+}
+
+.squad-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #1E293B;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.squad-pill:hover {
+    transform: translateY(-1px);
+    border-color: #93C5FD;
+    box-shadow: 0 3px 8px -2px rgba(28, 88, 168, 0.12);
+}
+
+.squad-pill.active {
+    background: #EAF2FC;
+    border-color: #1C58A8;
+    color: #003D82;
+    box-shadow: 0 0 0 2px rgba(28, 88, 168, 0.15);
+}
+
+html[data-theme="dark"] .squad-pill {
+    background: #131E33;
+    border-color: #233052;
+    color: #E2E8F0;
+}
+
+html[data-theme="dark"] .squad-pill:hover {
+    border-color: #3B82F6;
+    background: #192744;
+}
+
+html[data-theme="dark"] .squad-pill.active {
+    background: #1E3A8A;
+    border-color: #60A5FA;
+    color: #FFFFFF;
+}
+
+/* Micro barra de carga en la píldora */
+.squad-pill-bar {
+    width: 28px;
+    height: 4px;
+    background: #E2E8F0;
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+html[data-theme="dark"] .squad-pill-bar {
+    background: #233052;
+}
+
+.squad-pill-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Segmented Subarea Switch */
+.subarea-segmented {
+    display: inline-flex;
+    background: #F1F5F9;
+    padding: 0.2rem;
+    border-radius: 0.6rem;
+    border: 1px solid #E2E8F0;
+    gap: 0.2rem;
+}
+
+html[data-theme="dark"] .subarea-segmented {
+    background: #0F172A;
+    border-color: #233052;
+}
+
+.subarea-segmented-btn {
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748B;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.subarea-segmented-btn:hover {
+    color: #0F172A;
+}
+
+html[data-theme="dark"] .subarea-segmented-btn:hover {
+    color: #F8FAFC;
+}
+
+.subarea-segmented-btn.active {
+    background: #FFFFFF;
+    color: #003D82;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="dark"] .subarea-segmented-btn.active {
+    background: #1E293B;
+    color: #60A5FA;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Badges de Canal de Origen */
+.badge-channel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.badge-channel-m365 {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+
+html[data-theme="dark"] .badge-channel-m365 {
+    background: rgba(29, 78, 216, 0.15);
+    color: #93C5FD;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.badge-channel-call {
+    background: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+}
+
+html[data-theme="dark"] .badge-channel-call {
+    background: rgba(21, 128, 61, 0.15);
+    color: #86EFAC;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.badge-channel-alert {
+    background: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+
+html[data-theme="dark"] .badge-channel-alert {
+    background: rgba(180, 83, 9, 0.15);
+    color: #FCD34D;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Badges de Subárea */
+.badge-subarea-cabecera {
+    background: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid #C7D2FE;
+    font-weight: 700;
+    padding: 0.12rem 0.4rem;
+    border-radius: 0.35rem;
+    font-size: 0.66rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+html[data-theme="dark"] .badge-subarea-cabecera {
+    background: rgba(67, 56, 202, 0.2);
+    color: #A5B4FC;
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.badge-subarea-ftth {
+    background: #EAF2FC;
+    color: #1C58A8;
+    border: 1px solid #BFDBFE;
+    font-weight: 600;
+    padding: 0.12rem 0.4rem;
+    border-radius: 0.35rem;
+    font-size: 0.66rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+html[data-theme="dark"] .badge-subarea-ftth {
+    background: rgba(28, 88, 168, 0.2);
+    color: #93C5FD;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Botón de Despacho Rápido 1-Clic */
+.btn-quick-dispatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: linear-gradient(135deg, #1C58A8 0%, #004A9E 100%);
+    color: #FFFFFF !important;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.45rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(28, 88, 168, 0.2);
+    cursor: pointer;
+    transition: all 0.16s ease;
+    white-space: nowrap;
+}
+
+.btn-quick-dispatch:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px -2px rgba(28, 88, 168, 0.4);
+}
+
+.btn-quick-dispatch:active {
+    transform: scale(0.96);
+}
+
+.btn-inspect-ticket {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 0.45rem;
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-inspect-ticket:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    border-color: #94A3B8;
+}
+
+html[data-theme="dark"] .btn-inspect-ticket {
+    background: #1E293B;
+    border-color: #334155;
+    color: #94A3B8;
+}
+
+html[data-theme="dark"] .btn-inspect-ticket:hover {
+    background: #334155;
+    color: #F8FAFC;
+}
+

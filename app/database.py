@@ -315,8 +315,24 @@ def init_db():
         cursor.execute("ALTER TABLE email_tickets ADD COLUMN duracion_atencion_minutos INTEGER")
     if "tiempo_espera_minutos" not in columns:
         cursor.execute("ALTER TABLE email_tickets ADD COLUMN tiempo_espera_minutos INTEGER")
+    if "canal_origen" not in columns:
+        cursor.execute("ALTER TABLE email_tickets ADD COLUMN canal_origen TEXT DEFAULT 'M365_CORREO'")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_email_tickets_canal ON email_tickets(canal_origen)")
+    if "subarea" not in columns:
+        cursor.execute("ALTER TABLE email_tickets ADD COLUMN subarea TEXT DEFAULT 'SOPORTE_FTTH'")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_email_tickets_subarea ON email_tickets(subarea)")
 
     # Sincronizar datos históricos de tickets con el nuevo esquema
+    cursor.execute("""
+    UPDATE email_tickets SET
+        canal_origen = COALESCE(canal_origen, 'M365_CORREO'),
+        subarea = COALESCE(subarea, (
+            CASE 
+                WHEN subject LIKE '%BNG%' OR subject LIKE '%815%' OR subject LIKE '%CX600%' OR subject LIKE '%CGNAT%' OR subject LIKE '%PortChannel%' OR subject LIKE '%Troncal%' OR subject LIKE '%OLT Central%' OR full_body LIKE '%BNG%' OR full_body LIKE '%815%' OR folder = 'CABECERA' THEN 'CABECERA'
+                ELSE 'SOPORTE_FTTH'
+            END
+        ))
+    """)
     cursor.execute("""
     UPDATE email_tickets SET 
         departamento_id = COALESCE(departamento_id, (
